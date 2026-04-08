@@ -1,0 +1,41 @@
+{
+  "name": "PaveMail — JWood LLC",
+  "short_name": "PaveMail",
+  "description": "AI-powered direct mail for concrete driveway contractors",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e0d0b",
+  "theme_color": "#e8560a",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Spot Bid",
+      "short_name": "Spot Bid",
+      "description": "Send a spot bid to a single address",
+      "url": "/?tab=spotbid",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "New Campaign",
+      "short_name": "Campaign",
+      "description": "Create a neighborhood mailer campaign",
+      "url": "/?tab=create",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
