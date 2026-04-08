@@ -1246,20 +1246,31 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     }finally{setSpotSending(false);}
   };
 
-  const searchZip = async (zip) => {
-    if (!zip || zip.length < 5) return;
+  const searchZip = async (zipInput) => {
+    const zip = (zipInput || zipSearch || "").trim();
+    if (!zip || zip.length < 5) {
+      showToast("Please enter a 5-digit ZIP code", "info");
+      return;
+    }
     setRoutesLoading(true); setRouteError(null);
-    const routes = await fetchUSPSRoutes(zip);
-    if (routes.length === 0) {
-      setRouteError("No residential routes found for ZIP " + zip + ". Try another ZIP.");
-    } else {
-      setLiveRoutes(prev => {
-        const existing = prev.map(r => r.id);
-        return [...prev, ...routes.filter(r => !existing.includes(r.id))];
-      });
-      setSearchedZips(prev => prev.includes(zip) ? prev : [...prev, zip]);
-      const total = routes.reduce((s,r)=>s+r.homes,0);
-      showToast("Found " + routes.length + " routes in ZIP " + zip + " - " + total.toLocaleString() + " homes", "success");
+    showToast("Searching USPS routes for ZIP " + zip + "...", "info");
+    try {
+      const routes = await fetchUSPSRoutes(zip);
+      if (routes.length === 0) {
+        setRouteError("No residential routes found for ZIP " + zip + ". Try another ZIP.");
+        showToast("No routes found for ZIP " + zip, "info");
+      } else {
+        setLiveRoutes(prev => {
+          const existing = prev.map(r => r.id);
+          return [...prev, ...routes.filter(r => !existing.includes(r.id))];
+        });
+        setSearchedZips(prev => prev.includes(zip) ? prev : [...prev, zip]);
+        const total = routes.reduce((s,r)=>s+r.homes,0);
+        showToast("Found " + routes.length + " USPS routes - " + total.toLocaleString() + " homes", "success");
+      }
+    } catch(e) {
+      setRouteError("Error loading routes: " + e.message);
+      showToast("Failed to load USPS routes", "info");
     }
     setRoutesLoading(false);
   };
@@ -1367,7 +1378,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <div className="field" style={{margin:0,flex:1}}>
                     <input placeholder="Enter ZIP (e.g. 74105)" value={zipSearch} onChange={e=>setZipSearch(e.target.value.replace(/[^0-9]/g,"").slice(0,5))} onKeyDown={e=>e.key==="Enter"&&searchZip(zipSearch)} maxLength={5} style={{fontFamily:"DM Mono,monospace",fontSize:15,letterSpacing:2}}/>
                   </div>
-                  <button className="btn btn-primary btn-sm" onClick={()=>searchZip(zipSearch)} disabled={routesLoading||zipSearch.length<5} style={{flexShrink:0,padding:"0 14px"}}>
+                  <button className="btn btn-primary btn-sm" onClick={()=>searchZip(zipSearch)} disabled={routesLoading} style={{flexShrink:0,padding:"0 14px"}}>
                     {routesLoading?<span className="spin"/>:"Search"}
                   </button>
                 </div>
@@ -1375,7 +1386,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--gravel)",marginBottom:6}}>Quick - Tulsa Area</div>
                   <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                     {[["74105","S Tulsa"],["74011","Broken Arrow"],["74037","Jenks"],["74055","Owasso"],["74008","Bixby"],["74063","Sand Springs"],["74112","E Tulsa"],["74107","W Tulsa"]].map(([z,label])=>(
-                      <button key={z} className={`chip${searchedZips.includes(z)?" on":""}`} onClick={()=>{setZipSearch(z);searchZip(z);}} style={{fontSize:10}}>{label}</button>
+                      <button key={z} className={`chip${searchedZips.includes(z)?" on":""}`} onClick={()=>{setZipSearch(z);searchZip(z);}} style={{fontSize:10}} disabled={routesLoading}>{label}</button>
                     ))}
                   </div>
                 </div>
