@@ -35,6 +35,33 @@ async function sendMailer({ neighborhood, headline, sub }) {
   });
 }
 
+
+// ─────────────────────────────────────────────
+// IMGBB PHOTO UPLOAD (for Lob.com printing)
+// ─────────────────────────────────────────────
+const IMGBB_API_KEY = "1de580a4e5bbefe4b3b892494b4a6d7a"; // free key - replace with yours from imgbb.com
+
+async function uploadPhotoToImgbb(base64Data) {
+  try {
+    const imageData = base64Data.split(",")[1] || base64Data;
+    const formData = new FormData();
+    formData.append("key", IMGBB_API_KEY);
+    formData.append("image", imageData);
+    const res = await fetch("https://api.imgbb.com/1/upload", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json();
+    if (data.success) return data.data.url;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// Before/after stock image URLs for the back of postcard
+const BEFORE_AFTER_URL = "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&q=80";
+const CRACKED_EXAMPLE_URL = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80";
 // ─────────────────────────────────────────────
 // QR CODE
 // ─────────────────────────────────────────────
@@ -694,6 +721,7 @@ export default function App(){
   });
   const[autoPrice,setAutoPrice]=useState({lo:0,hi:0});
   const[spotPhoto,setSpotPhoto]=useState(null);
+  const[spotPhotoUrl,setSpotPhotoUrl]=useState(null); // hosted URL for Lob printing
   const[spotMailer,setSpotMailer]=useState(null);
   const[spotLoading,setSpotLoading]=useState(false);
   const[spotSending,setSpotSending]=useState(false);
@@ -891,13 +919,83 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
   const sendSpot=async()=>{
     if(!spotMailer||spotSending)return;
     setSpotSending(true);
+
+    // Upload photo to imgbb for Lob.com printing
+    let hostedPhotoUrl = spotPhotoUrl;
+    if(spotPhoto && !hostedPhotoUrl){
+      showToast("📷 Uploading photo for printing...","info");
+      hostedPhotoUrl = await uploadPhotoToImgbb(spotPhoto);
+      if(hostedPhotoUrl) setSpotPhotoUrl(hostedPhotoUrl);
+    }
+
     showToast("📤 Sending spot bid to Lob.com...","info");
     try{
       await lobRequest("/postcards",{
         description:`JWood LLC Spot Bid - ${spotMailer.address}`,
         to:LOB_TO_ID,from:LOB_FROM_ID,size:"6x9",
-        front:`<html><body style="margin:0;padding:26px;background:#1c1a17;color:#f5f0e6;font-family:Arial,sans-serif;"><div style="color:#e8560a;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;">A Personal Note from JWood LLC · Tulsa, OK</div><h1 style="font-size:24px;color:#f5f0e6;margin:0 0 8px;line-height:1.1;">${spotMailer.headline}</h1><p style="font-size:11px;color:#b8b4ac;line-height:1.65;margin-bottom:12px;">${spotMailer.personalNote}</p><div style="background:rgba(232,86,10,0.2);border:1px solid rgba(232,86,10,0.5);border-radius:6px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div><div style="font-size:8px;color:#e8560a;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px;">Your Personalized Estimate</div><div style="display:flex;align-items:baseline;gap:5px;"><span style="font-size:10px;color:rgba(184,180,172,0.7);">Starting at</span><span style="font-size:24px;font-weight:700;color:#f5f0e6;">${spotMailer.bidLo||spotMailer.bid}</span></div>${spotMailer.bidHi?`<div style="font-size:9px;color:rgba(184,180,172,0.6);">Up to ${spotMailer.bidHi} depending on scope</div>`:""} ${spotMailer.includes?`<div style="font-size:8px;color:rgba(184,180,172,0.4);margin-top:2px;">Includes: ${spotMailer.includes}</div>`:""}</div><div style="background:#e8560a;color:white;padding:8px 10px;border-radius:6px;text-align:center;flex-shrink:0;"><div style="font-size:8px;font-weight:700;letter-spacing:1px;">CALL NOW</div><div style="font-size:13px;font-weight:700;font-family:monospace;">918-896-6737</div></div></div><p style="margin-top:8px;font-size:9px;color:#7a7670;">${spotMailer.urgencyLine}</p></body></html>`,
-        back:`<html><body style="margin:0;padding:26px;background:#f5f0e6;color:#1c1a17;font-family:Arial,sans-serif;"><h2 style="font-size:18px;margin-bottom:8px;">What We Noticed at Your Home</h2>${spotMailer.damage?.map(d=>`<div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:7px 11px;border-radius:4px;margin-bottom:5px;font-size:10px;">${d}</div>`).join("")||"<div style='font-size:11px;color:#6a6864;'>General driveway wear and aging</div>"}<div style="margin-top:12px;background:rgba(232,86,10,0.08);border:1px solid rgba(232,86,10,0.2);border-radius:6px;padding:10px 14px;"><div style="font-size:8px;color:#e8560a;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Your Personalized Estimate</div><div style="display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;"><span style="font-size:10px;color:#6a6864;">Starting at</span><span style="font-size:22px;font-weight:700;color:#1c1a17;">${spotMailer.bidLo||spotMailer.bid}</span>${spotMailer.bidHi?`<span style="font-size:10px;color:#6a6864;">— up to ${spotMailer.bidHi}</span>`:""}</div>${spotMailer.includes?`<div style="font-size:9px;color:#8a8680;margin-top:3px;">✓ Includes: ${spotMailer.includes}</div>`:""}</div><div style="margin-top:10px;background:#1c1a17;color:white;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:14px;font-weight:700;">918-896-6737</div><div style="font-size:9px;color:#b8b4ac;margin-top:2px;">Call or text Joel directly</div><div style="margin-top:4px;font-size:9px;background:#e8560a;display:inline-block;padding:2px 8px;border-radius:4px;">Free on-site visit — no obligation</div></div></body></html>`,
+        front:`<html><body style="margin:0;padding:0;font-family:Arial,sans-serif;position:relative;width:100%;height:100%;overflow:hidden;">
+  ${hostedPhotoUrl
+    ? `<div style="position:absolute;inset:0;background:url('${hostedPhotoUrl}') center/cover no-repeat;"></div>
+       <div style="position:absolute;inset:0;background:linear-gradient(to bottom, rgba(14,13,11,0.55) 0%, rgba(14,13,11,0.85) 60%, rgba(14,13,11,0.97) 100%);"></div>`
+    : `<div style="position:absolute;inset:0;background:linear-gradient(145deg,#111009 0%,#2a2720 60%,#1c1a17 100%);"></div>`
+  }
+  <div style="position:relative;padding:26px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;">
+    <div style="position:absolute;top:22px;left:26px;right:26px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="color:#e8560a;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">JWood LLC · Tulsa, OK</div>
+      ${hostedPhotoUrl?`<div style="background:rgba(232,86,10,0.9);color:white;font-size:8px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:1px;">📷 YOUR DRIVEWAY</div>`:""}
+    </div>
+    <div style="margin-top:auto;">
+      <h1 style="font-size:26px;color:#f5f0e6;margin:0 0 8px;line-height:1.1;text-shadow:0 2px 8px rgba(0,0,0,0.8);">${spotMailer.headline}</h1>
+      <p style="font-size:11px;color:rgba(245,240,230,0.85);line-height:1.65;margin-bottom:14px;text-shadow:0 1px 4px rgba(0,0,0,0.9);">${spotMailer.personalNote}</p>
+      <div style="background:rgba(14,13,11,0.75);backdrop-filter:blur(4px);border:1px solid rgba(232,86,10,0.5);border-radius:8px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div>
+          <div style="font-size:8px;color:#e8560a;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;">Your Personalized Estimate</div>
+          <div style="display:flex;align-items:baseline;gap:5px;">
+            <span style="font-size:10px;color:rgba(184,180,172,0.8);">Starting at</span>
+            <span style="font-size:26px;font-weight:700;color:#f5f0e6;">${spotMailer.bidLo||spotMailer.bid}</span>
+          </div>
+          ${spotMailer.bidHi?`<div style="font-size:9px;color:rgba(184,180,172,0.6);">Up to ${spotMailer.bidHi} depending on scope</div>`:""}
+          ${spotMailer.includes?`<div style="font-size:8px;color:rgba(184,180,172,0.4);margin-top:2px;">Includes: ${spotMailer.includes}</div>`:""}
+        </div>
+        <div style="background:#e8560a;color:white;padding:8px 12px;border-radius:6px;text-align:center;flex-shrink:0;">
+          <div style="font-size:8px;font-weight:700;letter-spacing:1px;">CALL NOW</div>
+          <div style="font-size:14px;font-weight:700;font-family:monospace;">918-896-6737</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body></html>`,
+        back:`<html><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f5f0e6;">
+  <div style="padding:20px 22px;">
+    <div style="display:flex;gap:10px;margin-bottom:12px;">
+      <div style="flex:1;">
+        <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#e8560a;margin-bottom:4px;">What We Noticed</div>
+        ${spotMailer.damage?.map(d=>`<div style="background:#f0ebe0;border-left:3px solid #e8560a;padding:5px 9px;border-radius:3px;margin-bottom:4px;font-size:9px;color:#3a3835;">${d}</div>`).join("")||`<div style="font-size:10px;color:#6a6864;">General driveway wear</div>`}
+      </div>
+      <div style="width:120px;flex-shrink:0;">
+        <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2a7a52;margin-bottom:4px;">After JWood LLC</div>
+        <img src="${BEFORE_AFTER_URL}" style="width:100%;height:90px;object-fit:cover;border-radius:6px;border:2px solid #2a7a52;" alt="Finished driveway"/>
+        <div style="font-size:7px;color:#2a7a52;text-align:center;margin-top:3px;font-weight:700;">✓ GUARANTEED RESULT</div>
+      </div>
+    </div>
+    <div style="background:rgba(232,86,10,0.08);border:1px solid rgba(232,86,10,0.25);border-radius:6px;padding:10px 12px;margin-bottom:10px;">
+      <div style="font-size:8px;color:#e8560a;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Your Personalized Estimate</div>
+      <div style="display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;">
+        <span style="font-size:9px;color:#6a6864;">Starting at</span>
+        <span style="font-size:22px;font-weight:700;color:#1c1a17;">${spotMailer.bidLo||spotMailer.bid}</span>
+        ${spotMailer.bidHi?`<span style="font-size:9px;color:#6a6864;">— up to ${spotMailer.bidHi}</span>`:""}
+      </div>
+      ${spotMailer.includes?`<div style="font-size:8px;color:#8a8680;margin-top:2px;">✓ Includes: ${spotMailer.includes}</div>`:""}
+    </div>
+    <div style="background:#1c1a17;color:white;padding:10px 14px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:13px;font-weight:700;">918-896-6737</div>
+        <div style="font-size:8px;color:#b8b4ac;margin-top:1px;">Call or text Joel directly · joelmwood@gmail.com</div>
+      </div>
+      <div style="background:#e8560a;color:white;font-size:9px;font-weight:700;padding:5px 10px;border-radius:5px;text-align:center;">FREE<br/>ESTIMATE</div>
+    </div>
+  </div>
+</body></html>`,
         use_type:"marketing"
       });
       const newSpotJob={id:`SB-00${spotJobs.length+1}`,address:spotMailer.address,city:spotMailer.city,bid:spotMailer.bid,damage:spotMailer.damage,sent:"Apr 07",status:"queued"};
@@ -906,6 +1004,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       setSpotMailer(null);
       setSpotForm({address:"",city:"Tulsa",state:"OK",zip:"",sqft:400,customSqft:"",service:"Crack Repair",damageLevel:"Moderate",bidLow:"",bidHigh:"",overridePrice:false,includes:"",damage:[],notes:""});
       setSpotPhoto(null);
+      setSpotPhotoUrl(null);
     }catch(e){
       showToast("Spot bid queued (demo mode)","info");
       const newSpotJob={id:`SB-00${spotJobs.length+1}`,address:spotMailer.address,city:spotMailer.city,bid:spotMailer.bid,damage:spotMailer.damage||[],sent:"Apr 07",status:"queued"};
@@ -1302,27 +1401,39 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       <div className="preview-meta"><span>📍 <strong>{spotMailer.address}</strong></span><span>💵 <strong>{spotMailer.bid}</strong></span></div>
                     </div>
 
-                    <div className="page-tag">Front of Postcard</div>
+                    <div className="page-tag">Front of Postcard {spotMailer.photoUsed&&<span style={{marginLeft:6,background:"rgba(232,86,10,0.25)",color:"var(--orange2)",padding:"2px 7px",borderRadius:4,fontSize:9,fontWeight:700}}>📷 Full Bleed Photo</span>}</div>
                     <div className="spot-mailer" style={{marginBottom:18}}>
-                      <div className="spot-front">
-                        <div className="spot-front-texture"/>
-                        <div className="spot-tag">A Personal Note from JWood LLC · Tulsa, OK{spotMailer.photoUsed&&<span style={{marginLeft:8,background:"rgba(232,86,10,0.3)",padding:"2px 6px",borderRadius:4,fontSize:9}}>📷 AI Photo Analysis</span>}</div>
-                        <div className="spot-address">{spotMailer.address}, {spotMailer.city}</div>
-                        <div className="spot-headline" style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:36,color:"#f5f0e6",letterSpacing:1,marginBottom:10,position:"relative"}}>{spotMailer.headline}</div>
-                        <div className="spot-note">{spotMailer.personalNote}</div>
-                        <div className="spot-bid-box">
-                          <div style={{flex:1}}>
-                            <div className="spot-bid-label">Our Estimate for Your Home</div>
-                            <div style={{display:"flex",alignItems:"baseline",gap:8,marginTop:4,flexWrap:"wrap"}}>
-                              <div style={{fontSize:13,color:"rgba(184,180,172,0.7)"}}>Starting at</div>
-                              <div className="spot-bid-value">{spotMailer.bidLo||spotMailer.bid}</div>
-                            </div>
-                            {spotMailer.bidHi&&<div style={{fontSize:12,color:"rgba(184,180,172,0.6)",marginTop:2}}>Up to {spotMailer.bidHi} depending on scope</div>}
-                            {spotMailer.includes&&<div style={{fontSize:10,color:"rgba(184,180,172,0.45)",marginTop:4}}>Includes: {spotMailer.includes}</div>}
+                      <div className="spot-front" style={{
+                        backgroundImage: spotPhoto ? `url(${spotPhoto})` : "none",
+                        backgroundSize:"cover",backgroundPosition:"center",
+                        position:"relative"
+                      }}>
+                        {spotPhoto&&<div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom, rgba(14,13,11,0.5) 0%, rgba(14,13,11,0.82) 55%, rgba(14,13,11,0.97) 100%)",borderRadius:"inherit"}}/>}
+                        {!spotPhoto&&<div className="spot-front-texture"/>}
+                        <div style={{position:"relative",zIndex:1,display:"flex",flexDirection:"column",height:"100%"}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"auto"}}>
+                            <div className="spot-tag" style={{margin:0}}>JWood LLC · Tulsa, OK</div>
+                            {spotPhoto&&<div style={{background:"rgba(232,86,10,0.9)",color:"white",fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:4,letterSpacing:1}}>📷 YOUR DRIVEWAY</div>}
                           </div>
-                          <div style={{flexShrink:0,background:"var(--orange)",color:"white",padding:"8px 14px",borderRadius:6,fontSize:11,fontWeight:700,textAlign:"center",cursor:"pointer"}}>CALL NOW<br/><span style={{fontSize:13,fontFamily:"DM Mono,monospace"}}>918-896-6737</span></div>
+                          <div style={{paddingTop:16}}>
+                            <div className="spot-address">{spotMailer.address}, {spotMailer.city}</div>
+                            <div className="spot-headline" style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:34,color:"#f5f0e6",letterSpacing:1,marginBottom:10,lineHeight:1,textShadow:"0 2px 8px rgba(0,0,0,0.8)"}}>{spotMailer.headline}</div>
+                            <div className="spot-note" style={{textShadow:"0 1px 4px rgba(0,0,0,0.9)"}}>{spotMailer.personalNote}</div>
+                            <div className="spot-bid-box">
+                              <div style={{flex:1}}>
+                                <div className="spot-bid-label">Your Personalized Estimate</div>
+                                <div style={{display:"flex",alignItems:"baseline",gap:8,marginTop:4,flexWrap:"wrap"}}>
+                                  <div style={{fontSize:13,color:"rgba(184,180,172,0.7)"}}>Starting at</div>
+                                  <div className="spot-bid-value">{spotMailer.bidLo||spotMailer.bid}</div>
+                                </div>
+                                {spotMailer.bidHi&&<div style={{fontSize:12,color:"rgba(184,180,172,0.6)",marginTop:2}}>Up to {spotMailer.bidHi} depending on scope</div>}
+                                {spotMailer.includes&&<div style={{fontSize:10,color:"rgba(184,180,172,0.45)",marginTop:4}}>Includes: {spotMailer.includes}</div>}
+                              </div>
+                              <div style={{flexShrink:0,background:"var(--orange)",color:"white",padding:"8px 14px",borderRadius:6,fontSize:11,fontWeight:700,textAlign:"center"}}>CALL NOW<br/><span style={{fontSize:13,fontFamily:"DM Mono,monospace"}}>918-896-6737</span></div>
+                            </div>
+                            <div style={{marginTop:10,fontSize:10,color:"rgba(184,180,172,0.5)"}}>{spotMailer.urgencyLine}</div>
+                          </div>
                         </div>
-                        <div style={{marginTop:12,fontSize:11,color:"rgba(184,180,172,0.5)",position:"relative"}}>{spotMailer.urgencyLine}</div>
                         <div className="spot-bar"/>
                       </div>
                     </div>
