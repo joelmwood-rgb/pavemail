@@ -447,7 +447,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .spot-send-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
 .spot-send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
 .spot-mailer{background:#faf7f2;border-radius:8px;overflow:hidden;box-shadow:0 6px 30px rgba(0,0,0,0.6);font-family:'Syne',sans-serif;}
-.spot-front{background:linear-gradient(145deg,#111009 0%,#2a2720 100%);padding:32px;position:relative;overflow:hidden;min-height:280px;}
+.spot-front{padding:32px;position:relative;overflow:hidden;min-height:280px;}.spot-photo-bg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;-webkit-transform:translateZ(0);transform:translateZ(0);z-index:0;display:block;}.spot-photo-overlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;background:linear-gradient(to bottom,rgba(10,9,8,0.4) 0%,rgba(10,9,8,0.78) 55%,rgba(10,9,8,0.97) 100%);}.spot-front-content{position:relative;z-index:2;}
 .spot-front-texture{position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,rgba(184,180,172,0.025) 0,rgba(184,180,172,0.025) 1px,transparent 0,transparent 8px);}
 .spot-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:10px;position:relative;}
 .spot-address{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f5f0e6;position:relative;letter-spacing:1px;margin-bottom:8px;}
@@ -1127,7 +1127,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       const parsed=parseJSON(raw);
       if(parsed){
         console.log("Setting mailer with photo:", capturedPhoto ? "YES" : "NO");
-        setSpotMailer({...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,damage:detectedDamage,photoUsed:!!capturedPhoto,photoData:capturedPhoto||null});
+        setSpotMailer({...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,damage:detectedDamage,photoUsed:!!capturedPhoto,photoData:capturedPhoto||null,photoUrl:spotPhotoUrl||null});
         setSpotLoading(false);
         return;
       }
@@ -1147,7 +1147,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,
       damage:detectedDemo,
       photoUsed:!!capturedPhoto,
-      photoData:capturedPhoto||null
+      photoData:capturedPhoto||null,
+      photoUrl:spotPhotoUrl||null
     });
     setSpotLoading(false);
     showToast(capturedPhoto?"📷 Photo analyzed + mailer ready":"✨ Spot bid mailer ready","info");
@@ -1596,8 +1597,31 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 {spotMode==="photo"&&(
                   <div>
                     <label className="photo-drop" onClick={()=>document.getElementById('photo-input').click()}>
-                      {spotPhoto ? <><img src={spotPhoto} className="photo-preview" alt="driveway"/><div style={{fontSize:11,color:"var(--green2)",textAlign:"center",marginTop:4}}>✓ Photo ready — AI will analyze damage on generate</div></> : <><div className="pd-icon">📷</div><div className="pd-label">Tap to take photo or upload<br/><span style={{fontSize:10,color:"var(--gravel)"}}>AI reads the damage automatically</span></div></>}
-                      <input id="photo-input" type="file" accept="image/*" capture="environment" onChange={e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=ev=>setSpotPhoto(ev.target.result);r.readAsDataURL(f);}}}/>
+                      {spotPhoto ? <><img src={spotPhoto} className="photo-preview" alt="driveway"/><div style={{fontSize:11,color:spotPhotoUrl?"var(--green2)":"var(--yellow)",textAlign:"center",marginTop:4}}>{spotPhotoUrl?"✓ Photo uploaded & ready":"⏳ Uploading photo..."}</div></> : <><div className="pd-icon">📷</div><div className="pd-label">Tap to take photo or upload<br/><span style={{fontSize:10,color:"var(--gravel)"}}>AI reads the damage automatically</span></div></>}
+                      <input id="photo-input" type="file" accept="image/*" capture="environment" onChange={async e=>{
+  const f=e.target.files[0];
+  if(!f) return;
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    const base64=ev.target.result;
+    setSpotPhoto(base64); // store base64 for desktop preview
+    // immediately upload to imgbb for mobile-compatible URL
+    showToast("📷 Uploading photo...","info");
+    try {
+      const imageData=base64.split(",")[1];
+      const formData=new FormData();
+      formData.append("key","1de580a4e5bbefe4b3b892494b4a6d7a");
+      formData.append("image",imageData);
+      const res=await fetch("https://api.imgbb.com/1/upload",{method:"POST",body:formData});
+      const data=await res.json();
+      if(data.success){
+        setSpotPhotoUrl(data.data.url);
+        showToast("📷 Photo ready","success");
+      }
+    } catch(err){ console.error("imgbb upload failed:",err); }
+  };
+  reader.readAsDataURL(f);
+}}/>
                     </label>
                     {spotPhoto&&<button className="btn btn-ghost btn-sm" style={{width:"100%",marginTop:4}} onClick={e=>{e.stopPropagation();setSpotPhoto(null);}}>✕ Remove Photo</button>}
                   </div>
@@ -1788,22 +1812,25 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <div className="page-tag">Front of Postcard {spotMailer.photoData&&<span style={{marginLeft:6,background:"rgba(232,86,10,0.25)",color:"var(--orange2)",padding:"2px 7px",borderRadius:4,fontSize:9,fontWeight:700}}>📷 Photo Background</span>}</div>
                     <div className="spot-mailer" style={{marginBottom:18}}>
                       <div className="spot-front" style={{position:"relative",overflow:"hidden"}}>
-                        {/* Photo layer — sits behind everything */}
-                        {spotMailer.photoData&&(
+                        {/* Photo background — uses img tag for iOS Safari compatibility */}
+                        {spotMailer.photoData ? (
                           <>
-                            <img src={spotMailer.photoData} alt="" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",zIndex:0,opacity:1}}/>
+                            <img
+                              src={spotMailer.photoUrl||spotPhotoUrl||spotMailer.photoData}
+                              className="spot-photo-bg"
+                              alt=""
+                              role="presentation"
+                              onError={e=>{if(spotMailer.photoData)e.target.src=spotMailer.photoData;}}
+                            />
+                            <div className="spot-photo-overlay"/>
+                          </>
+                        ) : (
+                          <>
+                            <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,background:"linear-gradient(145deg,#111009 0%,#2a2720 100%)"}}/>
+                            <div className="spot-front-texture"/>
                           </>
                         )}
-                        {/* Dark overlay for readability */}
-                        <div style={{
-                          position:"absolute",inset:0,
-                          background:spotMailer.photoData
-                            ?"linear-gradient(to bottom, rgba(10,9,8,0.45) 0%, rgba(10,9,8,0.78) 50%, rgba(10,9,8,0.97) 100%)"
-                            :"linear-gradient(145deg,#111009 0%,#2a2720 100%)",
-                          zIndex:1
-                        }}/>
-                        {!spotMailer.photoData&&<div className="spot-front-texture"/>}
-                        <div style={{position:"relative",zIndex:2,display:"flex",flexDirection:"column",height:"100%"}}>
+                        <div className="spot-front-content" style={{display:"flex",flexDirection:"column",height:"100%"}}>
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"auto"}}>
                             <div className="spot-tag" style={{margin:0}}>JWood LLC · Tulsa, OK</div>
                             {spotMailer.photoData&&<div style={{background:"rgba(232,86,10,0.9)",color:"white",fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:4,letterSpacing:1}}>📷 YOUR DRIVEWAY</div>}
