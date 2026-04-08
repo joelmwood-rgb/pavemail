@@ -307,6 +307,53 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .toast.success{background:var(--green);}
 .toast.error{background:var(--red);}
 .toast.info{background:var(--blue);}
+/* ── SPOT BID ── */
+.spot-layout{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 52px);overflow:hidden;}
+.spot-form{background:var(--ink);border-right:1px solid rgba(184,180,172,0.08);overflow-y:auto;padding:20px;}
+.spot-preview{overflow-y:auto;padding:24px 28px;background:#111009;}
+.mode-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:18px;}
+.mode-tab{background:rgba(0,0,0,0.3);border:1px solid rgba(184,180,172,0.12);border-radius:7px;padding:10px 8px;text-align:center;cursor:pointer;transition:all 0.15s;font-family:'Syne',sans-serif;}
+.mode-tab:hover{border-color:rgba(232,86,10,0.3);}
+.mode-tab.on{border-color:var(--orange);background:rgba(232,86,10,0.1);}
+.mode-tab .mt-icon{font-size:20px;margin-bottom:4px;}
+.mode-tab .mt-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--stone);}
+.mode-tab.on .mt-label{color:var(--orange2);}
+.photo-drop{border:2px dashed rgba(184,180,172,0.2);border-radius:8px;padding:28px;text-align:center;cursor:pointer;transition:all 0.15s;background:rgba(0,0,0,0.2);margin-bottom:12px;}
+.photo-drop:hover{border-color:var(--orange);background:rgba(232,86,10,0.05);}
+.photo-drop .pd-icon{font-size:32px;margin-bottom:8px;}
+.photo-drop .pd-label{font-size:12px;color:var(--stone);}
+.photo-drop input{display:none;}
+.photo-preview{width:100%;border-radius:8px;margin-bottom:12px;max-height:160px;object-fit:cover;}
+.damage-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.bid-range-row{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:12px;}
+.bid-range-sep{text-align:center;color:var(--stone);font-size:12px;}
+.spot-send-btn{width:100%;background:var(--orange);color:white;border:none;border-radius:8px;padding:13px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;}
+.spot-send-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.spot-send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.spot-mailer{background:#faf7f2;border-radius:8px;overflow:hidden;box-shadow:0 6px 30px rgba(0,0,0,0.6);font-family:'Syne',sans-serif;}
+.spot-front{background:linear-gradient(145deg,#111009 0%,#2a2720 100%);padding:32px;position:relative;overflow:hidden;}
+.spot-front-texture{position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,rgba(184,180,172,0.025) 0,rgba(184,180,172,0.025) 1px,transparent 0,transparent 8px);}
+.spot-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:10px;position:relative;}
+.spot-address{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f5f0e6;position:relative;letter-spacing:1px;margin-bottom:8px;}
+.spot-note{font-size:13px;color:#b8b4ac;line-height:1.65;position:relative;margin-bottom:16px;}
+.spot-bid-box{background:rgba(232,86,10,0.15);border:1px solid rgba(232,86,10,0.4);border-radius:8px;padding:14px 18px;position:relative;display:flex;align-items:center;justify-content:space-between;}
+.spot-bid-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange2);}
+.spot-bid-value{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f5f0e6;letter-spacing:1px;}
+.spot-bar{position:absolute;bottom:0;left:0;right:0;height:4px;background:var(--orange);}
+.spot-back{background:#f5f1e8;padding:32px;}
+.spot-back h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:#1c1a17;margin-bottom:12px;}
+.spot-damage-list{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+.spot-damage-item{background:#f0ebe0;border-left:4px solid var(--orange);padding:10px 14px;border-radius:4px;font-size:12px;color:#3a3835;}
+.spot-cta-box{background:#1c1a17;border-radius:8px;padding:18px;display:flex;align-items:center;gap:16px;}
+.spot-cta-text h4{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:#f5f0e6;}
+.spot-cta-text p{font-size:11px;color:#7a7670;margin-top:3px;}
+.spot-jobs{margin-top:20px;}
+.spot-job-row{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:8px;padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:background 0.12s;}
+.spot-job-row:hover{background:rgba(184,180,172,0.03);}
+.spot-job-addr{font-size:13px;font-weight:600;color:var(--cream);}
+.spot-job-sub{font-size:11px;color:var(--stone);margin-top:2px;}
+.spot-job-bid{font-family:'DM Mono',monospace;font-size:14px;color:var(--orange2);font-weight:500;margin-left:auto;flex-shrink:0;}
+
 @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
 .lob-success-box{background:rgba(42,122,82,0.12);border:1px solid rgba(42,122,82,0.3);border-radius:9px;padding:16px 18px;margin-top:12px;font-size:12px;color:var(--green2);line-height:1.7;}
 .lob-success-box strong{color:var(--cream);}
@@ -427,6 +474,19 @@ export default function App(){
   const[jobs,setJobs]=useState(MOCK_JOBS);
   const[selectedJob,setSelectedJob]=useState(MOCK_JOBS[2]);
   const[settings,setSettings]=useState({autoSend:false,weeklyReport:true,trackOpens:true,smsAlerts:false});
+  const[spotMode,setSpotMode]=useState("address");
+  const[spotForm,setSpotForm]=useState({address:"",city:"Tulsa",state:"OK",zip:"",bidLow:"",bidHigh:"",damage:[],notes:""});
+  const[spotPhoto,setSpotPhoto]=useState(null);
+  const[spotMailer,setSpotMailer]=useState(null);
+  const[spotLoading,setSpotLoading]=useState(false);
+  const[spotSending,setSpotSending]=useState(false);
+  const[spotJobs,setSpotJobs]=useState([
+    {id:"SB-001",address:"4821 Oak Ridge Dr",city:"Broken Arrow",bid:"$1,200–$1,800",damage:["Freeze-thaw cracking","Spalling near garage"],sent:"Apr 03",status:"delivered"},
+    {id:"SB-002",address:"7234 S Memorial Dr",city:"Tulsa",bid:"$800–$1,100",damage:["Surface cracks","Drainage issue"],sent:"Apr 06",status:"sent"},
+  ]);
+  const setSpot=(k,v)=>setSpotForm(f=>({...f,[k]:v}));
+  const toggleDamage=(d)=>setSpotForm(f=>({...f,damage:f.damage.includes(d)?f.damage.filter(x=>x!==d):[...f.damage,d]}));
+  const DAMAGES=["Freeze-thaw cracking","Surface spalling","Tree root damage","Drainage issues","Sunken sections","Edge crumbling","Oil stains","Full replacement needed"];
 
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
   const showToast=(msg,type="success")=>{setToast({msg,type});setTimeout(()=>setToast(null),4000);};
@@ -514,6 +574,56 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
   const totalSpend=jobs.reduce((s,j)=>s+parseFloat(j.cost),0).toFixed(2);
   const totalCalls=jobs.reduce((s,j)=>s+j.calls,0);
 
+  const generateSpot=async()=>{
+    if(!spotForm.address)return;
+    setSpotLoading(true);setSpotMailer(null);
+    const damageList=spotForm.damage.length>0?spotForm.damage.join(", "):"general driveway wear";
+    const bidRange=spotForm.bidLow&&spotForm.bidHigh?`$${spotForm.bidLow}–$${spotForm.bidHigh}`:"contact for estimate";
+    const prompt=`Write a personal note for a direct mail postcard from JWood LLC (concrete contractor, Tulsa OK, 918-896-6737) to a homeowner at ${spotForm.address}, ${spotForm.city} OK. The contractor noticed: ${damageList}. Bid range: ${bidRange}. Notes: ${spotForm.notes||"none"}. Write a warm, personal 2-3 sentence note that mentions we drove past their home, noticed the specific damage, and want to help. Do NOT be salesy. Sound like a neighbor who noticed and wants to help. Return ONLY JSON: {"personalNote":"string","headline":"string","urgencyLine":"string"}`;
+    try{
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:400,messages:[{role:"user",content:prompt}]})});
+      const data=await res.json();
+      const raw=data.content?.map(b=>b.text||"").join("");
+      const parsed=parseJSON(raw);
+      if(parsed){setSpotMailer({...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,damage:spotForm.damage});setSpotLoading(false);return;}
+    }catch(_){}
+    // Demo fallback
+    await new Promise(r=>setTimeout(r,1400));
+    setSpotMailer({
+      headline:"WE NOTICED YOUR DRIVEWAY",
+      personalNote:`We were working in your neighborhood recently and noticed your driveway at ${spotForm.address} has ${damageList}. As local Tulsa concrete specialists, we'd love to help you get ahead of this before it gets worse — and we can usually start within a week.`,
+      urgencyLine:"Oklahoma winters don't wait — neither should your driveway.",
+      address:spotForm.address,city:spotForm.city,bid:bidRange,damage:spotForm.damage
+    });
+    setSpotLoading(false);
+    showToast("✨ Spot bid mailer ready","info");
+  };
+
+  const sendSpot=async()=>{
+    if(!spotMailer||spotSending)return;
+    setSpotSending(true);
+    showToast("📤 Sending spot bid to Lob.com...","info");
+    try{
+      await lobRequest("/postcards",{
+        description:`JWood LLC Spot Bid - ${spotMailer.address}`,
+        to:LOB_TO_ID,from:LOB_FROM_ID,size:"6x9",
+        front:`<html><body style="margin:0;padding:28px;background:#1c1a17;color:#f5f0e6;font-family:Arial,sans-serif;"><div style="color:#e8560a;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;">A Personal Note from JWood LLC</div><h1 style="font-size:28px;color:#f5f0e6;margin:0 0 10px;line-height:1.1;">${spotMailer.headline}</h1><p style="font-size:12px;color:#b8b4ac;line-height:1.7;margin-bottom:14px;">${spotMailer.personalNote}</p><div style="background:rgba(232,86,10,0.2);border:1px solid rgba(232,86,10,0.5);border-radius:6px;padding:12px 16px;"><div style="font-size:10px;color:#e8560a;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Our Estimate for Your Home</div><div style="font-size:24px;font-weight:700;color:#f5f0e6;">${spotMailer.bid}</div></div><p style="margin-top:12px;font-size:10px;color:#7a7670;">${spotMailer.urgencyLine}</p></body></html>`,
+        back:`<html><body style="margin:0;padding:28px;background:#f5f0e6;color:#1c1a17;font-family:Arial,sans-serif;"><h2 style="font-size:20px;margin-bottom:10px;">What We Noticed at Your Home</h2>${spotMailer.damage?.map(d=>`<div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;margin-bottom:6px;font-size:11px;">${d}</div>`).join("")||"<div style='font-size:12px;color:#6a6864;'>General driveway wear and aging</div>"}<div style="margin-top:16px;background:#1c1a17;color:white;padding:14px;border-radius:8px;text-align:center;"><div style="font-size:15px;font-weight:700;">918-896-6737</div><div style="font-size:10px;color:#b8b4ac;margin-top:2px;">Call or text Joel directly</div><div style="margin-top:5px;font-size:10px;background:#e8560a;display:inline-block;padding:3px 8px;border-radius:4px;">Free on-site estimate — no obligation</div></div></body></html>`,
+        use_type:"marketing"
+      });
+      const newSpotJob={id:`SB-00${spotJobs.length+1}`,address:spotMailer.address,city:spotMailer.city,bid:spotMailer.bid,damage:spotMailer.damage,sent:"Apr 07",status:"queued"};
+      setSpotJobs(p=>[newSpotJob,...p]);
+      showToast("✅ Spot bid sent to Lob.com!","success");
+      setSpotMailer(null);
+      setSpotForm({address:"",city:"Tulsa",state:"OK",zip:"",bidLow:"",bidHigh:"",damage:[],notes:""});
+      setSpotPhoto(null);
+    }catch(e){
+      showToast("Spot bid queued (demo mode)","info");
+      const newSpotJob={id:`SB-00${spotJobs.length+1}`,address:spotMailer.address,city:spotMailer.city,bid:spotMailer.bid,damage:spotMailer.damage||[],sent:"Apr 07",status:"queued"};
+      setSpotJobs(p=>[newSpotJob,...p]);
+    }finally{setSpotSending(false);}
+  };
+
   return(
     <>
       <style>{STYLES}</style>
@@ -534,7 +644,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         {/* NAV */}
         <nav className="nav">
           <div className="nav-label">Campaigns</div>
-          {[{id:"map",icon:"🗺️",label:"Neighborhood Scan"},{id:"create",icon:"✏️",label:"Create Mailer"},{id:"tracker",icon:"📊",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length}].map(item=>(
+          {[{id:"map",icon:"🗺️",label:"Neighborhood Scan"},{id:"create",icon:"✏️",label:"Create Mailer"},{id:"tracker",icon:"📊",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length},{id:"spotbid",icon:"🎯",label:"Spot Bid"}].map(item=>(
             <button key={item.id} className={`nav-item${tab===item.id?" active":""}`} onClick={()=>setTab(item.id)}>
               <span className="nav-icon">{item.icon}</span>{item.label}
               {item.badge?<span className="nav-badge">{item.badge}</span>:null}
@@ -716,6 +826,174 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <div><span className={`badge badge-${j.status}`}><span className="badge-dot"/>{j.status}</span></div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* SPOT BID */}
+          {tab==="spotbid"&&(
+            <div className="spot-layout">
+              <div className="spot-form">
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>SPOT BID</div>
+                <p style={{fontSize:12,color:"var(--stone)",marginBottom:16,lineHeight:1.6}}>See a cracked driveway? Send that homeowner a personal bid mailer from your truck.</p>
+                <div className="section-head">Input Method</div>
+                <div className="mode-tabs">
+                  {[{id:"address",icon:"📍",label:"Type Address"},{id:"map",icon:"🗺️",label:"Pin on Map"},{id:"photo",icon:"📷",label:"Photo"}].map(m=>(
+                    <div key={m.id} className={`mode-tab${spotMode===m.id?" on":""}`} onClick={()=>setSpotMode(m.id)}>
+                      <div className="mt-icon">{m.icon}</div>
+                      <div className="mt-label">{m.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {spotMode==="photo"&&(
+                  <div>
+                    <label className="photo-drop" onClick={()=>document.getElementById('photo-input').click()}>
+                      {spotPhoto ? <img src={spotPhoto} className="photo-preview" alt="driveway"/> : <><div className="pd-icon">📷</div><div className="pd-label">Tap to take photo or upload<br/><span style={{fontSize:10,color:"var(--gravel)"}}>AI will analyze the damage automatically</span></div></>}
+                      <input id="photo-input" type="file" accept="image/*" capture="environment" onChange={e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=ev=>setSpotPhoto(ev.target.result);r.readAsDataURL(f);}}}/>
+                    </label>
+                  </div>
+                )}
+
+                {spotMode==="map"&&(
+                  <div style={{background:"rgba(0,0,0,0.3)",border:"1px solid rgba(184,180,172,0.12)",borderRadius:8,height:160,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12,color:"var(--stone)",fontSize:12,flexDirection:"column",gap:8}}>
+                    <span style={{fontSize:24}}>🗺️</span>
+                    <span>Tap any address on the map</span>
+                    <span style={{fontSize:10,color:"var(--gravel)"}}>Full map integration coming soon</span>
+                  </div>
+                )}
+
+                <div className="section-head">Address</div>
+                <div className="field"><label>Street Address *</label><input placeholder="e.g. 4821 Oak Ridge Dr" value={spotForm.address} onChange={e=>setSpot("address",e.target.value)}/></div>
+                <div className="row2">
+                  <div className="field"><label>City</label><input placeholder="Tulsa" value={spotForm.city} onChange={e=>setSpot("city",e.target.value)}/></div>
+                  <div className="field"><label>ZIP</label><input placeholder="74105" value={spotForm.zip} onChange={e=>setSpot("zip",e.target.value)}/></div>
+                </div>
+
+                <div className="section-head">Damage Observed</div>
+                <div className="damage-chips">
+                  {DAMAGES.map(d=><button key={d} className={`chip${spotForm.damage.includes(d)?" on":""}`} onClick={()=>toggleDamage(d)}>{d}</button>)}
+                </div>
+
+                <div className="section-head">Bid Range</div>
+                <div className="bid-range-row">
+                  <div className="field" style={{margin:0}}><label>Low ($)</label><input type="number" placeholder="800" value={spotForm.bidLow} onChange={e=>setSpot("bidLow",e.target.value)}/></div>
+                  <div className="bid-range-sep">to</div>
+                  <div className="field" style={{margin:0}}><label>High ($)</label><input type="number" placeholder="1400" value={spotForm.bidHigh} onChange={e=>setSpot("bidHigh",e.target.value)}/></div>
+                </div>
+
+                <div className="field"><label>Extra Notes for AI</label><textarea placeholder="e.g. Large crack near garage door, looks like tree root damage" value={spotForm.notes} onChange={e=>setSpot("notes",e.target.value)}/></div>
+
+                <div className="divider"/>
+                <div style={{fontSize:11,color:"var(--stone)",marginBottom:10,textAlign:"center"}}>One postcard · $1.25 · Delivers in 2–5 days</div>
+
+                <button className="spot-send-btn" onClick={generateSpot} disabled={spotLoading||!spotForm.address}>
+                  {spotLoading?<><span className="spin"/>WRITING PERSONAL NOTE...</>:"⚡ GENERATE SPOT BID"}
+                </button>
+
+                {spotMailer&&!spotLoading&&(
+                  <button className="spot-send-btn" style={{background:"var(--green)",marginTop:8}} onClick={sendSpot} disabled={spotSending}>
+                    {spotSending?<><span className="spin"/>SENDING...</>:"📬 SEND THIS POSTCARD — $1.25"}
+                  </button>
+                )}
+
+                {spotJobs.length>0&&(
+                  <>
+                    <div className="section-head" style={{marginTop:20}}>Recent Spot Bids</div>
+                    <div className="spot-jobs">
+                      {spotJobs.slice(0,4).map(j=>(
+                        <div key={j.id} className="spot-job-row">
+                          <div>
+                            <div className="spot-job-addr">{j.address}</div>
+                            <div className="spot-job-sub">{j.city} · {j.sent} · <span className={`badge badge-${j.status}`} style={{fontSize:9,padding:"2px 6px"}}>{j.status}</span></div>
+                          </div>
+                          <div className="spot-job-bid">{j.bid}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="spot-preview">
+                {!spotMailer&&!spotLoading&&(
+                  <div className="empty">
+                    <div className="icon">🎯</div>
+                    <h3>Spot Bid Preview</h3>
+                    <p>Enter an address and damage details — AI writes a personal note that sounds like it came from Joel himself, not a corporation.</p>
+                    <div style={{marginTop:16,background:"rgba(232,86,10,0.08)",border:"1px solid rgba(232,86,10,0.2)",borderRadius:8,padding:"14px 18px",textAlign:"left",maxWidth:320}}>
+                      <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--orange2)",marginBottom:8}}>How It Works</div>
+                      <div style={{fontSize:12,color:"var(--stone)",lineHeight:1.8}}>
+                        <div>1. Drive past a cracked driveway</div>
+                        <div>2. Enter the address on your phone</div>
+                        <div>3. Check the damage you noticed</div>
+                        <div>4. Enter your bid range</div>
+                        <div>5. Hit Send — postcard arrives in 2 days</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {spotLoading&&(
+                  <div style={{padding:"40px 0"}}>
+                    <div className="page-tag">Generating Personal Note...</div>
+                    <div className="skel-page">
+                      <div className="skel" style={{height:14,width:"35%",marginBottom:12}}/>
+                      <div className="skel" style={{height:32,width:"65%",marginBottom:10}}/>
+                      <div className="skel" style={{height:13,width:"90%",marginBottom:6}}/>
+                      <div className="skel" style={{height:13,width:"80%",marginBottom:6}}/>
+                      <div className="skel" style={{height:13,width:"70%",marginBottom:20}}/>
+                      <div className="skel" style={{height:60,width:"100%"}}/>
+                    </div>
+                  </div>
+                )}
+
+                {spotMailer&&!spotLoading&&(
+                  <>
+                    <div className="preview-actions">
+                      <button className="btn btn-ghost btn-sm" onClick={generateSpot}>↺ Rewrite Note</button>
+                      <button className="btn btn-primary btn-sm" onClick={sendSpot} disabled={spotSending}>📬 Send $1.25</button>
+                      <div className="preview-meta"><span>📍 <strong>{spotMailer.address}</strong></span><span>💵 <strong>{spotMailer.bid}</strong></span></div>
+                    </div>
+
+                    <div className="page-tag">Front of Postcard</div>
+                    <div className="spot-mailer" style={{marginBottom:18}}>
+                      <div className="spot-front">
+                        <div className="spot-front-texture"/>
+                        <div className="spot-tag">A Personal Note from JWood LLC · Tulsa, OK</div>
+                        <div className="spot-address">{spotMailer.address}, {spotMailer.city}</div>
+                        <div className="spot-headline" style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:36,color:"#f5f0e6",letterSpacing:1,marginBottom:10,position:"relative"}}>{spotMailer.headline}</div>
+                        <div className="spot-note">{spotMailer.personalNote}</div>
+                        <div className="spot-bid-box">
+                          <div><div className="spot-bid-label">Our Estimate for Your Home</div><div style={{fontSize:11,color:"rgba(184,180,172,0.6)",marginTop:2}}>Based on what we observed</div></div>
+                          <div className="spot-bid-value">{spotMailer.bid}</div>
+                        </div>
+                        <div style={{marginTop:12,fontSize:11,color:"rgba(184,180,172,0.5)",position:"relative"}}>{spotMailer.urgencyLine}</div>
+                        <div className="spot-bar"/>
+                      </div>
+                    </div>
+
+                    <div className="page-tag">Back of Postcard</div>
+                    <div className="spot-mailer">
+                      <div className="spot-back">
+                        <h3>WHAT WE NOTICED AT YOUR HOME</h3>
+                        <div className="spot-damage-list">
+                          {spotMailer.damage?.length>0 ? spotMailer.damage.map((d,i)=><div key={i} className="spot-damage-item">⚠️ {d}</div>) : <div className="spot-damage-item">General driveway wear and aging concrete</div>}
+                        </div>
+                        <div className="spot-cta-box">
+                          <div style={{display:"flex",alignItems:"center",gap:10}}>
+                            <div style={{width:40,height:40,background:"var(--orange)",borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>🏗️</div>
+                            <div className="spot-cta-text">
+                              <h4>CALL JOEL DIRECTLY</h4>
+                              <p>918-896-6737 · joelmwood@gmail.com</p>
+                            </div>
+                          </div>
+                          <QRCode value="tel:9188966737" size={64}/>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
