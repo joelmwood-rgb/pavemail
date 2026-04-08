@@ -7,6 +7,7 @@ const PROXY_BASE      = "https://joelmwood--b166b8c432db11f19dff42b51c65c3df.web
 const LOB_PROXY       = PROXY_BASE + "/?target=lob";
 const ANTHROPIC_PROXY = PROXY_BASE + "/?target=anthropic";
 const LOB_VERIFY_PROXY= PROXY_BASE + "/?target=lob-verify";
+const IMGBB_PROXY     = PROXY_BASE + "/?target=imgbb";
 const USPS_PROXY      = PROXY_BASE + "/?target=usps";
 
 const ROUTE_COLORS = ["#e8560a","#2a7a52","#1a6fa8","#8b5e3c","#6a3a8a","#2a6a6a","#b83232","#c4a020","#4a6a2a","#6a2a6a"];
@@ -102,16 +103,17 @@ async function uploadPhotoToImgbb(base64Data) {
   try {
     const imageData = base64Data.split(",")[1] || base64Data;
     const formData = new FormData();
-    formData.append("key", IMGBB_API_KEY);
     formData.append("image", imageData);
-    const res = await fetch("https://api.imgbb.com/1/upload", {
+    const res = await fetch(IMGBB_PROXY, {
       method: "POST",
       body: formData,
     });
     const data = await res.json();
     if (data.success) return data.data.url;
+    console.error("imgbb upload failed:", data);
     return null;
-  } catch {
+  } catch(e) {
+    console.error("imgbb proxy error:", e);
     return null;
   }
 }
@@ -1612,7 +1614,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       const formData=new FormData();
       formData.append("key","1de580a4e5bbefe4b3b892494b4a6d7a");
       formData.append("image",imageData);
-      const res=await fetch("https://api.imgbb.com/1/upload",{method:"POST",body:formData});
+      const res=await fetch(IMGBB_PROXY,{method:"POST",body:formData});
       const data=await res.json();
       if(data.success){
         setSpotPhotoUrl(data.data.url);
