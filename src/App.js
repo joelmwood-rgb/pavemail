@@ -18,17 +18,27 @@ async function fetchUSPSRoutes(zip) {
     const features = data?.results?.[0]?.value?.features || [];
     return features.map((f, i) => {
       const a = f.attributes || {};
+      // Real USPS GIS field names from live endpoint
+      const routeId = a.CRID_ID || a.ZIP_CRID?.slice(5) || String(i+1).padStart(3,'0');
+      const city = (a.CITY_STATE || "").split(",")[0].trim() || "Tulsa";
       return {
-        id: `${zip}-${a.CRR_RTE || i}`,
-        routeId: a.CRR_RTE || `C${String(i+1).padStart(3,'0')}`,
-        zip: zip,
-        name: `ZIP ${zip} - Route ${a.CRR_RTE || String(i+1).padStart(3,'0')}`,
-        homes: parseInt(a.RES_CNT || a.TOT_CNT || 0),
+        id: a.ZIP_CRID || `${zip}-${i}`,
+        routeId: routeId,
+        zip: a.ZIP_CODE || zip,
+        name: `${city} ${a.ZIP_CODE||zip} - Route ${routeId}`,
+        homes: parseInt(a.RES_CNT || 0),
         businesses: parseInt(a.BUS_CNT || 0),
+        total: parseInt(a.TOT_CNT || a.RES_CNT || 0),
+        medIncome: parseInt(a.MED_INCOME || 0),
+        medAge: parseInt(a.MED_AGE || 0),
+        city: city,
         color: ROUTE_COLORS[i % ROUTE_COLORS.length],
       };
-    }).filter(r => r.homes > 0);
-  } catch(e) { return []; }
+    }).filter(r => r.homes > 0 || r.total > 0);
+  } catch(e) {
+    console.error("USPS route fetch failed:", e);
+    return [];
+  }
 }
 
 async function verifyAddress(address, city, state, zip) {
@@ -1388,7 +1398,11 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       <div className="route-dot" style={{background:r.color}}/>
                       <div style={{flex:1,minWidth:0}}>
                         <div className="route-name">{r.name}</div>
-                        <div className="route-count">{r.homes.toLocaleString()} homes - ZIP {r.zip}</div>
+                        <div className="route-count">
+                          {r.homes.toLocaleString()} homes
+                          {r.businesses>0&&` - ${r.businesses} biz`}
+                          {r.medIncome>0&&` - Med income $${r.medIncome.toLocaleString()}`}
+                        </div>
                       </div>
                       <div className="route-check">checkmark</div>
                     </div>
@@ -1398,9 +1412,15 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <div className="sel-summary">
                     <h4>Campaign Summary</h4>
                     <div className="sum-row"><span>Routes selected</span><strong>{selectedRoutes.length}</strong></div>
-                    <div className="sum-row"><span>Total homes</span><strong>{totalHomes.toLocaleString()}</strong></div>
+                    <div className="sum-row"><span>Residential homes</span><strong>{totalHomes.toLocaleString()}</strong></div>
                     <div className="sum-row"><span>Est. cost (EDDM)</span><strong style={{fontFamily:"DM Mono,monospace",color:"var(--orange2)"}}>${(totalHomes*0.62).toFixed(2)}</strong></div>
+                    <div className="sum-row"><span>Est. revenue</span><strong style={{color:"var(--green2)"}}>${(totalHomes*1.25).toFixed(2)}</strong></div>
                     <div className="sum-row"><span>USPS delivery</span><strong>2-5 days</strong></div>
+                    {liveRoutes.filter(r=>selectedRoutes.includes(r.id)&&r.medIncome>0).length>0&&(
+                      <div className="sum-row"><span>Avg med. income</span><strong style={{color:"var(--concrete)"}}>
+                        ${Math.round(liveRoutes.filter(r=>selectedRoutes.includes(r.id)&&r.medIncome>0).reduce((s,r)=>s+r.medIncome,0)/Math.max(liveRoutes.filter(r=>selectedRoutes.includes(r.id)&&r.medIncome>0).length,1)).toLocaleString()}
+                      </strong></div>
+                    )}
                     <button className="btn btn-primary" style={{width:"100%",marginTop:12}} onClick={proceedToCreate}>Create Mailer</button>
                   </div>
                 )}
