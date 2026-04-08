@@ -1123,7 +1123,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       const raw=data.content?.map(b=>b.text||"").join("");
       const parsed=parseJSON(raw);
       if(parsed){
-        setSpotMailer({...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,damage:detectedDamage,photoUsed:!!spotPhoto});
+        setSpotMailer({...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,damage:detectedDamage,photoUsed:!!spotPhoto,photoData:spotPhoto||null});
         setSpotLoading(false);
         return;
       }
@@ -1141,7 +1141,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       urgencyLine:"Oklahoma winters do not wait — neither should your driveway.",
       address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,
       damage:detectedDemo,
-      photoUsed:!!spotPhoto
+      photoUsed:!!spotPhoto,
+      photoData:spotPhoto||null
     });
     setSpotLoading(false);
     showToast(spotPhoto?"📷 Photo analyzed + mailer ready":"✨ Spot bid mailer ready","info");
@@ -1779,18 +1780,32 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       <div className="preview-meta"><span>📍 <strong>{spotMailer.address}</strong></span><span>💵 <strong>{spotMailer.bid}</strong></span></div>
                     </div>
 
-                    <div className="page-tag">Front of Postcard {spotPhoto&&<span style={{marginLeft:6,background:"rgba(232,86,10,0.25)",color:"var(--orange2)",padding:"2px 7px",borderRadius:4,fontSize:9,fontWeight:700}}>📷 Photo Background Active</span>}</div>
+                    <div className="page-tag">Front of Postcard {spotMailer.photoData&&<span style={{marginLeft:6,background:"rgba(232,86,10,0.25)",color:"var(--orange2)",padding:"2px 7px",borderRadius:4,fontSize:9,fontWeight:700}}>📷 Photo Background</span>}</div>
                     <div className="spot-mailer" style={{marginBottom:18}}>
-                      <div className="spot-front" style={spotPhoto ? {
-                        background:`url(${spotPhoto}) center/cover no-repeat`,
-                        position:"relative"
-                      } : {}}>
-                        {spotPhoto&&<div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom, rgba(14,13,11,0.5) 0%, rgba(14,13,11,0.82) 55%, rgba(14,13,11,0.97) 100%)",borderRadius:"inherit"}}/>}
-                        {!spotPhoto&&<div className="spot-front-texture"/>}
-                        <div style={{position:"relative",zIndex:1,display:"flex",flexDirection:"column",height:"100%"}}>
+                      <div className="spot-front" style={{position:"relative",overflow:"hidden"}}>
+                        {/* Photo layer — sits behind everything */}
+                        {spotMailer.photoData&&(
+                          <div style={{
+                            position:"absolute",inset:0,
+                            backgroundImage:`url(${spotMailer.photoData})`,
+                            backgroundSize:"cover",
+                            backgroundPosition:"center",
+                            zIndex:0
+                          }}/>
+                        )}
+                        {/* Dark overlay for readability */}
+                        <div style={{
+                          position:"absolute",inset:0,
+                          background:spotMailer.photoData
+                            ?"linear-gradient(to bottom, rgba(10,9,8,0.45) 0%, rgba(10,9,8,0.78) 50%, rgba(10,9,8,0.97) 100%)"
+                            :"linear-gradient(145deg,#111009 0%,#2a2720 100%)",
+                          zIndex:1
+                        }}/>
+                        {!spotMailer.photoData&&<div className="spot-front-texture"/>}
+                        <div style={{position:"relative",zIndex:2,display:"flex",flexDirection:"column",height:"100%"}}>
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"auto"}}>
                             <div className="spot-tag" style={{margin:0}}>JWood LLC · Tulsa, OK</div>
-                            {spotPhoto&&<div style={{background:"rgba(232,86,10,0.9)",color:"white",fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:4,letterSpacing:1}}>📷 YOUR DRIVEWAY</div>}
+                            {spotMailer.photoData&&<div style={{background:"rgba(232,86,10,0.9)",color:"white",fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:4,letterSpacing:1}}>📷 YOUR DRIVEWAY</div>}
                           </div>
                           <div style={{paddingTop:16}}>
                             <div className="spot-address">{spotMailer.address}, {spotMailer.city}</div>
