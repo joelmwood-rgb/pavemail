@@ -494,6 +494,32 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
   .kanban{grid-template-columns:1fr;}
   .pipeline-stats{grid-template-columns:1fr 1fr;}
 }
+
+/* ── LOGIN SCREEN ── */
+.login-screen{position:fixed;inset:0;background:var(--black);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0;}
+.login-bg{position:absolute;inset:0;background:linear-gradient(145deg,#0e0d0b 0%,#1c1a17 60%,#0e0d0b 100%);}
+.login-texture{position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,rgba(184,180,172,0.02) 0,rgba(184,180,172,0.02) 1px,transparent 0,transparent 8px);}
+.login-box{position:relative;width:100%;max-width:340px;padding:20px;}
+.login-logo{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:4px;color:var(--cream);text-align:center;margin-bottom:4px;}
+.login-logo span{color:var(--orange);}
+.login-tagline{font-size:11px;color:var(--stone);text-align:center;letter-spacing:2px;text-transform:uppercase;margin-bottom:36px;}
+.login-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--stone);text-align:center;margin-bottom:14px;}
+.pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:24px;}
+.pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid rgba(184,180,172,0.2);background:transparent;transition:all 0.15s;}
+.pin-dot.filled{background:var(--orange);border-color:var(--orange);box-shadow:0 0 10px rgba(232,86,10,0.4);}
+.pin-dot.error{background:var(--red);border-color:var(--red);}
+.keypad{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
+.key-btn{background:rgba(184,180,172,0.07);border:1px solid rgba(184,180,172,0.1);border-radius:10px;padding:16px;font-family:'Syne',sans-serif;font-size:20px;font-weight:600;color:var(--cream);cursor:pointer;transition:all 0.12s;text-align:center;}
+.key-btn:hover{background:rgba(184,180,172,0.14);border-color:rgba(184,180,172,0.2);}
+.key-btn:active{background:rgba(232,86,10,0.2);border-color:var(--orange);transform:scale(0.95);}
+.key-btn.del{color:var(--stone);font-size:16px;}
+.key-btn.zero{grid-column:2;}
+.login-remember{display:flex;align-items:center;justify-content:center;gap:8px;font-size:11px;color:var(--stone);cursor:pointer;margin-top:4px;}
+.login-remember input{accent-color:var(--orange);width:14px;height:14px;cursor:pointer;}
+.login-error{text-align:center;font-size:12px;color:var(--red);margin-top:8px;height:16px;transition:opacity 0.2s;}
+.login-footer{position:relative;text-align:center;font-size:10px;color:var(--gravel);margin-top:28px;letter-spacing:1px;}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.shake{animation:shake 0.4s ease;}
 @media (max-width: 768px) {
   body { overflow: auto; }
 
@@ -774,6 +800,38 @@ function MailerPreview({mailer,form}){
 // MAIN APP
 // ─────────────────────────────────────────────
 export default function App(){
+  // ── AUTH ──
+  const ACCESS_CODE = "8966";
+  const STORAGE_KEY = "pavemail_auth";
+  const[unlocked,setUnlocked]=useState(()=>{
+    try{ return localStorage.getItem(STORAGE_KEY)==="true"; }catch{ return false; }
+  });
+  const[pin,setPin]=useState("");
+  const[pinError,setPinError]=useState(false);
+  const[rememberMe,setRememberMe]=useState(true);
+  const[shaking,setShaking]=useState(false);
+
+  const pressKey=(k)=>{
+    if(pin.length>=4)return;
+    const next=pin+k;
+    setPin(next);
+    if(next.length===4){
+      setTimeout(()=>{
+        if(next===ACCESS_CODE){
+          if(rememberMe){ try{localStorage.setItem(STORAGE_KEY,"true");}catch{} }
+          setUnlocked(true);
+          setPin("");
+        } else {
+          setPinError(true);
+          setShaking(true);
+          setTimeout(()=>{setPin("");setPinError(false);setShaking(false);},600);
+        }
+      },200);
+    }
+  };
+
+  const delKey=()=>setPin(p=>p.slice(0,-1));
+
   const[tab,setTab]=useState("map");
   const[toast,setToast]=useState(null);
   const[selectedRoutes,setSelectedRoutes]=useState([]);
@@ -1123,6 +1181,41 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       setSpotJobs(p=>[newSpotJob,...p]);
     }finally{setSpotSending(false);}
   };
+
+  // Show login screen if not unlocked
+  if(!unlocked) return(
+    <>
+      <style>{STYLES}</style>
+      <div className="login-screen">
+        <div className="login-bg"/>
+        <div className="login-texture"/>
+        <div className="login-box">
+          <div className="login-logo">PAVE<span>MAIL</span></div>
+          <div className="login-tagline">JWood LLC · Tulsa, OK</div>
+          <div className="login-label">Enter Access Code</div>
+          <div className={`pin-dots${shaking?" shake":""}`}>
+            {[0,1,2,3].map(i=>(
+              <div key={i} className={`pin-dot${i<pin.length?pinError?" error":" filled":""}`}/>
+            ))}
+          </div>
+          <div className="keypad">
+            {["1","2","3","4","5","6","7","8","9"].map(k=>(
+              <button key={k} className="key-btn" onClick={()=>pressKey(k)}>{k}</button>
+            ))}
+            <div/>
+            <button className="key-btn zero" onClick={()=>pressKey("0")}>0</button>
+            <button className="key-btn del" onClick={delKey}>⌫</button>
+          </div>
+          <label className="login-remember">
+            <input type="checkbox" checked={rememberMe} onChange={e=>setRememberMe(e.target.checked)}/>
+            Remember this device
+          </label>
+          <div className="login-error" style={{opacity:pinError?1:0}}>Incorrect code — try again</div>
+          <div className="login-footer">🔒 JWood LLC · Secured Access</div>
+        </div>
+      </div>
+    </>
+  );
 
   return(
     <>
@@ -1753,7 +1846,10 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {/* SETTINGS */}
           {tab==="settings"&&(
             <div className="settings-layout">
-              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>SETTINGS</div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4,flexWrap:"wrap",gap:10}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"var(--cream)"}}>SETTINGS</div>
+                <button className="btn btn-ghost btn-sm" onClick={()=>{try{localStorage.removeItem("pavemail_auth");}catch{}setUnlocked(false);setPin("");}}>🔒 Lock App</button>
+              </div>
               <p style={{fontSize:13,color:"var(--stone)",marginBottom:26}}>JWood LLC · Tulsa, OK · {COMPANY.phone}</p>
               <div className="settings-section">
                 <h3>Company Info</h3>
