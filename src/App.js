@@ -495,6 +495,13 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
   .pipeline-stats{grid-template-columns:1fr 1fr;}
 }
 
+
+/* ── PWA INSTALL BANNER ── */
+.install-banner{position:fixed;bottom:0;left:0;right:0;background:var(--ink);border-top:1px solid rgba(232,86,10,0.3);padding:14px 18px;display:flex;align-items:center;gap:14px;z-index:998;animation:slideUp 0.4s ease;}
+.install-icon{width:44px;height:44px;background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.install-text h4{font-size:13px;font-weight:700;color:var(--cream);}
+.install-text p{font-size:11px;color:var(--stone);margin-top:1px;}
+.install-actions{margin-left:auto;display:flex;gap:8px;flex-shrink:0;}
 /* ── LOGIN SCREEN ── */
 .login-screen{position:fixed;inset:0;background:var(--black);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0;}
 .login-bg{position:absolute;inset:0;background:linear-gradient(145deg,#0e0d0b 0%,#1c1a17 60%,#0e0d0b 100%);}
@@ -800,6 +807,36 @@ function MailerPreview({mailer,form}){
 // MAIN APP
 // ─────────────────────────────────────────────
 export default function App(){
+  // ── PWA INSTALL PROMPT ──
+  const[showInstall,setShowInstall]=useState(false);
+  React.useEffect(()=>{
+    const handler=(e)=>{
+      e.preventDefault();
+      window.__installPrompt=e;
+      // Show after 3 seconds if not already installed
+      const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+      if(!isStandalone){ setTimeout(()=>setShowInstall(true), 3000); }
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    // Also show for iOS (no beforeinstallprompt)
+    const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone=window.navigator.standalone;
+    if(isIOS && !isStandalone){ setTimeout(()=>setShowInstall(true), 4000); }
+    return()=>window.removeEventListener('beforeinstallprompt', handler);
+  },[]);
+
+  const installApp=async()=>{
+    if(window.__installPrompt){
+      window.__installPrompt.prompt();
+      const result=await window.__installPrompt.userChoice;
+      if(result.outcome==='accepted') setShowInstall(false);
+    } else {
+      // iOS fallback
+      showToast("Tap Share → Add to Home Screen to install","info");
+      setShowInstall(false);
+    }
+  };
+
   // ── AUTH ──
   const ACCESS_CODE = "8966";
   const STORAGE_KEY = "pavemail_auth";
@@ -1934,7 +1971,22 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         </div>
       )}
 
-      {toast&&<div className={`toast ${toast.type}`}>{toast.msg}</div>}
+      {/* PWA INSTALL BANNER */}
+      {showInstall&&(
+        <div className="install-banner">
+          <div className="install-icon">🏗️</div>
+          <div className="install-text">
+            <h4>Add PaveMail to Home Screen</h4>
+            <p>Works offline · Feels like a real app · Free</p>
+          </div>
+          <div className="install-actions">
+            <button className="btn btn-ghost btn-sm" onClick={()=>setShowInstall(false)}>Later</button>
+            <button className="btn btn-primary btn-sm" onClick={installApp}>Install</button>
+          </div>
+        </div>
+      )}
+
+      {toast&&<div className={`toast ${toast.type}`} style={{bottom:showInstall?"80px":"24px"}}>{toast.msg}</div>}
     </>
   );
 }
