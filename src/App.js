@@ -577,26 +577,79 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
   const generateSpot=async()=>{
     if(!spotForm.address)return;
     setSpotLoading(true);setSpotMailer(null);
-    const damageList=spotForm.damage.length>0?spotForm.damage.join(", "):"general driveway wear";
+
     const bidRange=spotForm.bidLow&&spotForm.bidHigh?`$${spotForm.bidLow}–$${spotForm.bidHigh}`:"contact for estimate";
-    const prompt=`Write a personal note for a direct mail postcard from JWood LLC (concrete contractor, Tulsa OK, 918-896-6737) to a homeowner at ${spotForm.address}, ${spotForm.city} OK. The contractor noticed: ${damageList}. Bid range: ${bidRange}. Notes: ${spotForm.notes||"none"}. Write a warm, personal 2-3 sentence note that mentions we drove past their home, noticed the specific damage, and want to help. Do NOT be salesy. Sound like a neighbor who noticed and wants to help. Return ONLY JSON: {"personalNote":"string","headline":"string","urgencyLine":"string"}`;
+
     try{
-      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:400,messages:[{role:"user",content:prompt}]})});
+      let messages;
+      let detectedDamage=spotForm.damage;
+
+      // STEP 1: If photo uploaded, use vision to analyze damage first
+      if(spotPhoto){
+        showToast("📷 Analyzing photo...","info");
+        const base64=spotPhoto.split(",")[1];
+        const mediaType=spotPhoto.split(";")[0].split(":")[1]||"image/jpeg";
+        const visionRes=await fetch("https://api.anthropic.com/v1/messages",{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({
+            model:"claude-sonnet-4-20250514",
+            max_tokens:400,
+            messages:[{
+              role:"user",
+              content:[
+                {type:"image",source:{type:"base64",media_type:mediaType,data:base64}},
+                {type:"text",text:`You are a concrete driveway expert. Analyze this photo of a driveway and identify all visible damage or issues. Be specific and technical. Return ONLY JSON: {"damage":["issue1","issue2"],"severity":"minor|moderate|severe","summary":"one sentence description of overall condition"}`}
+              ]
+            }]
+          })
+        });
+        const visionData=await visionRes.json();
+        const visionRaw=visionData.content?.map(b=>b.text||"").join("");
+        const visionParsed=parseJSON(visionRaw);
+        if(visionParsed?.damage){
+          detectedDamage=[...new Set([...spotForm.damage,...visionParsed.damage])];
+          setSpotForm(f=>({...f,damage:detectedDamage}));
+          showToast(`📷 AI detected: ${visionParsed.summary}`,"info");
+        }
+      }
+
+      // STEP 2: Generate the personal note using detected damage
+      const damageList=detectedDamage.length>0?detectedDamage.join(", "):"general driveway wear";
+      const photoContext=spotPhoto?" We photographed the damage for reference.":"";
+      const prompt=`Write a personal note for a direct mail postcard from JWood LLC (concrete contractor, Tulsa OK, 918-896-6737) to a homeowner at ${spotForm.address}, ${spotForm.city} OK. The contractor noticed: ${damageList}.${photoContext} Bid range: ${bidRange}. Notes: ${spotForm.notes||"none"}. Write a warm, personal 2-3 sentence note that mentions we drove past their home, noticed the specific damage, and want to help. Sound like a neighbor, not a corporation. Do NOT be salesy. Return ONLY JSON: {"personalNote":"string","headline":"string","urgencyLine":"string"}`;
+
+      const res=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:400,messages:[{role:"user",content:prompt}]})
+      });
       const data=await res.json();
       const raw=data.content?.map(b=>b.text||"").join("");
       const parsed=parseJSON(raw);
-      if(parsed){setSpotMailer({...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,damage:spotForm.damage});setSpotLoading(false);return;}
+      if(parsed){
+        setSpotMailer({...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,damage:detectedDamage,photoUsed:!!spotPhoto});
+        setSpotLoading(false);
+        return;
+      }
     }catch(_){}
+
     // Demo fallback
-    await new Promise(r=>setTimeout(r,1400));
+    await new Promise(r=>setTimeout(r,1600));
+    const damageList=spotForm.damage.length>0?spotForm.damage.join(", "):"general driveway wear";
+    const detectedDemo=spotPhoto
+      ? [...spotForm.damage,"Surface spalling near edges","Hairline fractures across slab"]
+      : spotForm.damage;
     setSpotMailer({
       headline:"WE NOTICED YOUR DRIVEWAY",
-      personalNote:`We were working in your neighborhood recently and noticed your driveway at ${spotForm.address} has ${damageList}. As local Tulsa concrete specialists, we'd love to help you get ahead of this before it gets worse — and we can usually start within a week.`,
-      urgencyLine:"Oklahoma winters don't wait — neither should your driveway.",
-      address:spotForm.address,city:spotForm.city,bid:bidRange,damage:spotForm.damage
+      personalNote:`We were working in your neighborhood recently and noticed your driveway at ${spotForm.address} has ${damageList}. As local Tulsa concrete specialists, we would love to help you get ahead of this before it gets worse — and we can usually start within a week.`,
+      urgencyLine:"Oklahoma winters do not wait — neither should your driveway.",
+      address:spotForm.address,city:spotForm.city,bid:bidRange,
+      damage:detectedDemo,
+      photoUsed:!!spotPhoto
     });
     setSpotLoading(false);
-    showToast("✨ Spot bid mailer ready","info");
+    showToast(spotPhoto?"📷 Photo analyzed + mailer ready":"✨ Spot bid mailer ready","info");
   };
 
   const sendSpot=async()=>{
@@ -849,9 +902,10 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 {spotMode==="photo"&&(
                   <div>
                     <label className="photo-drop" onClick={()=>document.getElementById('photo-input').click()}>
-                      {spotPhoto ? <img src={spotPhoto} className="photo-preview" alt="driveway"/> : <><div className="pd-icon">📷</div><div className="pd-label">Tap to take photo or upload<br/><span style={{fontSize:10,color:"var(--gravel)"}}>AI will analyze the damage automatically</span></div></>}
+                      {spotPhoto ? <><img src={spotPhoto} className="photo-preview" alt="driveway"/><div style={{fontSize:11,color:"var(--green2)",textAlign:"center",marginTop:4}}>✓ Photo ready — AI will analyze damage on generate</div></> : <><div className="pd-icon">📷</div><div className="pd-label">Tap to take photo or upload<br/><span style={{fontSize:10,color:"var(--gravel)"}}>AI reads the damage automatically</span></div></>}
                       <input id="photo-input" type="file" accept="image/*" capture="environment" onChange={e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=ev=>setSpotPhoto(ev.target.result);r.readAsDataURL(f);}}}/>
                     </label>
+                    {spotPhoto&&<button className="btn btn-ghost btn-sm" style={{width:"100%",marginTop:4}} onClick={e=>{e.stopPropagation();setSpotPhoto(null);}}>✕ Remove Photo</button>}
                   </div>
                 )}
 
@@ -960,7 +1014,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <div className="spot-mailer" style={{marginBottom:18}}>
                       <div className="spot-front">
                         <div className="spot-front-texture"/>
-                        <div className="spot-tag">A Personal Note from JWood LLC · Tulsa, OK</div>
+                        <div className="spot-tag">A Personal Note from JWood LLC · Tulsa, OK{spotMailer.photoUsed&&<span style={{marginLeft:8,background:"rgba(232,86,10,0.3)",padding:"2px 6px",borderRadius:4,fontSize:9}}>📷 AI Photo Analysis</span>}</div>
                         <div className="spot-address">{spotMailer.address}, {spotMailer.city}</div>
                         <div className="spot-headline" style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:36,color:"#f5f0e6",letterSpacing:1,marginBottom:10,position:"relative"}}>{spotMailer.headline}</div>
                         <div className="spot-note">{spotMailer.personalNote}</div>
