@@ -1062,6 +1062,9 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
   const generateSpot=async()=>{
     if(!spotForm.address)return;
+    // Capture photo synchronously before any async calls
+    const capturedPhoto = spotPhoto;
+    console.log("generateSpot called, photo:", capturedPhoto ? "YES ("+capturedPhoto.length+" chars)" : "NO");
     setSpotLoading(true);setSpotMailer(null);
 
     const lo = spotForm.bidLow ? `$${parseInt(spotForm.bidLow).toLocaleString()}` : null;
@@ -1078,10 +1081,10 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       let detectedDamage=spotForm.damage;
 
       // STEP 1: If photo uploaded, use vision to analyze damage first
-      if(spotPhoto){
+      if(capturedPhoto){
         showToast("📷 Analyzing photo...","info");
-        const base64=spotPhoto.split(",")[1];
-        const mediaType=spotPhoto.split(";")[0].split(":")[1]||"image/jpeg";
+        const base64=capturedPhoto.split(",")[1];
+        const mediaType=capturedPhoto.split(";")[0].split(":")[1]||"image/jpeg";
         const visionRes=await fetch(ANTHROPIC_PROXY,{
           method:"POST",
           headers:{"Content-Type":"application/json"},
@@ -1110,7 +1113,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
       // STEP 2: Generate the personal note using detected damage
       const damageList=detectedDamage.length>0?detectedDamage.join(", "):"general driveway wear";
-      const photoContext=spotPhoto?" We photographed the damage for reference.":"";
+      const photoContext=capturedPhoto?" We photographed the damage for reference.":"";
       const sqftDesc=`${spotForm.customSqft||spotForm.sqft} sq ft ${spotForm.service} job`;
       const prompt=`Write a personal note for a direct mail postcard from JWood LLC (concrete contractor, Tulsa OK, 918-896-6737) to a homeowner at ${spotForm.address}, ${spotForm.city} OK. The contractor noticed: ${damageList}.${photoContext} This is a ${sqftDesc} with ${spotForm.damageLevel} damage. Bid range: ${bidRange}. Notes: ${spotForm.notes||"none"}. Write a warm, personal 2-3 sentence note that mentions we drove past their home, noticed the specific damage, and want to help. Sound like a neighbor, not a corporation. Do NOT be salesy. Return ONLY JSON: {"personalNote":"string","headline":"string","urgencyLine":"string"}`;
 
@@ -1123,7 +1126,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       const raw=data.content?.map(b=>b.text||"").join("");
       const parsed=parseJSON(raw);
       if(parsed){
-        setSpotMailer({...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,damage:detectedDamage,photoUsed:!!spotPhoto,photoData:spotPhoto||null});
+        console.log("Setting mailer with photo:", capturedPhoto ? "YES" : "NO");
+        setSpotMailer({...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,damage:detectedDamage,photoUsed:!!capturedPhoto,photoData:capturedPhoto||null});
         setSpotLoading(false);
         return;
       }
@@ -1132,20 +1136,21 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     // Demo fallback
     await new Promise(r=>setTimeout(r,1600));
     const damageList=spotForm.damage.length>0?spotForm.damage.join(", "):"general driveway wear";
-    const detectedDemo=spotPhoto
+    const detectedDemo=capturedPhoto
       ? [...spotForm.damage,"Surface spalling near edges","Hairline fractures across slab"]
       : spotForm.damage;
+    console.log("Demo fallback, capturedPhoto:", capturedPhoto ? "YES ("+capturedPhoto.length+" chars)" : "NO");
     setSpotMailer({
       headline:"WE NOTICED YOUR DRIVEWAY",
       personalNote:`We were working in your neighborhood recently and noticed your driveway at ${spotForm.address} has ${damageList}. As local Tulsa concrete specialists, we would love to help you get ahead of this before it gets worse — and we can usually start within a week.`,
       urgencyLine:"Oklahoma winters do not wait — neither should your driveway.",
       address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,
       damage:detectedDemo,
-      photoUsed:!!spotPhoto,
-      photoData:spotPhoto||null
+      photoUsed:!!capturedPhoto,
+      photoData:capturedPhoto||null
     });
     setSpotLoading(false);
-    showToast(spotPhoto?"📷 Photo analyzed + mailer ready":"✨ Spot bid mailer ready","info");
+    showToast(capturedPhoto?"📷 Photo analyzed + mailer ready":"✨ Spot bid mailer ready","info");
   };
 
   const sendSpot=async()=>{
@@ -1785,13 +1790,9 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       <div className="spot-front" style={{position:"relative",overflow:"hidden"}}>
                         {/* Photo layer — sits behind everything */}
                         {spotMailer.photoData&&(
-                          <div style={{
-                            position:"absolute",inset:0,
-                            backgroundImage:`url(${spotMailer.photoData})`,
-                            backgroundSize:"cover",
-                            backgroundPosition:"center",
-                            zIndex:0
-                          }}/>
+                          <>
+                            <img src={spotMailer.photoData} alt="" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",zIndex:0,opacity:1}}/>
+                          </>
                         )}
                         {/* Dark overlay for readability */}
                         <div style={{
