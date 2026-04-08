@@ -421,6 +421,79 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 /* ═══════════════════════════════════════
    MOBILE RESPONSIVE
 ═══════════════════════════════════════ */
+
+/* ── PIPELINE ── */
+.pipeline-layout{padding:20px 24px;}
+.pipeline-view-tabs{display:flex;gap:6px;margin-bottom:20px;}
+.pvt{background:rgba(0,0,0,0.3);border:1px solid rgba(184,180,172,0.12);border-radius:7px;padding:7px 14px;font-size:12px;font-weight:600;color:var(--stone);cursor:pointer;transition:all 0.15s;font-family:'Syne',sans-serif;display:flex;align-items:center;gap:6px;}
+.pvt:hover{color:var(--concrete);}
+.pvt.on{background:var(--orange);border-color:var(--orange);color:white;}
+
+.pipeline-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.pl-stat{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:9px;padding:14px 16px;}
+.pl-stat-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);margin-bottom:6px;}
+.pl-stat-value{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;line-height:1;}
+.pl-stat-sub{font-size:10px;color:var(--stone);margin-top:3px;}
+
+/* KANBAN */
+.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start;}
+.kanban-col{background:rgba(0,0,0,0.2);border:1px solid rgba(184,180,172,0.07);border-radius:10px;overflow:hidden;}
+.kanban-head{padding:12px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(184,180,172,0.07);}
+.kanban-head-icon{font-size:16px;}
+.kanban-head-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.kanban-count{margin-left:auto;background:rgba(184,180,172,0.1);border-radius:10px;padding:2px 7px;font-size:10px;font-weight:700;color:var(--stone);}
+.kanban-cards{padding:10px;display:flex;flex-direction:column;gap:8px;min-height:80px;}
+.pl-card{background:var(--ink);border:1px solid rgba(184,180,172,0.09);border-radius:8px;padding:12px 14px;cursor:pointer;transition:all 0.12s;}
+.pl-card:hover{border-color:rgba(184,180,172,0.2);transform:translateY(-1px);}
+.pl-card-addr{font-size:12px;font-weight:700;color:var(--cream);margin-bottom:2px;}
+.pl-card-city{font-size:10px;color:var(--stone);margin-bottom:8px;}
+.pl-card-bid{font-family:'DM Mono',monospace;font-size:13px;color:var(--orange2);font-weight:600;}
+.pl-card-bid-range{font-size:10px;color:var(--stone);}
+.pl-card-notes{font-size:10px;color:var(--gravel);margin-top:6px;line-height:1.4;}
+.pl-card-actions{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;}
+.pl-action-btn{font-size:9px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;border:none;font-family:'Syne',sans-serif;transition:all 0.12s;}
+.pl-card-date{font-size:9px;color:var(--gravel);margin-top:6px;font-family:'DM Mono',monospace;}
+
+/* LIST VIEW */
+.pl-list{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:10px;overflow:hidden;}
+.pl-list-head{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1fr 1fr 120px;gap:10px;padding:10px 16px;background:rgba(0,0,0,0.2);border-bottom:1px solid rgba(184,180,172,0.07);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);}
+.pl-list-row{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1fr 1fr 120px;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(184,180,172,0.05);align-items:center;transition:background 0.12s;cursor:pointer;}
+.pl-list-row:last-child{border-bottom:none;}
+.pl-list-row:hover{background:rgba(184,180,172,0.03);}
+.pl-addr{font-size:12px;font-weight:600;color:var(--cream);}
+.pl-sub{font-size:10px;color:var(--stone);margin-top:1px;}
+.pl-cell{font-size:11px;color:var(--concrete);}
+.pl-cell.mono{font-family:'DM Mono',monospace;color:var(--orange2);}
+
+/* MAP VIEW */
+.pl-map-wrap{position:relative;background:#1a1a16;border-radius:10px;overflow:hidden;height:400px;margin-bottom:16px;}
+.pl-map-canvas{position:absolute;inset:0;background:linear-gradient(rgba(184,180,172,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(184,180,172,0.04) 1px,transparent 1px);background-size:40px 40px;background-color:#1a1a16;}
+.pl-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;transition:transform 0.15s;}
+.pl-pin:hover{transform:translate(-50%,-100%) scale(1.2);}
+.pl-pin-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;border:2px solid rgba(255,255,255,0.3);box-shadow:0 2px 8px rgba(0,0,0,0.4);}
+.pl-pin-label{font-size:9px;font-weight:700;white-space:nowrap;background:rgba(14,13,11,0.85);color:var(--cream);padding:2px 6px;border-radius:4px;margin-top:3px;text-align:center;}
+.pl-legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+.pl-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--stone);}
+.pl-legend-dot{width:10px;height:10px;border-radius:50%;}
+
+/* ADD LEAD MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-box{background:var(--ink);border:1px solid rgba(184,180,172,0.12);border-radius:12px;padding:24px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--cream);margin-bottom:4px;}
+.modal-sub{font-size:12px;color:var(--stone);margin-bottom:18px;}
+
+@media(max-width:768px){
+  .kanban{grid-template-columns:1fr 1fr;}
+  .pipeline-stats{grid-template-columns:1fr 1fr;}
+  .pl-list-head,.pl-list-row{grid-template-columns:2fr 1fr 1fr 100px;}
+  .pl-list-head>div:nth-child(3),.pl-list-row>div:nth-child(3),
+  .pl-list-head>div:nth-child(4),.pl-list-row>div:nth-child(4),
+  .pl-list-head>div:nth-child(5),.pl-list-row>div:nth-child(5){display:none;}
+}
+@media(max-width:480px){
+  .kanban{grid-template-columns:1fr;}
+  .pipeline-stats{grid-template-columns:1fr 1fr;}
+}
 @media (max-width: 768px) {
   body { overflow: auto; }
 
@@ -729,6 +802,42 @@ export default function App(){
     {id:"SB-001",address:"4821 Oak Ridge Dr",city:"Broken Arrow",bid:"$1,200–$1,800",damage:["Freeze-thaw cracking","Spalling near garage"],sent:"Apr 03",status:"delivered"},
     {id:"SB-002",address:"7234 S Memorial Dr",city:"Tulsa",bid:"$800–$1,100",damage:["Surface cracks","Drainage issue"],sent:"Apr 06",status:"sent"},
   ]);
+
+  const[pipelineView,setPipelineView]=useState("kanban");
+  const[showAddLead,setShowAddLead]=useState(false);
+  const[newLead,setNewLead]=useState({address:"",city:"Tulsa",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
+  const[pipeline,setPipeline]=useState([
+    {id:"PL-001",address:"4821 Oak Ridge Dr",city:"Broken Arrow",neighborhood:"Broken Arrow",stage:"won",bidLo:"$1,200",bidHi:"$1,800",spotted:"Mar 28",mailerSent:"Apr 03",calledBack:"Apr 08",jobWon:"Apr 10",notes:"Full driveway replacement",value:1600},
+    {id:"PL-002",address:"7234 S Memorial Dr",city:"Tulsa",neighborhood:"South Tulsa",stage:"called",bidLo:"$800",bidHi:"$1,100",spotted:"Apr 01",mailerSent:"Apr 06",calledBack:"Apr 09",jobWon:null,notes:"Interested, getting HOA approval",value:950},
+    {id:"PL-003",address:"1892 E 91st St",city:"Tulsa",neighborhood:"South Tulsa",stage:"sent",bidLo:"$2,400",bidHi:"$3,200",spotted:"Apr 03",mailerSent:"Apr 07",calledBack:null,jobWon:null,notes:"Large 3-car garage",value:2800},
+    {id:"PL-004",address:"3341 S Peoria Ave",city:"Tulsa",neighborhood:"Midtown",stage:"sent",bidLo:"$600",bidHi:"$900",spotted:"Apr 04",mailerSent:"Apr 07",calledBack:null,jobWon:null,notes:"Crack repair only",value:750},
+    {id:"PL-005",address:"9102 N 129th E Ave",city:"Owasso",neighborhood:"Owasso",stage:"spotted",bidLo:"$1,800",bidHi:"$2,600",spotted:"Apr 06",mailerSent:null,calledBack:null,jobWon:null,notes:"Saw severe cracking from road",value:2200},
+    {id:"PL-006",address:"2847 E 51st St",city:"Tulsa",neighborhood:"Midtown",stage:"spotted",bidLo:"$400",bidHi:"$700",spotted:"Apr 07",mailerSent:null,calledBack:null,jobWon:null,notes:"Minor sealing job",value:550},
+  ]);
+
+  const STAGES = [
+    {id:"spotted", label:"Spotted",    icon:"🚗", color:"#7a7670", bg:"rgba(122,118,112,0.15)"},
+    {id:"sent",    label:"Mailer Sent",icon:"📬", color:"#1a6fa8", bg:"rgba(26,111,168,0.15)"},
+    {id:"called",  label:"Called Back", icon:"📞", color:"#d4a017", bg:"rgba(212,160,23,0.15)"},
+    {id:"won",     label:"Job Won",    icon:"🏆", color:"#2a7a52", bg:"rgba(42,122,82,0.15)"},
+  ];
+
+  const moveStage=(id,stage)=>setPipeline(p=>p.map(l=>l.id===id?{...l,stage,
+    mailerSent:stage==="sent"&&!l.mailerSent?"Apr 07":l.mailerSent,
+    calledBack:stage==="called"&&!l.calledBack?"Apr 08":l.calledBack,
+    jobWon:stage==="won"&&!l.jobWon?"Apr 09":l.jobWon,
+  }:l));
+
+  const addLead=()=>{
+    const id=`PL-00${pipeline.length+1}`;
+    const lo=newLead.bidLow?`$${parseInt(newLead.bidLow).toLocaleString()}`:"";
+    const hi=newLead.bidHigh?`$${parseInt(newLead.bidHigh).toLocaleString()}`:"";
+    const value=newLead.bidLow?parseInt(newLead.bidLow):0;
+    setPipeline(p=>[{id,address:newLead.address,city:newLead.city,neighborhood:newLead.neighborhood||newLead.city,stage:"spotted",bidLo:lo,bidHi:hi,spotted:"Apr 07",mailerSent:null,calledBack:null,jobWon:null,notes:newLead.notes,value},...p]);
+    setNewLead({address:"",city:"Tulsa",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
+    setShowAddLead(false);
+    showToast("📍 Lead added to pipeline","success");
+  };
   const setSpot=(k,v)=>setSpotForm(f=>({...f,[k]:v}));
 
   // Auto-recalculate price whenever inputs change
@@ -1000,7 +1109,10 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       });
       const newSpotJob={id:`SB-00${spotJobs.length+1}`,address:spotMailer.address,city:spotMailer.city,bid:spotMailer.bid,damage:spotMailer.damage,sent:"Apr 07",status:"queued"};
       setSpotJobs(p=>[newSpotJob,...p]);
-      showToast("✅ Spot bid sent to Lob.com!","success");
+      // Auto-add to pipeline as "sent"
+      const plId=`PL-${Date.now()}`;
+      setPipeline(p=>[{id:plId,address:spotMailer.address,city:spotMailer.city,neighborhood:spotForm.neighborhood||spotMailer.city,stage:"sent",bidLo:spotMailer.bidLo||spotMailer.bid,bidHi:spotMailer.bidHi||"",spotted:"Apr 07",mailerSent:"Apr 07",calledBack:null,jobWon:null,notes:spotMailer.damage?.join(", ")||"",value:parseInt(spotForm.bidLow)||0},...p]);
+      showToast("✅ Spot bid sent + added to pipeline!","success");
       setSpotMailer(null);
       setSpotForm({address:"",city:"Tulsa",state:"OK",zip:"",sqft:400,customSqft:"",service:"Crack Repair",damageLevel:"Moderate",bidLow:"",bidHigh:"",overridePrice:false,includes:"",damage:[],notes:""});
       setSpotPhoto(null);
@@ -1032,7 +1144,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         {/* NAV */}
         <nav className="nav">
           <div className="nav-label">Campaigns</div>
-          {[{id:"map",icon:"🗺️",label:"Neighborhood Scan"},{id:"create",icon:"✏️",label:"Create Mailer"},{id:"tracker",icon:"📊",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length},{id:"spotbid",icon:"🎯",label:"Spot Bid"}].map(item=>(
+          {[{id:"map",icon:"🗺️",label:"Neighborhood Scan"},{id:"create",icon:"✏️",label:"Create Mailer"},{id:"tracker",icon:"📊",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length},{id:"spotbid",icon:"🎯",label:"Spot Bid"},{id:"pipeline",icon:"📍",label:"Pipeline"}].map(item=>(
             <button key={item.id} className={`nav-item${tab===item.id?" active":""}`} onClick={()=>setTab(item.id)}>
               <span className="nav-icon">{item.icon}</span>{item.label}
               {item.badge?<span className="nav-badge">{item.badge}</span>:null}
@@ -1472,6 +1584,172 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             </div>
           )}
 
+
+          {/* PIPELINE */}
+          {tab==="pipeline"&&(
+            <div className="pipeline-layout">
+              {/* Header */}
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)",lineHeight:1}}>ADDRESS PIPELINE</div>
+                  <div style={{fontSize:12,color:"var(--stone)",marginTop:3}}>Every address JWood LLC has spotted, mailed, or closed.</div>
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <button className="btn btn-ghost btn-sm" onClick={()=>setShowAddLead(true)}>+ Log Address</button>
+                  <button className="btn btn-primary btn-sm" onClick={()=>setTab("spotbid")}>🎯 Spot Bid</button>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="pipeline-stats">
+                {[
+                  {label:"Total Leads",value:pipeline.length,color:"var(--cream)",sub:"addresses tracked"},
+                  {label:"Mailers Sent",value:pipeline.filter(l=>["sent","called","won"].includes(l.stage)).length,color:"var(--blue2)",sub:"postcards out"},
+                  {label:"Called Back",value:pipeline.filter(l=>["called","won"].includes(l.stage)).length,color:"var(--yellow)",sub:`${Math.round(pipeline.filter(l=>["called","won"].includes(l.stage)).length/Math.max(pipeline.filter(l=>["sent","called","won"].includes(l.stage)).length,1)*100)}% response rate`},
+                  {label:"Jobs Won",value:pipeline.filter(l=>l.stage==="won").length,color:"var(--green2)",sub:`$${pipeline.filter(l=>l.stage==="won").reduce((s,l)=>s+l.value,0).toLocaleString()} revenue`},
+                ].map((s,i)=>(
+                  <div className="pl-stat" key={i}>
+                    <div className="pl-stat-label">{s.label}</div>
+                    <div className="pl-stat-value" style={{color:s.color}}>{s.value}</div>
+                    <div className="pl-stat-sub">{s.sub}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* View Tabs */}
+              <div className="pipeline-view-tabs">
+                {[{id:"kanban",icon:"▦",label:"Kanban"},{id:"list",icon:"≡",label:"List"},{id:"map",icon:"🗺",label:"Map"}].map(v=>(
+                  <button key={v.id} className={`pvt${pipelineView===v.id?" on":""}`} onClick={()=>setPipelineView(v.id)}>
+                    {v.icon} {v.label}
+                  </button>
+                ))}
+                <div style={{marginLeft:"auto",fontSize:11,color:"var(--stone)",display:"flex",alignItems:"center",gap:6}}>
+                  <span>Pipeline value:</span>
+                  <strong style={{color:"var(--orange2)",fontFamily:"DM Mono,monospace"}}>${pipeline.reduce((s,l)=>s+l.value,0).toLocaleString()}</strong>
+                </div>
+              </div>
+
+              {/* KANBAN VIEW */}
+              {pipelineView==="kanban"&&(
+                <div className="kanban">
+                  {STAGES.map(stage=>{
+                    const leads=pipeline.filter(l=>l.stage===stage.id);
+                    const nextStage=STAGES[STAGES.findIndex(s=>s.id===stage.id)+1];
+                    return(
+                      <div className="kanban-col" key={stage.id}>
+                        <div className="kanban-head" style={{borderTop:`3px solid ${stage.color}`}}>
+                          <span className="kanban-head-icon">{stage.icon}</span>
+                          <span className="kanban-head-label" style={{color:stage.color}}>{stage.label}</span>
+                          <span className="kanban-count">{leads.length}</span>
+                        </div>
+                        <div className="kanban-cards">
+                          {leads.map(lead=>(
+                            <div className="pl-card" key={lead.id}>
+                              <div className="pl-card-addr">{lead.address}</div>
+                              <div className="pl-card-city">{lead.neighborhood} · {lead.city}</div>
+                              <div className="pl-card-bid">{lead.bidLo}{lead.bidHi&&<span className="pl-card-bid-range"> — {lead.bidHi}</span>}</div>
+                              {lead.notes&&<div className="pl-card-notes">{lead.notes}</div>}
+                              <div className="pl-card-date">
+                                {lead.spotted&&`Spotted ${lead.spotted}`}
+                                {lead.mailerSent&&` · Sent ${lead.mailerSent}`}
+                                {lead.calledBack&&` · Called ${lead.calledBack}`}
+                                {lead.jobWon&&` · Won ${lead.jobWon}`}
+                              </div>
+                              <div className="pl-card-actions">
+                                {nextStage&&(
+                                  <button className="pl-action-btn" style={{background:nextStage.bg,color:nextStage.color}} onClick={()=>moveStage(lead.id,nextStage.id)}>
+                                    → {nextStage.label}
+                                  </button>
+                                )}
+                                {stage.id==="spotted"&&(
+                                  <button className="pl-action-btn" style={{background:"rgba(232,86,10,0.15)",color:"var(--orange2)"}} onClick={()=>{setSpotForm(f=>({...f,address:lead.address,city:lead.city,neighborhood:lead.neighborhood}));setTab("spotbid");}}>
+                                    🎯 Spot Bid
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          {leads.length===0&&<div style={{fontSize:11,color:"var(--gravel)",textAlign:"center",padding:"16px 0"}}>No leads here yet</div>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* LIST VIEW */}
+              {pipelineView==="list"&&(
+                <div className="pl-list">
+                  <div className="pl-list-head">
+                    <div>Address</div><div>Neighborhood</div><div>Spotted</div><div>Sent</div><div>Called</div><div>Bid</div><div>Status</div>
+                  </div>
+                  {pipeline.map(lead=>{
+                    const stage=STAGES.find(s=>s.id===lead.stage);
+                    return(
+                      <div className="pl-list-row" key={lead.id}>
+                        <div><div className="pl-addr">{lead.address}</div><div className="pl-sub">{lead.city}</div></div>
+                        <div className="pl-cell">{lead.neighborhood}</div>
+                        <div className="pl-cell">{lead.spotted||"—"}</div>
+                        <div className="pl-cell">{lead.mailerSent||"—"}</div>
+                        <div className="pl-cell">{lead.calledBack||"—"}</div>
+                        <div className="pl-cell mono">{lead.bidLo}{lead.bidHi?`–${lead.bidHi}`:""}</div>
+                        <div>
+                          <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",borderRadius:12,fontSize:10,fontWeight:700,background:stage?.bg,color:stage?.color}}>
+                            {stage?.icon} {stage?.label}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* MAP VIEW */}
+              {pipelineView==="map"&&(
+                <>
+                  <div className="pl-legend">
+                    {STAGES.map(s=>(
+                      <div className="pl-legend-item" key={s.id}>
+                        <div className="pl-legend-dot" style={{background:s.color}}/>
+                        {s.icon} {s.label} ({pipeline.filter(l=>l.stage===s.id).length})
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pl-map-wrap">
+                    <div className="pl-map-canvas"/>
+                    {/* Roads */}
+                    {[15,30,50,65,80].map(y=><div key={y} style={{position:"absolute",left:0,right:0,top:`${y}%`,height:y===30||y===65?5:2,background:"rgba(184,180,172,0.08)"}}/>)}
+                    {[20,40,60,80].map(x=><div key={x} style={{position:"absolute",top:0,bottom:0,left:`${x}%`,width:x===40||x===60?5:2,background:"rgba(184,180,172,0.08)"}}/>)}
+                    <div style={{position:"absolute",top:"27%",left:"22%",fontSize:9,color:"rgba(184,180,172,0.3)",fontFamily:"DM Mono,monospace",letterSpacing:1,textTransform:"uppercase"}}>PEORIA AVE</div>
+                    <div style={{position:"absolute",top:"62%",left:"42%",fontSize:9,color:"rgba(184,180,172,0.3)",fontFamily:"DM Mono,monospace",letterSpacing:1,textTransform:"uppercase"}}>MEMORIAL DR</div>
+                    {/* Pipeline pins - each lead gets a pin */}
+                    {pipeline.map((lead,i)=>{
+                      const stage=STAGES.find(s=>s.id===lead.stage);
+                      const positions=[
+                        {x:32,y:28},{x:58,y:22},{x:22,y:55},{x:68,y:48},{x:44,y:70},{x:76,y:35},
+                        {x:38,y:42},{x:52,y:62},{x:28,y:75},{x:64,y:72},{x:48,y:32},{x:72,y:58},
+                      ];
+                      const pos=positions[i%positions.length];
+                      return(
+                        <div key={lead.id} className="pl-pin" style={{left:`${pos.x}%`,top:`${pos.y}%`}}>
+                          <div className="pl-pin-dot" style={{background:stage?.color}}>
+                            <span style={{fontSize:12}}>{stage?.icon}</span>
+                          </div>
+                          <div className="pl-pin-label">{lead.address.split(" ").slice(0,3).join(" ")}</div>
+                        </div>
+                      );
+                    })}
+                    {/* Map controls */}
+                    <div style={{position:"absolute",bottom:12,right:12,display:"flex",flexDirection:"column",gap:5}}>
+                      <button style={{width:32,height:32,background:"var(--ink)",border:"1px solid rgba(184,180,172,0.15)",borderRadius:6,color:"var(--concrete)",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+                      <button style={{width:32,height:32,background:"var(--ink)",border:"1px solid rgba(184,180,172,0.15)",borderRadius:6,color:"var(--concrete)",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* SETTINGS */}
           {tab==="settings"&&(
             <div className="settings-layout">
@@ -1536,6 +1814,30 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
         </div>
       </div>
+      {/* ADD LEAD MODAL */}
+      {showAddLead&&(
+        <div className="modal-overlay" onClick={e=>{if(e.target.className==="modal-overlay")setShowAddLead(false);}}>
+          <div className="modal-box">
+            <div className="modal-title">LOG ADDRESS</div>
+            <div className="modal-sub">Add a spotted address to your pipeline without sending a mailer yet.</div>
+            <div className="field"><label>Street Address *</label><input placeholder="e.g. 4821 Oak Ridge Dr" value={newLead.address} onChange={e=>setNewLead(f=>({...f,address:e.target.value}))}/></div>
+            <div className="row2">
+              <div className="field"><label>City</label><input placeholder="Tulsa" value={newLead.city} onChange={e=>setNewLead(f=>({...f,city:e.target.value}))}/></div>
+              <div className="field"><label>Neighborhood</label><input placeholder="South Tulsa" value={newLead.neighborhood} onChange={e=>setNewLead(f=>({...f,neighborhood:e.target.value}))}/></div>
+            </div>
+            <div className="row2">
+              <div className="field"><label>Bid Low ($)</label><input type="number" placeholder="800" value={newLead.bidLow} onChange={e=>setNewLead(f=>({...f,bidLow:e.target.value}))}/></div>
+              <div className="field"><label>Bid High ($)</label><input type="number" placeholder="1400" value={newLead.bidHigh} onChange={e=>setNewLead(f=>({...f,bidHigh:e.target.value}))}/></div>
+            </div>
+            <div className="field"><label>Notes</label><textarea placeholder="e.g. Saw severe cracking from the road, large 2-car" value={newLead.notes} onChange={e=>setNewLead(f=>({...f,notes:e.target.value}))}/></div>
+            <div style={{display:"flex",gap:8,marginTop:4}}>
+              <button className="btn btn-primary" style={{flex:1}} onClick={addLead} disabled={!newLead.address}>📍 Add to Pipeline</button>
+              <button className="btn btn-ghost" onClick={()=>setShowAddLead(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {toast&&<div className={`toast ${toast.type}`}>{toast.msg}</div>}
     </>
   );
