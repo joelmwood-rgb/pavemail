@@ -447,7 +447,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .spot-send-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
 .spot-send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
 .spot-mailer{background:#faf7f2;border-radius:8px;overflow:hidden;box-shadow:0 6px 30px rgba(0,0,0,0.6);font-family:'Syne',sans-serif;}
-.spot-front{background:linear-gradient(145deg,#111009 0%,#2a2720 100%);padding:32px;position:relative;overflow:hidden;}
+.spot-front{background:linear-gradient(145deg,#111009 0%,#2a2720 100%);padding:32px;position:relative;overflow:hidden;min-height:280px;}
 .spot-front-texture{position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,rgba(184,180,172,0.025) 0,rgba(184,180,172,0.025) 1px,transparent 0,transparent 8px);}
 .spot-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:10px;position:relative;}
 .spot-address{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f5f0e6;position:relative;letter-spacing:1px;margin-bottom:8px;}
@@ -1779,13 +1779,12 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       <div className="preview-meta"><span>📍 <strong>{spotMailer.address}</strong></span><span>💵 <strong>{spotMailer.bid}</strong></span></div>
                     </div>
 
-                    <div className="page-tag">Front of Postcard {spotMailer.photoUsed&&<span style={{marginLeft:6,background:"rgba(232,86,10,0.25)",color:"var(--orange2)",padding:"2px 7px",borderRadius:4,fontSize:9,fontWeight:700}}>📷 Full Bleed Photo</span>}</div>
+                    <div className="page-tag">Front of Postcard {spotPhoto&&<span style={{marginLeft:6,background:"rgba(232,86,10,0.25)",color:"var(--orange2)",padding:"2px 7px",borderRadius:4,fontSize:9,fontWeight:700}}>📷 Photo Background Active</span>}</div>
                     <div className="spot-mailer" style={{marginBottom:18}}>
-                      <div className="spot-front" style={{
-                        backgroundImage: spotPhoto ? `url(${spotPhoto})` : "none",
-                        backgroundSize:"cover",backgroundPosition:"center",
+                      <div className="spot-front" style={spotPhoto ? {
+                        background:`url(${spotPhoto}) center/cover no-repeat`,
                         position:"relative"
-                      }}>
+                      } : {}}>
                         {spotPhoto&&<div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom, rgba(14,13,11,0.5) 0%, rgba(14,13,11,0.82) 55%, rgba(14,13,11,0.97) 100%)",borderRadius:"inherit"}}/>}
                         {!spotPhoto&&<div className="spot-front-texture"/>}
                         <div style={{position:"relative",zIndex:1,display:"flex",flexDirection:"column",height:"100%"}}>
