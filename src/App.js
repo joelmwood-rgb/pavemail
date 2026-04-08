@@ -3,8 +3,55 @@ import React, { useState } from "react";
 // ─────────────────────────────────────────────
 // LOB API INTEGRATION
 // ─────────────────────────────────────────────
-const LOB_PROXY       = "https://joelmwood--b166b8c432db11f19dff42b51c65c3df.web.val.run/?target=lob";
-const ANTHROPIC_PROXY = "https://joelmwood--b166b8c432db11f19dff42b51c65c3df.web.val.run/?target=anthropic";
+const PROXY_BASE      = "https://joelmwood--b166b8c432db11f19dff42b51c65c3df.web.val.run";
+const LOB_PROXY       = PROXY_BASE + "/?target=lob";
+const ANTHROPIC_PROXY = PROXY_BASE + "/?target=anthropic";
+const LOB_VERIFY_PROXY= PROXY_BASE + "/?target=lob-verify";
+const USPS_PROXY      = PROXY_BASE + "/?target=usps";
+
+const ROUTE_COLORS = ["#e8560a","#2a7a52","#1a6fa8","#8b5e3c","#6a3a8a","#2a6a6a","#b83232","#c4a020","#4a6a2a","#6a2a6a"];
+
+async function fetchUSPSRoutes(zip) {
+  try {
+    const res = await fetch(`${USPS_PROXY}&zip=${zip.trim()}`);
+    const data = await res.json();
+    const features = data?.results?.[0]?.value?.features || [];
+    return features.map((f, i) => {
+      const a = f.attributes || {};
+      return {
+        id: `${zip}-${a.CRR_RTE || i}`,
+        routeId: a.CRR_RTE || `C${String(i+1).padStart(3,'0')}`,
+        zip: zip,
+        name: `ZIP ${zip} - Route ${a.CRR_RTE || String(i+1).padStart(3,'0')}`,
+        homes: parseInt(a.RES_CNT || a.TOT_CNT || 0),
+        businesses: parseInt(a.BUS_CNT || 0),
+        color: ROUTE_COLORS[i % ROUTE_COLORS.length],
+      };
+    }).filter(r => r.homes > 0);
+  } catch(e) { return []; }
+}
+
+async function verifyAddress(address, city, state, zip) {
+  try {
+    const res = await fetch(LOB_VERIFY_PROXY, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ primary_line: address, city: city||"Tulsa", state: state||"OK", zip_code: zip||"" })
+    });
+    const data = await res.json();
+    return {
+      valid: data.deliverability === "deliverable",
+      deliverability: data.deliverability,
+      address: data.primary_line,
+      city: data.components?.city || city,
+      state: data.components?.state || state,
+      zip: data.components?.zip_code || zip,
+      zipPlus4: data.components?.zip_code_plus_4 || "",
+      carrierRoute: data.components?.carrier_route || "",
+      corrected: data.primary_line !== address,
+    };
+  } catch(e) { return { valid: false, deliverability: "error" }; }
+}
 
 async function lobRequest(endpoint, body) {
   const res = await fetch(LOB_PROXY, {
@@ -495,13 +542,6 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
   .pipeline-stats{grid-template-columns:1fr 1fr;}
 }
 
-
-/* ── PWA INSTALL BANNER ── */
-.install-banner{position:fixed;bottom:0;left:0;right:0;background:var(--ink);border-top:1px solid rgba(232,86,10,0.3);padding:14px 18px;display:flex;align-items:center;gap:14px;z-index:998;animation:slideUp 0.4s ease;}
-.install-icon{width:44px;height:44px;background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
-.install-text h4{font-size:13px;font-weight:700;color:var(--cream);}
-.install-text p{font-size:11px;color:var(--stone);margin-top:1px;}
-.install-actions{margin-left:auto;display:flex;gap:8px;flex-shrink:0;}
 /* ── LOGIN SCREEN ── */
 .login-screen{position:fixed;inset:0;background:var(--black);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0;}
 .login-bg{position:absolute;inset:0;background:linear-gradient(145deg,#0e0d0b 0%,#1c1a17 60%,#0e0d0b 100%);}
@@ -807,36 +847,6 @@ function MailerPreview({mailer,form}){
 // MAIN APP
 // ─────────────────────────────────────────────
 export default function App(){
-  // ── PWA INSTALL PROMPT ──
-  const[showInstall,setShowInstall]=useState(false);
-  React.useEffect(()=>{
-    const handler=(e)=>{
-      e.preventDefault();
-      window.__installPrompt=e;
-      // Show after 3 seconds if not already installed
-      const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
-      if(!isStandalone){ setTimeout(()=>setShowInstall(true), 3000); }
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    // Also show for iOS (no beforeinstallprompt)
-    const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
-    const isStandalone=window.navigator.standalone;
-    if(isIOS && !isStandalone){ setTimeout(()=>setShowInstall(true), 4000); }
-    return()=>window.removeEventListener('beforeinstallprompt', handler);
-  },[]);
-
-  const installApp=async()=>{
-    if(window.__installPrompt){
-      window.__installPrompt.prompt();
-      const result=await window.__installPrompt.userChoice;
-      if(result.outcome==='accepted') setShowInstall(false);
-    } else {
-      // iOS fallback
-      showToast("Tap Share → Add to Home Screen to install","info");
-      setShowInstall(false);
-    }
-  };
-
   // ── AUTH ──
   const ACCESS_CODE = "8966";
   const STORAGE_KEY = "pavemail_auth";
@@ -872,6 +882,13 @@ export default function App(){
   const[tab,setTab]=useState("map");
   const[toast,setToast]=useState(null);
   const[selectedRoutes,setSelectedRoutes]=useState([]);
+  const[liveRoutes,setLiveRoutes]=useState([]);
+  const[routesLoading,setRoutesLoading]=useState(false);
+  const[routeError,setRouteError]=useState(null);
+  const[zipSearch,setZipSearch]=useState("");
+  const[searchedZips,setSearchedZips]=useState([]);
+  const[verifyResult,setVerifyResult]=useState(null);
+  const[verifying,setVerifying]=useState(false);
   const[form,setForm]=useState({company:COMPANY.name,phone:COMPANY.phone,neighborhood:"",city:COMPANY.city,season:"Spring",offer:"Free Estimate",angle:"Crack Repair",homes:"200",promoCode:COMPANY.promo,extraNotes:""});
   const[loading,setLoading]=useState(false);
   const[sending,setSending]=useState(false);
@@ -952,8 +969,8 @@ export default function App(){
   const toggleRoute=(id)=>setSelectedRoutes(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
 
   const proceedToCreate=()=>{
-    const r=selectedRoutes.map(id=>ROUTES.find(x=>x.id===id)?.name).filter(Boolean);
-    const h=selectedRoutes.reduce((s,id)=>s+(ROUTES.find(x=>x.id===id)?.homes||0),0);
+    const r=selectedRoutes.map(id=>liveRoutes.find(x=>x.id===id)?.name).filter(Boolean);
+    const h=selectedRoutes.reduce((s,id)=>s+(liveRoutes.find(x=>x.id===id)?.homes||0),0);
     setForm(f=>({...f,neighborhood:r[0]||f.neighborhood,homes:String(h||f.homes)}));
     setTab("create");
   };
@@ -1027,7 +1044,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     }
   };
 
-  const totalHomes=selectedRoutes.reduce((s,id)=>s+(ROUTES.find(r=>r.id===id)?.homes||0),0);
+  const totalHomes=selectedRoutes.reduce((s,id)=>s+(liveRoutes.find(r=>r.id===id)?.homes||0),0);
   const estCost=((parseInt(form.homes)||0)*0.62).toFixed(2);
   const totalMailed=jobs.reduce((s,j)=>s+parseInt(j.homes),0);
   const totalSpend=jobs.reduce((s,j)=>s+parseFloat(j.cost),0).toFixed(2);
@@ -1219,6 +1236,40 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     }finally{setSpotSending(false);}
   };
 
+  const searchZip = async (zip) => {
+    if (!zip || zip.length < 5) return;
+    setRoutesLoading(true); setRouteError(null);
+    const routes = await fetchUSPSRoutes(zip);
+    if (routes.length === 0) {
+      setRouteError("No residential routes found for ZIP " + zip + ". Try another ZIP.");
+    } else {
+      setLiveRoutes(prev => {
+        const existing = prev.map(r => r.id);
+        return [...prev, ...routes.filter(r => !existing.includes(r.id))];
+      });
+      setSearchedZips(prev => prev.includes(zip) ? prev : [...prev, zip]);
+      const total = routes.reduce((s,r)=>s+r.homes,0);
+      showToast("Found " + routes.length + " routes in ZIP " + zip + " - " + total.toLocaleString() + " homes", "success");
+    }
+    setRoutesLoading(false);
+  };
+
+  const clearRoutes = () => { setLiveRoutes([]); setSelectedRoutes([]); setSearchedZips([]); setRouteError(null); };
+
+  const verifySpotAddress = async () => {
+    if (!spotForm.address) return;
+    setVerifying(true); setVerifyResult(null);
+    const result = await verifyAddress(spotForm.address, spotForm.city, spotForm.state, spotForm.zip);
+    setVerifyResult(result);
+    if (result.valid) {
+      setSpotForm(f => ({...f, address: result.address||f.address, city: result.city||f.city, state: result.state||f.state, zip: result.zip||f.zip}));
+      showToast("Address verified - Carrier Route " + result.carrierRoute + " - Deliverable", "success");
+    } else {
+      showToast("Address issue: " + (result.deliverability||"not deliverable"), "info");
+    }
+    setVerifying(false);
+  };
+
   // Show login screen if not unlocked
   if(!unlocked) return(
     <>
@@ -1300,27 +1351,57 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {tab==="map"&&(
             <div className="map-layout">
               <div className="map-sidebar"><div className="map-sidebar-inner">
-                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>TULSA AREA SCANNER</div>
-                <p style={{fontSize:12,color:"var(--stone)",lineHeight:1.6,marginBottom:16}}>Select Tulsa-area neighborhoods to target with real USPS ZIP data.</p>
-                <div className="field"><label>Search Neighborhood / ZIP</label><input placeholder="e.g. Broken Arrow or 74011"/></div>
-                <div className="section-head" style={{marginTop:14}}>Available Routes</div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>USPS ROUTE SCANNER</div>
+                <p style={{fontSize:12,color:"var(--stone)",lineHeight:1.6,marginBottom:14}}>Enter any ZIP to load live USPS carrier routes and real home counts.</p>
+                <div style={{display:"flex",gap:8,marginBottom:10}}>
+                  <div className="field" style={{margin:0,flex:1}}>
+                    <input placeholder="Enter ZIP (e.g. 74105)" value={zipSearch} onChange={e=>setZipSearch(e.target.value.replace(/[^0-9]/g,"").slice(0,5))} onKeyDown={e=>e.key==="Enter"&&searchZip(zipSearch)} maxLength={5} style={{fontFamily:"DM Mono,monospace",fontSize:15,letterSpacing:2}}/>
+                  </div>
+                  <button className="btn btn-primary btn-sm" onClick={()=>searchZip(zipSearch)} disabled={routesLoading||zipSearch.length<5} style={{flexShrink:0,padding:"0 14px"}}>
+                    {routesLoading?<span className="spin"/>:"Search"}
+                  </button>
+                </div>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--gravel)",marginBottom:6}}>Quick - Tulsa Area</div>
+                  <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                    {[["74105","S Tulsa"],["74011","Broken Arrow"],["74037","Jenks"],["74055","Owasso"],["74008","Bixby"],["74063","Sand Springs"],["74112","E Tulsa"],["74107","W Tulsa"]].map(([z,label])=>(
+                      <button key={z} className={`chip${searchedZips.includes(z)?" on":""}`} onClick={()=>{setZipSearch(z);searchZip(z);}} style={{fontSize:10}}>{label}</button>
+                    ))}
+                  </div>
+                </div>
+                {routeError&&<div style={{background:"rgba(184,50,50,0.1)",border:"1px solid rgba(184,50,50,0.25)",borderRadius:6,padding:"8px 12px",fontSize:11,color:"#f08080",marginBottom:10}}>{routeError}</div>}
+                <div className="section-head" style={{marginTop:4}}>
+                  {liveRoutes.length>0?`${liveRoutes.length} Live USPS Routes`:"Available Routes"}
+                  {liveRoutes.length>0&&<button onClick={clearRoutes} style={{marginLeft:"auto",fontSize:10,color:"var(--stone)",background:"none",border:"none",cursor:"pointer",textDecoration:"underline",fontFamily:"'Syne',sans-serif"}}>Clear all</button>}
+                </div>
+                {liveRoutes.length===0&&!routesLoading&&(
+                  <div style={{fontSize:11,color:"var(--gravel)",textAlign:"center",padding:"20px 0",lineHeight:1.6}}>Enter a ZIP code to load live USPS carrier routes</div>
+                )}
+                {routesLoading&&(
+                  <div style={{display:"flex",alignItems:"center",gap:8,padding:"16px 0",color:"var(--stone)",fontSize:12}}>
+                    <span className="spin"/><span>Fetching USPS routes...</span>
+                  </div>
+                )}
                 <div className="route-list">
-                  {ROUTES.map(r=>(
+                  {liveRoutes.map(r=>(
                     <div key={r.id} className={`route-item${selectedRoutes.includes(r.id)?" sel":""}`} onClick={()=>toggleRoute(r.id)}>
                       <div className="route-dot" style={{background:r.color}}/>
-                      <div><div className="route-name">{r.name}</div><div className="route-count">{r.homes} homes · ZIP {r.zip}</div></div>
-                      <div className="route-check">✓</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div className="route-name">{r.name}</div>
+                        <div className="route-count">{r.homes.toLocaleString()} homes - ZIP {r.zip}</div>
+                      </div>
+                      <div className="route-check">checkmark</div>
                     </div>
                   ))}
                 </div>
                 {selectedRoutes.length>0&&(
                   <div className="sel-summary">
-                    <h4>📬 Campaign Summary</h4>
+                    <h4>Campaign Summary</h4>
                     <div className="sum-row"><span>Routes selected</span><strong>{selectedRoutes.length}</strong></div>
                     <div className="sum-row"><span>Total homes</span><strong>{totalHomes.toLocaleString()}</strong></div>
-                    <div className="sum-row"><span>Est. cost (EDDM)</span><strong style={{fontFamily:"DM Mono",color:"var(--orange2)"}}>${(totalHomes*0.62).toFixed(2)}</strong></div>
-                    <div className="sum-row"><span>Est. delivery</span><strong>2–5 days</strong></div>
-                    <button className="btn btn-primary" style={{width:"100%",marginTop:12}} onClick={proceedToCreate}>Create Mailer →</button>
+                    <div className="sum-row"><span>Est. cost (EDDM)</span><strong style={{fontFamily:"DM Mono,monospace",color:"var(--orange2)"}}>${(totalHomes*0.62).toFixed(2)}</strong></div>
+                    <div className="sum-row"><span>USPS delivery</span><strong>2-5 days</strong></div>
+                    <button className="btn btn-primary" style={{width:"100%",marginTop:12}} onClick={proceedToCreate}>Create Mailer</button>
                   </div>
                 )}
               </div></div>
@@ -1332,12 +1413,11 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div className="map-road-label" style={{top:"62%",left:"42%"}}>MEMORIAL DR</div>
                 <div className="map-road-label" style={{top:"12%",left:"62%",transform:"rotate(90deg)"}}>HWY 169</div>
                 <div className="map-road-label" style={{top:"42%",left:"2%"}}>US-64</div>
-                {selectedRoutes.includes(1)&&<div className="map-zone" style={{left:"18%",top:"10%",width:"28%",height:"32%"}}><div className="map-zone-label">South Tulsa / Midtown</div></div>}
-                {selectedRoutes.includes(2)&&<div className="map-zone" style={{left:"50%",top:"8%",width:"30%",height:"28%",borderColor:"#2a7a52",background:"rgba(42,122,82,0.08)"}}><div className="map-zone-label" style={{background:"#2a7a52"}}>Broken Arrow</div></div>}
-                {selectedRoutes.includes(3)&&<div className="map-zone" style={{left:"15%",top:"48%",width:"26%",height:"32%",borderColor:"#1a6fa8",background:"rgba(26,111,168,0.08)"}}><div className="map-zone-label" style={{background:"#1a6fa8"}}>Jenks / Riverview</div></div>}
-                {selectedRoutes.includes(4)&&<div className="map-zone" style={{left:"48%",top:"44%",width:"28%",height:"30%",borderColor:"#8b5e3c",background:"rgba(139,94,60,0.08)"}}><div className="map-zone-label" style={{background:"#8b5e3c"}}>Owasso</div></div>}
-                {selectedRoutes.includes(5)&&<div className="map-zone" style={{left:"10%",top:"78%",width:"25%",height:"18%",borderColor:"#6a3a8a",background:"rgba(106,58,138,0.08)"}}><div className="map-zone-label" style={{background:"#6a3a8a"}}>Bixby</div></div>}
-                {selectedRoutes.includes(6)&&<div className="map-zone" style={{left:"68%",top:"68%",width:"24%",height:"20%",borderColor:"#2a6a6a",background:"rgba(42,106,106,0.08)"}}><div className="map-zone-label" style={{background:"#2a6a6a"}}>Sand Springs</div></div>}
+                {liveRoutes.filter(r=>selectedRoutes.includes(r.id)).map((r,i)=>{
+                  const pos=[{left:"18%",top:"10%",width:"28%",height:"32%"},{left:"50%",top:"8%",width:"30%",height:"28%"},{left:"15%",top:"48%",width:"26%",height:"32%"},{left:"48%",top:"44%",width:"28%",height:"30%"},{left:"10%",top:"78%",width:"25%",height:"18%"},{left:"68%",top:"68%",width:"24%",height:"20%"},{left:"35%",top:"25%",width:"22%",height:"25%"},{left:"60%",top:"55%",width:"20%",height:"22%"}][i%8];
+                  return <div key={r.id} className="map-zone" style={{...pos,borderColor:r.color,background:r.color+"14"}}><div className="map-zone-label" style={{background:r.color}}>{r.name} ({r.homes.toLocaleString()})</div></div>;
+                })}
+                {liveRoutes.length===0&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:10,color:"var(--gravel)",textAlign:"center",padding:40}}><div style={{fontSize:36,opacity:0.3}}>map</div><div style={{fontSize:13,color:"var(--stone)"}}>Enter a ZIP code to load live USPS carrier routes</div></div>}
                 {PINS.map((p,i)=><div key={i} className={`map-pin ${p.t}`} style={{left:`${p.x}%`,top:`${p.y}%`}}/>)}
                 <div style={{position:"absolute",top:12,left:12,background:"rgba(14,13,11,0.82)",border:"1px solid rgba(184,180,172,0.12)",borderRadius:7,padding:"10px 14px",fontSize:10,color:"var(--concrete)",display:"flex",flexDirection:"column",gap:6}}>
                   <div style={{display:"flex",alignItems:"center",gap:7}}><div style={{width:10,height:10,borderRadius:"50%",background:"var(--orange2)"}}/> Home Address</div>
@@ -1495,7 +1575,32 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 )}
 
                 <div className="section-head">Address</div>
-                <div className="field"><label>Street Address *</label><input placeholder="e.g. 4821 Oak Ridge Dr" value={spotForm.address} onChange={e=>setSpot("address",e.target.value)}/></div>
+                <div className="field">
+                  <label>Street Address *</label>
+                  <div style={{display:"flex",gap:8}}>
+                    <input placeholder="e.g. 4821 Oak Ridge Dr" value={spotForm.address} onChange={e=>{setSpot("address",e.target.value);setVerifyResult(null);}} style={{flex:1}}/>
+                    <button className="btn btn-ghost btn-sm" onClick={verifySpotAddress} disabled={verifying||!spotForm.address} style={{flexShrink:0,padding:"0 10px"}} title="Verify with USPS">
+                      {verifying?<span className="spin"/>:"Verify"}
+                    </button>
+                  </div>
+                </div>
+                {verifyResult&&(
+                  <div style={{marginBottom:10,borderRadius:7,padding:"10px 14px",fontSize:11,lineHeight:1.7,background:verifyResult.valid?"rgba(42,122,82,0.1)":"rgba(184,50,50,0.1)",border:`1px solid ${verifyResult.valid?"rgba(42,122,82,0.25)":"rgba(184,50,50,0.25)"}`,color:verifyResult.valid?"var(--green2)":"#f08080"}}>
+                    {verifyResult.valid?(
+                      <>
+                        <div><strong>USPS Verified - Deliverable</strong></div>
+                        <div style={{color:"var(--concrete)"}}>{verifyResult.address}, {verifyResult.city}, {verifyResult.state} {verifyResult.zip}{verifyResult.zipPlus4&&`-${verifyResult.zipPlus4}`}</div>
+                        {verifyResult.carrierRoute&&<div style={{color:"var(--stone)",fontFamily:"DM Mono,monospace",fontSize:10}}>Carrier Route: {verifyResult.zip}{verifyResult.carrierRoute}</div>}
+                        {verifyResult.corrected&&<div style={{color:"var(--yellow)",fontSize:10}}>Address was auto-corrected by USPS</div>}
+                      </>
+                    ):(
+                      <>
+                        <div><strong>Address Issue: {verifyResult.deliverability||"unknown"}</strong></div>
+                        <div style={{fontSize:10,marginTop:2}}>Check address and retry, or proceed anyway.</div>
+                      </>
+                    )}
+                  </div>
+                )}
                 <div className="row2">
                   <div className="field"><label>City</label><input placeholder="Tulsa" value={spotForm.city} onChange={e=>setSpot("city",e.target.value)}/></div>
                   <div className="field"><label>ZIP</label><input placeholder="74105" value={spotForm.zip} onChange={e=>setSpot("zip",e.target.value)}/></div>
@@ -1971,22 +2076,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         </div>
       )}
 
-      {/* PWA INSTALL BANNER */}
-      {showInstall&&(
-        <div className="install-banner">
-          <div className="install-icon">🏗️</div>
-          <div className="install-text">
-            <h4>Add PaveMail to Home Screen</h4>
-            <p>Works offline · Feels like a real app · Free</p>
-          </div>
-          <div className="install-actions">
-            <button className="btn btn-ghost btn-sm" onClick={()=>setShowInstall(false)}>Later</button>
-            <button className="btn btn-primary btn-sm" onClick={installApp}>Install</button>
-          </div>
-        </div>
-      )}
-
-      {toast&&<div className={`toast ${toast.type}`} style={{bottom:showInstall?"80px":"24px"}}>{toast.msg}</div>}
+      {toast&&<div className={`toast ${toast.type}`}>{toast.msg}</div>}
     </>
   );
 }
