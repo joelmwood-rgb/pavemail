@@ -55,6 +55,37 @@ const COMPANY = {
   promo:   "JWOOD25",
 };
 
+
+// ─────────────────────────────────────────────
+// PRICING ENGINE
+// ─────────────────────────────────────────────
+const DRIVEWAY_SIZES = [
+  { label:"Small",  desc:"1-car, ~250 sq ft",  sqft:250  },
+  { label:"Medium", desc:"2-car, ~400 sq ft",  sqft:400  },
+  { label:"Large",  desc:"3-car, ~600 sq ft",  sqft:600  },
+  { label:"XL",     desc:"600+ sq ft",          sqft:800  },
+];
+
+const SERVICE_RATES = {
+  "Crack Repair":     { low:3,  high:6,  label:"Crack Repair"     },
+  "Resurfacing":      { low:3,  high:5,  label:"Resurfacing"      },
+  "New Installation": { low:6,  high:12, label:"New Pour"         },
+  "Sealing":          { low:1,  high:2,  label:"Sealing"          },
+};
+
+const DAMAGE_MULTIPLIERS = {
+  "Minor":    { low:0.85, high:1.0  },
+  "Moderate": { low:1.0,  high:1.2  },
+  "Severe":   { low:1.2,  high:1.5  },
+};
+
+function calcPrice(sqft, service, damage) {
+  const rate   = SERVICE_RATES[service]   || SERVICE_RATES["Crack Repair"];
+  const mult   = DAMAGE_MULTIPLIERS[damage] || DAMAGE_MULTIPLIERS["Moderate"];
+  const lo = Math.round((sqft * rate.low  * mult.low)  / 50) * 50;
+  const hi = Math.round((sqft * rate.high * mult.high) / 50) * 50;
+  return { lo, hi };
+}
 // ─────────────────────────────────────────────
 // DEMO MAILER CONTENT (fallback when no API)
 // ─────────────────────────────────────────────
@@ -337,9 +368,9 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .spot-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:10px;position:relative;}
 .spot-address{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f5f0e6;position:relative;letter-spacing:1px;margin-bottom:8px;}
 .spot-note{font-size:13px;color:#b8b4ac;line-height:1.65;position:relative;margin-bottom:16px;}
-.spot-bid-box{background:rgba(232,86,10,0.15);border:1px solid rgba(232,86,10,0.4);border-radius:8px;padding:14px 18px;position:relative;display:flex;align-items:center;justify-content:space-between;}
+.spot-bid-box{background:rgba(232,86,10,0.15);border:1px solid rgba(232,86,10,0.4);border-radius:8px;padding:14px 18px;position:relative;display:flex;align-items:flex-start;gap:12px;}
 .spot-bid-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange2);}
-.spot-bid-value{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f5f0e6;letter-spacing:1px;}
+.spot-bid-value{font-family:'Bebas Neue',sans-serif;font-size:32px;color:#f5f0e6;letter-spacing:1px;line-height:1;}
 .spot-bar{position:absolute;bottom:0;left:0;right:0;height:4px;background:var(--orange);}
 .spot-back{background:#f5f1e8;padding:32px;}
 .spot-back h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:#1c1a17;margin-bottom:12px;}
@@ -655,7 +686,13 @@ export default function App(){
   const[selectedJob,setSelectedJob]=useState(MOCK_JOBS[2]);
   const[settings,setSettings]=useState({autoSend:false,weeklyReport:true,trackOpens:true,smsAlerts:false});
   const[spotMode,setSpotMode]=useState("address");
-  const[spotForm,setSpotForm]=useState({address:"",city:"Tulsa",state:"OK",zip:"",bidLow:"",bidHigh:"",damage:[],notes:""});
+  const[spotForm,setSpotForm]=useState({
+    address:"",city:"Tulsa",state:"OK",zip:"",
+    sqft:400,customSqft:"",service:"Crack Repair",damageLevel:"Moderate",
+    bidLow:"",bidHigh:"",overridePrice:false,
+    includes:"",damage:[],notes:""
+  });
+  const[autoPrice,setAutoPrice]=useState({lo:0,hi:0});
   const[spotPhoto,setSpotPhoto]=useState(null);
   const[spotMailer,setSpotMailer]=useState(null);
   const[spotLoading,setSpotLoading]=useState(false);
@@ -665,6 +702,16 @@ export default function App(){
     {id:"SB-002",address:"7234 S Memorial Dr",city:"Tulsa",bid:"$800–$1,100",damage:["Surface cracks","Drainage issue"],sent:"Apr 06",status:"sent"},
   ]);
   const setSpot=(k,v)=>setSpotForm(f=>({...f,[k]:v}));
+
+  // Auto-recalculate price whenever inputs change
+  React.useEffect(()=>{
+    const sqft = spotForm.customSqft ? parseInt(spotForm.customSqft) : spotForm.sqft;
+    if(sqft && spotForm.service && spotForm.damageLevel && !spotForm.overridePrice){
+      const{lo,hi}=calcPrice(sqft,spotForm.service,spotForm.damageLevel);
+      setAutoPrice({lo,hi});
+      setSpotForm(f=>({...f,bidLow:String(lo),bidHigh:String(hi)}));
+    }
+  },[spotForm.sqft,spotForm.customSqft,spotForm.service,spotForm.damageLevel,spotForm.overridePrice]);
   const toggleDamage=(d)=>setSpotForm(f=>({...f,damage:f.damage.includes(d)?f.damage.filter(x=>x!==d):[...f.damage,d]}));
   const DAMAGES=["Freeze-thaw cracking","Surface spalling","Tree root damage","Drainage issues","Sunken sections","Edge crumbling","Oil stains","Full replacement needed"];
 
@@ -758,7 +805,14 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     if(!spotForm.address)return;
     setSpotLoading(true);setSpotMailer(null);
 
-    const bidRange=spotForm.bidLow&&spotForm.bidHigh?`$${spotForm.bidLow}–$${spotForm.bidHigh}`:"contact for estimate";
+    const lo = spotForm.bidLow ? `$${parseInt(spotForm.bidLow).toLocaleString()}` : null;
+    const hi = spotForm.bidHigh ? `$${parseInt(spotForm.bidHigh).toLocaleString()}` : null;
+    const bidRange = lo && hi
+      ? `Starting at ${lo} — Up to ${hi}`
+      : lo ? `Starting at ${lo}` : hi ? `Up to ${hi}` : "Call for Free Estimate";
+    const bidStarting = lo || "Call for estimate";
+    const bidUpTo = hi || "";
+    const includesText=spotForm.includes||"Demo, haul away, pour, finish & seal";
 
     try{
       let messages;
@@ -789,7 +843,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         const visionParsed=parseJSON(visionRaw);
         if(visionParsed?.damage){
           detectedDamage=[...new Set([...spotForm.damage,...visionParsed.damage])];
-          setSpotForm(f=>({...f,damage:detectedDamage}));
+          const newLevel = visionParsed.severity==="severe"?"Severe":visionParsed.severity==="minor"?"Minor":"Moderate";
+          setSpotForm(f=>({...f,damage:detectedDamage,damageLevel:newLevel,overridePrice:false}));
           showToast(`📷 AI detected: ${visionParsed.summary}`,"info");
         }
       }
@@ -797,7 +852,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       // STEP 2: Generate the personal note using detected damage
       const damageList=detectedDamage.length>0?detectedDamage.join(", "):"general driveway wear";
       const photoContext=spotPhoto?" We photographed the damage for reference.":"";
-      const prompt=`Write a personal note for a direct mail postcard from JWood LLC (concrete contractor, Tulsa OK, 918-896-6737) to a homeowner at ${spotForm.address}, ${spotForm.city} OK. The contractor noticed: ${damageList}.${photoContext} Bid range: ${bidRange}. Notes: ${spotForm.notes||"none"}. Write a warm, personal 2-3 sentence note that mentions we drove past their home, noticed the specific damage, and want to help. Sound like a neighbor, not a corporation. Do NOT be salesy. Return ONLY JSON: {"personalNote":"string","headline":"string","urgencyLine":"string"}`;
+      const sqftDesc=`${spotForm.customSqft||spotForm.sqft} sq ft ${spotForm.service} job`;
+      const prompt=`Write a personal note for a direct mail postcard from JWood LLC (concrete contractor, Tulsa OK, 918-896-6737) to a homeowner at ${spotForm.address}, ${spotForm.city} OK. The contractor noticed: ${damageList}.${photoContext} This is a ${sqftDesc} with ${spotForm.damageLevel} damage. Bid range: ${bidRange}. Notes: ${spotForm.notes||"none"}. Write a warm, personal 2-3 sentence note that mentions we drove past their home, noticed the specific damage, and want to help. Sound like a neighbor, not a corporation. Do NOT be salesy. Return ONLY JSON: {"personalNote":"string","headline":"string","urgencyLine":"string"}`;
 
       const res=await fetch(ANTHROPIC_PROXY,{
         method:"POST",
@@ -808,7 +864,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       const raw=data.content?.map(b=>b.text||"").join("");
       const parsed=parseJSON(raw);
       if(parsed){
-        setSpotMailer({...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,damage:detectedDamage,photoUsed:!!spotPhoto});
+        setSpotMailer({...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,damage:detectedDamage,photoUsed:!!spotPhoto});
         setSpotLoading(false);
         return;
       }
@@ -824,7 +880,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       headline:"WE NOTICED YOUR DRIVEWAY",
       personalNote:`We were working in your neighborhood recently and noticed your driveway at ${spotForm.address} has ${damageList}. As local Tulsa concrete specialists, we would love to help you get ahead of this before it gets worse — and we can usually start within a week.`,
       urgencyLine:"Oklahoma winters do not wait — neither should your driveway.",
-      address:spotForm.address,city:spotForm.city,bid:bidRange,
+      address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,
       damage:detectedDemo,
       photoUsed:!!spotPhoto
     });
@@ -840,15 +896,15 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       await lobRequest("/postcards",{
         description:`JWood LLC Spot Bid - ${spotMailer.address}`,
         to:LOB_TO_ID,from:LOB_FROM_ID,size:"6x9",
-        front:`<html><body style="margin:0;padding:28px;background:#1c1a17;color:#f5f0e6;font-family:Arial,sans-serif;"><div style="color:#e8560a;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;">A Personal Note from JWood LLC</div><h1 style="font-size:28px;color:#f5f0e6;margin:0 0 10px;line-height:1.1;">${spotMailer.headline}</h1><p style="font-size:12px;color:#b8b4ac;line-height:1.7;margin-bottom:14px;">${spotMailer.personalNote}</p><div style="background:rgba(232,86,10,0.2);border:1px solid rgba(232,86,10,0.5);border-radius:6px;padding:12px 16px;"><div style="font-size:10px;color:#e8560a;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Our Estimate for Your Home</div><div style="font-size:24px;font-weight:700;color:#f5f0e6;">${spotMailer.bid}</div></div><p style="margin-top:12px;font-size:10px;color:#7a7670;">${spotMailer.urgencyLine}</p></body></html>`,
-        back:`<html><body style="margin:0;padding:28px;background:#f5f0e6;color:#1c1a17;font-family:Arial,sans-serif;"><h2 style="font-size:20px;margin-bottom:10px;">What We Noticed at Your Home</h2>${spotMailer.damage?.map(d=>`<div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;margin-bottom:6px;font-size:11px;">${d}</div>`).join("")||"<div style='font-size:12px;color:#6a6864;'>General driveway wear and aging</div>"}<div style="margin-top:16px;background:#1c1a17;color:white;padding:14px;border-radius:8px;text-align:center;"><div style="font-size:15px;font-weight:700;">918-896-6737</div><div style="font-size:10px;color:#b8b4ac;margin-top:2px;">Call or text Joel directly</div><div style="margin-top:5px;font-size:10px;background:#e8560a;display:inline-block;padding:3px 8px;border-radius:4px;">Free on-site estimate — no obligation</div></div></body></html>`,
+        front:`<html><body style="margin:0;padding:26px;background:#1c1a17;color:#f5f0e6;font-family:Arial,sans-serif;"><div style="color:#e8560a;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;">A Personal Note from JWood LLC · Tulsa, OK</div><h1 style="font-size:24px;color:#f5f0e6;margin:0 0 8px;line-height:1.1;">${spotMailer.headline}</h1><p style="font-size:11px;color:#b8b4ac;line-height:1.65;margin-bottom:12px;">${spotMailer.personalNote}</p><div style="background:rgba(232,86,10,0.2);border:1px solid rgba(232,86,10,0.5);border-radius:6px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div><div style="font-size:8px;color:#e8560a;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px;">Your Personalized Estimate</div><div style="display:flex;align-items:baseline;gap:5px;"><span style="font-size:10px;color:rgba(184,180,172,0.7);">Starting at</span><span style="font-size:24px;font-weight:700;color:#f5f0e6;">${spotMailer.bidLo||spotMailer.bid}</span></div>${spotMailer.bidHi?`<div style="font-size:9px;color:rgba(184,180,172,0.6);">Up to ${spotMailer.bidHi} depending on scope</div>`:""} ${spotMailer.includes?`<div style="font-size:8px;color:rgba(184,180,172,0.4);margin-top:2px;">Includes: ${spotMailer.includes}</div>`:""}</div><div style="background:#e8560a;color:white;padding:8px 10px;border-radius:6px;text-align:center;flex-shrink:0;"><div style="font-size:8px;font-weight:700;letter-spacing:1px;">CALL NOW</div><div style="font-size:13px;font-weight:700;font-family:monospace;">918-896-6737</div></div></div><p style="margin-top:8px;font-size:9px;color:#7a7670;">${spotMailer.urgencyLine}</p></body></html>`,
+        back:`<html><body style="margin:0;padding:26px;background:#f5f0e6;color:#1c1a17;font-family:Arial,sans-serif;"><h2 style="font-size:18px;margin-bottom:8px;">What We Noticed at Your Home</h2>${spotMailer.damage?.map(d=>`<div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:7px 11px;border-radius:4px;margin-bottom:5px;font-size:10px;">${d}</div>`).join("")||"<div style='font-size:11px;color:#6a6864;'>General driveway wear and aging</div>"}<div style="margin-top:12px;background:rgba(232,86,10,0.08);border:1px solid rgba(232,86,10,0.2);border-radius:6px;padding:10px 14px;"><div style="font-size:8px;color:#e8560a;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Your Personalized Estimate</div><div style="display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;"><span style="font-size:10px;color:#6a6864;">Starting at</span><span style="font-size:22px;font-weight:700;color:#1c1a17;">${spotMailer.bidLo||spotMailer.bid}</span>${spotMailer.bidHi?`<span style="font-size:10px;color:#6a6864;">— up to ${spotMailer.bidHi}</span>`:""}</div>${spotMailer.includes?`<div style="font-size:9px;color:#8a8680;margin-top:3px;">✓ Includes: ${spotMailer.includes}</div>`:""}</div><div style="margin-top:10px;background:#1c1a17;color:white;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:14px;font-weight:700;">918-896-6737</div><div style="font-size:9px;color:#b8b4ac;margin-top:2px;">Call or text Joel directly</div><div style="margin-top:4px;font-size:9px;background:#e8560a;display:inline-block;padding:2px 8px;border-radius:4px;">Free on-site visit — no obligation</div></div></body></html>`,
         use_type:"marketing"
       });
       const newSpotJob={id:`SB-00${spotJobs.length+1}`,address:spotMailer.address,city:spotMailer.city,bid:spotMailer.bid,damage:spotMailer.damage,sent:"Apr 07",status:"queued"};
       setSpotJobs(p=>[newSpotJob,...p]);
       showToast("✅ Spot bid sent to Lob.com!","success");
       setSpotMailer(null);
-      setSpotForm({address:"",city:"Tulsa",state:"OK",zip:"",bidLow:"",bidHigh:"",damage:[],notes:""});
+      setSpotForm({address:"",city:"Tulsa",state:"OK",zip:"",sqft:400,customSqft:"",service:"Crack Repair",damageLevel:"Moderate",bidLow:"",bidHigh:"",overridePrice:false,includes:"",damage:[],notes:""});
       setSpotPhoto(null);
     }catch(e){
       showToast("Spot bid queued (demo mode)","info");
@@ -1109,12 +1165,68 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   {DAMAGES.map(d=><button key={d} className={`chip${spotForm.damage.includes(d)?" on":""}`} onClick={()=>toggleDamage(d)}>{d}</button>)}
                 </div>
 
-                <div className="section-head">Bid Range</div>
-                <div className="bid-range-row">
-                  <div className="field" style={{margin:0}}><label>Low ($)</label><input type="number" placeholder="800" value={spotForm.bidLow} onChange={e=>setSpot("bidLow",e.target.value)}/></div>
-                  <div className="bid-range-sep">to</div>
-                  <div className="field" style={{margin:0}}><label>High ($)</label><input type="number" placeholder="1400" value={spotForm.bidHigh} onChange={e=>setSpot("bidHigh",e.target.value)}/></div>
+                <div className="section-head">Driveway Size</div>
+                <div className="chips" style={{marginBottom:8}}>
+                  {DRIVEWAY_SIZES.map(s=>(
+                    <button key={s.label} className={`chip${spotForm.sqft===s.sqft&&!spotForm.customSqft?" on":""}`}
+                      onClick={()=>setSpotForm(f=>({...f,sqft:s.sqft,customSqft:"",overridePrice:false}))}>
+                      {s.label}<span style={{fontSize:9,opacity:0.7,display:"block"}}>{s.desc}</span>
+                    </button>
+                  ))}
                 </div>
+                <div className="field">
+                  <label>Custom Sq Ft (optional)</label>
+                  <input type="number" placeholder="e.g. 350" value={spotForm.customSqft}
+                    onChange={e=>setSpotForm(f=>({...f,customSqft:e.target.value,overridePrice:false}))}/>
+                </div>
+
+                <div className="section-head">Service Type</div>
+                <div className="chips" style={{marginBottom:12}}>
+                  {Object.keys(SERVICE_RATES).map(s=>(
+                    <button key={s} className={`chip${spotForm.service===s?" on":""}`}
+                      onClick={()=>setSpotForm(f=>({...f,service:s,overridePrice:false}))}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="section-head">Damage Level</div>
+                <div className="chips" style={{marginBottom:12}}>
+                  {["Minor","Moderate","Severe"].map(d=>(
+                    <button key={d} className={`chip${spotForm.damageLevel===d?" on":""}`}
+                      onClick={()=>setSpotForm(f=>({...f,damageLevel:d,overridePrice:false}))}>
+                      {d}
+                    </button>
+                  ))}
+                </div>
+
+                {/* AUTO-CALCULATED PRICE */}
+                <div style={{background:"rgba(232,86,10,0.08)",border:"1px solid rgba(232,86,10,0.25)",borderRadius:9,padding:"14px 16px",marginBottom:12}}>
+                  <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--orange2)",marginBottom:6}}>
+                    {spotForm.overridePrice?"✏️ Manual Override":"⚡ Auto-Calculated Price"}
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:11,color:"var(--stone)",marginBottom:4}}>Starting at</div>
+                      <input type="number" value={spotForm.bidLow}
+                        onChange={e=>setSpotForm(f=>({...f,bidLow:e.target.value,overridePrice:true}))}
+                        style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:6,padding:"8px 10px",color:"var(--orange2)",fontFamily:"DM Mono,monospace",fontSize:18,fontWeight:600,outline:"none"}}/>
+                    </div>
+                    <div style={{color:"var(--stone)",fontSize:13,paddingTop:20}}>to</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:11,color:"var(--stone)",marginBottom:4}}>Up to</div>
+                      <input type="number" value={spotForm.bidHigh}
+                        onChange={e=>setSpotForm(f=>({...f,bidHigh:e.target.value,overridePrice:true}))}
+                        style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:6,padding:"8px 10px",color:"var(--orange2)",fontFamily:"DM Mono,monospace",fontSize:18,fontWeight:600,outline:"none"}}/>
+                    </div>
+                  </div>
+                  <div style={{fontSize:10,color:"var(--gravel)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <span>{spotForm.customSqft||spotForm.sqft} sq ft · {spotForm.service} · {spotForm.damageLevel} damage</span>
+                    {spotForm.overridePrice&&<button onClick={()=>setSpotForm(f=>({...f,overridePrice:false}))} style={{fontSize:10,color:"var(--orange2)",background:"none",border:"none",cursor:"pointer",textDecoration:"underline"}}>Reset to auto</button>}
+                  </div>
+                </div>
+
+                <div className="field"><label>What's Included</label><input placeholder="e.g. Demo, haul away, pour, finish & seal" value={spotForm.includes||""} onChange={e=>setSpot("includes",e.target.value)}/></div>
 
                 <div className="field"><label>Extra Notes for AI</label><textarea placeholder="e.g. Large crack near garage door, looks like tree root damage" value={spotForm.notes} onChange={e=>setSpot("notes",e.target.value)}/></div>
 
@@ -1199,8 +1311,16 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                         <div className="spot-headline" style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:36,color:"#f5f0e6",letterSpacing:1,marginBottom:10,position:"relative"}}>{spotMailer.headline}</div>
                         <div className="spot-note">{spotMailer.personalNote}</div>
                         <div className="spot-bid-box">
-                          <div><div className="spot-bid-label">Our Estimate for Your Home</div><div style={{fontSize:11,color:"rgba(184,180,172,0.6)",marginTop:2}}>Based on what we observed</div></div>
-                          <div className="spot-bid-value">{spotMailer.bid}</div>
+                          <div style={{flex:1}}>
+                            <div className="spot-bid-label">Our Estimate for Your Home</div>
+                            <div style={{display:"flex",alignItems:"baseline",gap:8,marginTop:4,flexWrap:"wrap"}}>
+                              <div style={{fontSize:13,color:"rgba(184,180,172,0.7)"}}>Starting at</div>
+                              <div className="spot-bid-value">{spotMailer.bidLo||spotMailer.bid}</div>
+                            </div>
+                            {spotMailer.bidHi&&<div style={{fontSize:12,color:"rgba(184,180,172,0.6)",marginTop:2}}>Up to {spotMailer.bidHi} depending on scope</div>}
+                            {spotMailer.includes&&<div style={{fontSize:10,color:"rgba(184,180,172,0.45)",marginTop:4}}>Includes: {spotMailer.includes}</div>}
+                          </div>
+                          <div style={{flexShrink:0,background:"var(--orange)",color:"white",padding:"8px 14px",borderRadius:6,fontSize:11,fontWeight:700,textAlign:"center",cursor:"pointer"}}>CALL NOW<br/><span style={{fontSize:13,fontFamily:"DM Mono,monospace"}}>918-896-6737</span></div>
                         </div>
                         <div style={{marginTop:12,fontSize:11,color:"rgba(184,180,172,0.5)",position:"relative"}}>{spotMailer.urgencyLine}</div>
                         <div className="spot-bar"/>
@@ -1213,6 +1333,15 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                         <h3>WHAT WE NOTICED AT YOUR HOME</h3>
                         <div className="spot-damage-list">
                           {spotMailer.damage?.length>0 ? spotMailer.damage.map((d,i)=><div key={i} className="spot-damage-item">⚠️ {d}</div>) : <div className="spot-damage-item">General driveway wear and aging concrete</div>}
+                        </div>
+                        <div style={{background:"rgba(232,86,10,0.08)",border:"1px solid rgba(232,86,10,0.2)",borderRadius:8,padding:"12px 16px",marginBottom:12}}>
+                          <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--orange)",marginBottom:6}}>Your Personalized Estimate</div>
+                          <div style={{display:"flex",alignItems:"baseline",gap:6,flexWrap:"wrap"}}>
+                            <span style={{fontSize:11,color:"#6a6864"}}>Starting at</span>
+                            <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,color:"#1c1a17",letterSpacing:1}}>{spotMailer.bidLo||spotMailer.bid}</span>
+                            {spotMailer.bidHi&&<span style={{fontSize:11,color:"#6a6864"}}>— up to {spotMailer.bidHi}</span>}
+                          </div>
+                          {spotMailer.includes&&<div style={{fontSize:10,color:"#8a8680",marginTop:4}}>✓ Includes: {spotMailer.includes}</div>}
                         </div>
                         <div className="spot-cta-box">
                           <div style={{display:"flex",alignItems:"center",gap:10}}>
