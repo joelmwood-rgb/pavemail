@@ -3,7 +3,8 @@ import React, { useState } from "react";
 // ─────────────────────────────────────────────
 // LOB API INTEGRATION
 // ─────────────────────────────────────────────
-const LOB_PROXY = "https://joelmwood--b166b8c432db11f19dff42b51c65c3df.web.val.run/";
+const LOB_PROXY       = "https://joelmwood--b166b8c432db11f19dff42b51c65c3df.web.val.run/?target=lob";
+const ANTHROPIC_PROXY = "https://joelmwood--b166b8c432db11f19dff42b51c65c3df.web.val.run/?target=anthropic";
 
 async function lobRequest(endpoint, body) {
   const res = await fetch(LOB_PROXY, {
@@ -505,7 +506,7 @@ export default function App(){
     try{
       const prompt=`You are a direct mail copywriter for a concrete driveway contractor in Tulsa, Oklahoma. Company: ${COMPANY.name}, Phone: ${COMPANY.phone}. Neighborhood: ${form.neighborhood}, OK. Season: ${form.season}, Service: ${form.angle}, Offer: ${form.offer}, Promo: ${form.promoCode}. Notes: ${form.extraNotes||"Tulsa area, Oklahoma weather"}.
 Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subheadline":"string","badgeTop":"string","badgeMain":"string","badgeBottom":"string"},"page2":{"headline":"string","intro":"string","benefits":[{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"}],"whyTitle":"string","whyText":"string"},"page3":{"headline":"string","intro":"string","steps":[{"title":"string","desc":"string"},{"title":"string","desc":"string"},{"title":"string","desc":"string"},{"title":"string","desc":"string"}],"offerHeadline":"string","offerSub":"string"},"page4":{"eyebrow":"string","headline":"string","sub":"string","guarantee":"string"}}`;
-      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
+      const res=await fetch(ANTHROPIC_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
       const data=await res.json();
       const raw=data.content?.map(b=>b.text||"").join("");
       const parsed=parseJSON(raw);
@@ -589,7 +590,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         showToast("📷 Analyzing photo...","info");
         const base64=spotPhoto.split(",")[1];
         const mediaType=spotPhoto.split(";")[0].split(":")[1]||"image/jpeg";
-        const visionRes=await fetch("https://api.anthropic.com/v1/messages",{
+        const visionRes=await fetch(ANTHROPIC_PROXY,{
           method:"POST",
           headers:{"Content-Type":"application/json"},
           body:JSON.stringify({
@@ -619,7 +620,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       const photoContext=spotPhoto?" We photographed the damage for reference.":"";
       const prompt=`Write a personal note for a direct mail postcard from JWood LLC (concrete contractor, Tulsa OK, 918-896-6737) to a homeowner at ${spotForm.address}, ${spotForm.city} OK. The contractor noticed: ${damageList}.${photoContext} Bid range: ${bidRange}. Notes: ${spotForm.notes||"none"}. Write a warm, personal 2-3 sentence note that mentions we drove past their home, noticed the specific damage, and want to help. Sound like a neighbor, not a corporation. Do NOT be salesy. Return ONLY JSON: {"personalNote":"string","headline":"string","urgencyLine":"string"}`;
 
-      const res=await fetch("https://api.anthropic.com/v1/messages",{
+      const res=await fetch(ANTHROPIC_PROXY,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:400,messages:[{role:"user",content:prompt}]})
