@@ -4,6 +4,152 @@ import React, { useState } from "react";
 // LOB API INTEGRATION
 // ─────────────────────────────────────────────
 const PROXY_BASE      = "https://joelmwood--b166b8c432db11f19dff42b51c65c3df.web.val.run";
+
+// ─────────────────────────────────────────────
+// SUPABASE CLIENT
+// ─────────────────────────────────────────────
+const SUPABASE_URL = "https://pzbvvohedpgeiynqoujr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_H6U94DoMxk7_Cap6ftIoew_14fhh8Qe";
+
+async function sbFetch(path, options={} ) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      "Prefer": options.prefer || "return=representation",
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    console.error("Supabase error:", res.status, err);
+    return null;
+  }
+  return res.json();
+}
+
+// DB helpers
+const db = {
+  // Pipeline
+  async getPipeline() {
+    return sbFetch("pipeline_leads?contractor_id=eq.jwood&order=created_at.desc");
+  },
+  async upsertLead(lead) {
+    return sbFetch("pipeline_leads", {
+      method: "POST",
+      prefer: "return=representation",
+      headers: { "Prefer": "resolution=merge-duplicates,return=representation" },
+      body: JSON.stringify({
+        id: lead.id,
+        contractor_id: "jwood",
+        address: lead.address,
+        city: lead.city,
+        neighborhood: lead.neighborhood||"",
+        stage: lead.stage,
+        bid_lo: lead.bidLo||"",
+        bid_hi: lead.bidHi||"",
+        value: lead.value||0,
+        notes: lead.notes||"",
+        mailer_sent: lead.mailerSent?new Date().toISOString().split("T")[0]:null,
+        called_back: lead.calledBack?new Date().toISOString().split("T")[0]:null,
+        job_won: lead.jobWon?new Date().toISOString().split("T")[0]:null,
+      }),
+    });
+  },
+  async updateLeadStage(id, stage) {
+    return sbFetch(`pipeline_leads?id=eq.${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ stage, updated_at: new Date().toISOString() }),
+    });
+  },
+  async deleteLead(id) {
+    return sbFetch(`pipeline_leads?id=eq.${id}`, { method: "DELETE" });
+  },
+
+  // Campaigns
+  async getCampaigns() {
+    return sbFetch("campaigns?contractor_id=eq.jwood&order=created_at.desc");
+  },
+  async saveCampaign(campaign) {
+    return sbFetch("campaigns", {
+      method: "POST",
+      body: JSON.stringify({
+        contractor_id: "jwood",
+        name: campaign.name,
+        area: campaign.area,
+        homes: parseInt(campaign.homes)||0,
+        cost: parseFloat(campaign.cost)||0,
+        status: campaign.status||"queued",
+        lob_id: campaign.lobId||campaign.lob||"",
+        mailer_content: campaign.mailerContent||null,
+      }),
+    });
+  },
+
+  // Spot bids
+  async getSpotBids() {
+    return sbFetch("spot_bids?contractor_id=eq.jwood&order=created_at.desc");
+  },
+  async saveSpotBid(bid) {
+    return sbFetch("spot_bids", {
+      method: "POST",
+      body: JSON.stringify({
+        contractor_id: "jwood",
+        address: bid.address,
+        city: bid.city||"Tulsa",
+        bid: bid.bid||"",
+        damage: bid.damage||[],
+        photo_url: bid.photoUrl||"",
+        lob_id: bid.lobId||"",
+        status: "sent",
+        mailer_content: bid.mailerContent||null,
+      }),
+    });
+  },
+
+  // AI calls
+  async getAiCalls() {
+    return sbFetch("ai_calls?contractor_id=eq.jwood&order=created_at.desc");
+  },
+  async saveAiCall(call) {
+    return sbFetch("ai_calls", {
+      method: "POST",
+      body: JSON.stringify({
+        contractor_id: "jwood",
+        caller: call.caller||"Unknown",
+        phone: call.phone||"",
+        summary: call.summary||"",
+        service: call.service||"",
+        address: call.address||"",
+        status: call.status||"pending",
+        transferred: call.transferred||false,
+        bland_call_id: call.blandCallId||"",
+      }),
+    });
+  },
+
+  // Jobs
+  async getJobs() {
+    return sbFetch("jobs?contractor_id=eq.jwood&order=created_at.desc");
+  },
+  async saveJob(job) {
+    return sbFetch("jobs", {
+      method: "POST",
+      body: JSON.stringify({
+        contractor_id: "jwood",
+        name: job.name,
+        area: job.area||"",
+        homes: String(job.homes||0),
+        cost: String(job.cost||0),
+        status: job.status||"queued",
+        lob_id: job.lob||job.lobId||"",
+        calls: job.calls||0,
+      }),
+    });
+  },
+};
 const BLAND_PROXY     = PROXY_BASE + "/?target=bland-call";
 const BLAND_STATUS    = PROXY_BASE + "/?target=bland-status";
 
@@ -32,20 +178,21 @@ async function createBlandAgent(phoneNumber, leadContext) {
       body: JSON.stringify({
         phone_number: phoneNumber,
         task: BLAND_AGENT_SCRIPT,
-        model: "enhanced",
         language: "en-US",
         voice: "maya",
         max_duration: 10,
-        answered_by_enabled: true,
-        transfer_phone_number: "9188966737",
-        transfer_list: { "default": "9188966737" },
+        wait_for_greeting: true,
+        transfer_phone_number: "+19188966737",
         webhook: PROXY_BASE + "/?target=bland",
         metadata: { source: "pavemail", lead: leadContext },
         first_sentence: "Thanks for calling JWood LLC, this is Alex! Are you calling about a driveway project?",
         record: true,
+        reduce_latency: false,
       })
     });
-    return await res.json();
+    const data = await res.json();
+    console.log("Bland API response:", JSON.stringify(data));
+    return data;
   } catch(e) {
     console.error("Bland API error:", e);
     return { error: e.message };
@@ -1121,6 +1268,8 @@ export default function App(){
   ];
 
   const moveStage=(id,newStage)=>{
+    // Save to Supabase
+    db.updateLeadStage(id, newStage).catch(e=>console.error("Stage update failed:", e));
     setPipeline(p=>p.map(l=>l.id===id?{...l,stage:newStage,
       mailerSent:newStage==="sent"&&!l.mailerSent?"Apr 07":l.mailerSent,
       calledBack:newStage==="called"&&!l.calledBack?"Apr 08":l.calledBack,
@@ -1238,12 +1387,52 @@ export default function App(){
     const lo=newLead.bidLow?`$${parseInt(newLead.bidLow).toLocaleString()}`:"";
     const hi=newLead.bidHigh?`$${parseInt(newLead.bidHigh).toLocaleString()}`:"";
     const value=newLead.bidLow?parseInt(newLead.bidLow):0;
-    setPipeline(p=>[{id,address:newLead.address,city:newLead.city,neighborhood:newLead.neighborhood||newLead.city,stage:"spotted",bidLo:lo,bidHi:hi,spotted:"Apr 07",mailerSent:null,calledBack:null,jobWon:null,notes:newLead.notes,value},...p]);
+    const newLeadObj={id,address:newLead.address,city:newLead.city,neighborhood:newLead.neighborhood||newLead.city,stage:"spotted",bidLo:lo,bidHi:hi,spotted:"Apr 07",mailerSent:null,calledBack:null,jobWon:null,notes:newLead.notes,value};
+    setPipeline(p=>[newLeadObj,...p]);
+    db.upsertLead(newLeadObj).catch(e=>console.error("Save lead failed:", e));
     setNewLead({address:"",city:"Tulsa",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
     setShowAddLead(false);
     showToast("📍 Lead added to pipeline","success");
   };
   const setSpot=(k,v)=>setSpotForm(f=>({...f,[k]:v}));
+
+  // ── LOAD ALL DATA FROM SUPABASE ON MOUNT ──
+  React.useEffect(()=>{
+    const loadAll = async () => {
+      try {
+        const [leads, savedBids, savedCalls] = await Promise.all([
+          db.getPipeline(),
+          db.getSpotBids(),
+          db.getAiCalls(),
+        ]);
+        if(leads && leads.length > 0){
+          setPipeline(leads.map(l=>({
+            id:l.id, address:l.address, city:l.city, neighborhood:l.neighborhood||"",
+            stage:l.stage, bidLo:l.bid_lo||"", bidHi:l.bid_hi||"", value:l.value||0,
+            spotted:l.spotted||"", mailerSent:l.mailer_sent||null,
+            calledBack:l.called_back||null, jobWon:l.job_won||null,
+            notes:l.notes||"", color:ROUTE_COLORS[0],
+          })));
+        }
+        if(savedBids && savedBids.length > 0){
+          setSpotJobs(savedBids.map(b=>({
+            id:b.id, address:b.address, city:b.city, bid:b.bid||"",
+            damage:b.damage||[], sent:b.sent_date||"", status:b.status||"sent",
+          })));
+        }
+        if(savedCalls && savedCalls.length > 0){
+          setAiLeads(savedCalls.map(c=>({
+            id:c.id, caller:c.caller||"Unknown", phone:c.phone||"",
+            summary:c.summary||"", service:c.service||"", address:c.address||"",
+            status:c.status||"pending", transferred:c.transferred||false,
+            time:new Date(c.created_at).toLocaleDateString(),
+          })));
+        }
+        console.log("Supabase loaded:", leads?.length, "leads,", savedBids?.length, "bids,", savedCalls?.length, "calls");
+      } catch(e){ console.error("Supabase load error:", e); }
+    };
+    loadAll();
+  },[]);
 
   // Auto-recalculate price whenever inputs change
   React.useEffect(()=>{
@@ -1525,10 +1714,14 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       });
       const newSpotJob={id:`SB-00${spotJobs.length+1}`,address:spotMailer.address,city:spotMailer.city,bid:spotMailer.bid,damage:spotMailer.damage,sent:"Apr 07",status:"queued"};
       setSpotJobs(p=>[newSpotJob,...p]);
+      // Save spot bid to Supabase
+      db.saveSpotBid({address:spotMailer.address,city:spotMailer.city,bid:spotMailer.bid,damage:spotMailer.damage,photoUrl:capturedPhotoUrl||"",lobId:lobData?.id||"",mailerContent:spotMailer}).catch(e=>console.error("Save spot bid failed:",e));
       // Auto-add to pipeline as "sent"
       const plId=`PL-${Date.now()}`;
-      setPipeline(p=>[{id:plId,address:spotMailer.address,city:spotMailer.city,neighborhood:spotForm.neighborhood||spotMailer.city,stage:"sent",bidLo:spotMailer.bidLo||spotMailer.bid,bidHi:spotMailer.bidHi||"",spotted:"Apr 07",mailerSent:"Apr 07",calledBack:null,jobWon:null,notes:spotMailer.damage?.join(", ")||"",value:parseInt(spotForm.bidLow)||0},...p]);
-      showToast("✅ Spot bid sent + added to pipeline!","success");
+      const newPipelineLead={id:plId,address:spotMailer.address,city:spotMailer.city,neighborhood:spotForm.neighborhood||spotMailer.city,stage:"sent",bidLo:spotMailer.bidLo||spotMailer.bid,bidHi:spotMailer.bidHi||"",spotted:"Apr 07",mailerSent:"Apr 07",calledBack:null,jobWon:null,notes:spotMailer.damage?.join(", ")||"",value:parseInt(spotForm.bidLow)||0};
+      setPipeline(p=>[newPipelineLead,...p]);
+      db.upsertLead(newPipelineLead).catch(e=>console.error("Save pipeline lead failed:",e));
+      showToast("✅ Spot bid sent + saved to database!","success");
       setSpotMailer(null);
       setSpotForm({address:"",city:"Tulsa",state:"OK",zip:"",sqft:400,customSqft:"",service:"Crack Repair",damageLevel:"Moderate",bidLow:"",bidHigh:"",overridePrice:false,includes:"",damage:[],notes:""});
       setSpotPhoto(null);
@@ -2254,11 +2447,14 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       showToast("Initiating test call...","info");
                       const clean=testCallNumber.replace(/\D/g,"");
                       const result=await createBlandAgent("+1"+clean,"Test call from PaveMail dashboard");
-                      if(result.call_id||result.id){
-                        showToast("Test call initiated! You should receive a call shortly.","success");
-                        setAiLeads(l=>[{id:"AL-"+Date.now(),caller:"Test Call",phone:testCallNumber,summary:"Test call initiated from PaveMail dashboard",service:"Test",address:"",status:"pending",time:"Just now",transferred:false},...l]);
+                      console.log("Test call result:", JSON.stringify(result));
+                      if(result.call_id||result.id||result.status==="success"){
+                        showToast("Test call initiated! You should receive a call within 10 seconds.","success");
+                        setAiLeads(l=>[{id:"AL-"+Date.now(),caller:"Test Call",phone:testCallNumber,summary:"Test call initiated from PaveMail dashboard. Call ID: "+(result.call_id||result.id||"pending"),service:"Test",address:"",status:"pending",time:"Just now",transferred:false},...l]);
                       } else {
-                        showToast("Call failed: "+(result.error||result.message||"Check Bland.ai dashboard"),"info");
+                        const errMsg = result.errors?.[0]?.message || result.message || result.error || JSON.stringify(result).slice(0,100);
+                        showToast("Call failed: "+errMsg,"info");
+                        console.error("Full bland error:", result);
                       }
                       setTestCallLoading(false);
                     }}
