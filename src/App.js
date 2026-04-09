@@ -1287,7 +1287,7 @@ export default function App(){
     mode: "hungry", // hungry | normal | selective | paused
     manualOverride: null,
   });
-  function showToast(msg,type="success") {
+  function showToast(msg,type="success") {setToast({msg,type});setTimeout(()=>setToast(null),4000);}
   const toggleRoute=(id)=>setSelectedRoutes(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
 
 
