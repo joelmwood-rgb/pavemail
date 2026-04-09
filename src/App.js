@@ -1103,7 +1103,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               role:"user",
               content:[
                 {type:"image",source:{type:"url",url:capturedPhotoUrl}},
-                {type:"text",text:"Analyze this driveway photo. List all visible damage. Reply with only valid JSON, no markdown: damage array of strings, severity as minor or moderate or severe, summary as one sentence."}
+                {type:"text",text:"Analyze this driveway photo. List all visible damage. Reply with only valid JSON, no markdown: {damage:[string], severity:string, summary:string}"}
               ]
             }]
           })
@@ -1114,7 +1114,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         const visionParsed=parseJSON(visionRaw);
         if(visionParsed?.damage){
           detectedDamage=[...new Set([...spotForm.damage,...visionParsed.damage])];
-          const newLevel = visionParsed.severity==="severe"?"Severe":visionParsed.severity==="minor"?"Minor":"Moderate";
+                const newLevel = visionParsed.severity==="severe"?"Severe":visionParsed.severity==="minor"?"Minor":"Moderate";
           setSpotForm(f=>({...f,damage:detectedDamage,damageLevel:newLevel,overridePrice:false}));
           showToast("AI detected: "+visionParsed.summary,"info");
         } else {
@@ -1828,52 +1828,51 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <div className="spot-mailer" style={{marginBottom:18}}>
                       <div className="spot-front">
                         <div className="spot-photo-wrap">
-                        {(spotMailer.photoUrl||spotMailer.photoData) ? (
-                          <>
-                            <img
-                              src={spotMailer.photoUrl||spotPhotoUrlRef.current||spotPhotoUrl||spotMailer.photoData}
-                              className="spot-photo-bg"
-                              alt=""
-                              role="presentation"
-                              onLoad={()=>console.log("Photo loaded on screen!")}
-                              onError={e=>{ console.log("Photo load error"); if(spotMailer.photoData&&e.target.src!==spotMailer.photoData) e.target.src=spotMailer.photoData; }}
-                            />
-                            <div className="spot-photo-overlay"/>
-                          </>
-                        ) : (
-                          <>
-                            <div className="spot-front-no-photo"/>
-                            <div className="spot-front-texture"/>
-                          </>
-                        )}
-                        <div className="spot-front-content">
-                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"auto"}}>
-                            <div className="spot-tag" style={{margin:0}}>JWood LLC · Tulsa, OK</div>
-                            {(spotMailer.photoUrl||spotMailer.photoData)&&<div style={{background:"rgba(232,86,10,0.9)",color:"white",fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:4,letterSpacing:1}}>📷 YOUR DRIVEWAY</div>}
-                          </div>
-                          <div style={{paddingTop:16}}>
-                            <div className="spot-address">{spotMailer.address}, {spotMailer.city}</div>
-                            <div className="spot-headline" style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:34,color:"#f5f0e6",letterSpacing:1,marginBottom:10,lineHeight:1,textShadow:"0 2px 8px rgba(0,0,0,0.8)"}}>{spotMailer.headline}</div>
-                            <div className="spot-note" style={{textShadow:"0 1px 4px rgba(0,0,0,0.9)"}}>{spotMailer.personalNote}</div>
-                            <div className="spot-bid-box">
-                              <div style={{flex:1}}>
-                                <div className="spot-bid-label">Your Personalized Estimate</div>
-                                <div style={{display:"flex",alignItems:"baseline",gap:8,marginTop:4,flexWrap:"wrap"}}>
-                                  <div style={{fontSize:13,color:"rgba(184,180,172,0.7)"}}>Starting at</div>
-                                  <div className="spot-bid-value">{spotMailer.bidLo||spotMailer.bid}</div>
-                                </div>
-                                {spotMailer.bidHi&&<div style={{fontSize:12,color:"rgba(184,180,172,0.6)",marginTop:2}}>Up to {spotMailer.bidHi} depending on scope</div>}
-                                {spotMailer.includes&&<div style={{fontSize:10,color:"rgba(184,180,172,0.45)",marginTop:4}}>Includes: {spotMailer.includes}</div>}
-                              </div>
-                              <div style={{flexShrink:0,background:"var(--orange)",color:"white",padding:"8px 14px",borderRadius:6,fontSize:11,fontWeight:700,textAlign:"center"}}>CALL NOW<br/><span style={{fontSize:13,fontFamily:"DM Mono,monospace"}}>918-896-6737</span></div>
+                          {(spotMailer.photoUrl||spotMailer.photoData) ? (
+                            <>
+                              <img
+                                src={spotMailer.photoUrl||spotPhotoUrlRef.current||spotPhotoUrl||spotMailer.photoData}
+                                className="spot-photo-bg"
+                                alt=""
+                                role="presentation"
+                                onLoad={()=>console.log("Photo loaded on screen!")}
+                                onError={e=>{ console.log("Photo load error"); if(spotMailer.photoData&&e.target.src!==spotMailer.photoData) e.target.src=spotMailer.photoData; }}
+                              />
+                              <div className="spot-photo-overlay"/>
+                            </>
+                          ) : (
+                            <>
+                              <div className="spot-front-no-photo"/>
+                              <div className="spot-front-texture"/>
+                            </>
+                          )}
+                          <div className="spot-front-content">
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"auto"}}>
+                              <div className="spot-tag" style={{margin:0}}>JWood LLC · Tulsa, OK</div>
+                              {(spotMailer.photoUrl||spotMailer.photoData)&&<div style={{background:"rgba(232,86,10,0.9)",color:"white",fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:4,letterSpacing:1}}>YOUR DRIVEWAY</div>}
                             </div>
-                            <div style={{marginTop:10,fontSize:10,color:"rgba(184,180,172,0.5)"}}>{spotMailer.urgencyLine}</div>
+                            <div style={{paddingTop:16}}>
+                              <div className="spot-address">{spotMailer.address}, {spotMailer.city}</div>
+                              <div className="spot-headline" style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:34,color:"#f5f0e6",letterSpacing:1,marginBottom:10,lineHeight:1,textShadow:"0 2px 8px rgba(0,0,0,0.8)"}}>{spotMailer.headline}</div>
+                              <div className="spot-note" style={{textShadow:"0 1px 4px rgba(0,0,0,0.9)"}}>{spotMailer.personalNote}</div>
+                              <div className="spot-bid-box">
+                                <div style={{flex:1}}>
+                                  <div className="spot-bid-label">Your Personalized Estimate</div>
+                                  <div style={{display:"flex",alignItems:"baseline",gap:8,marginTop:4,flexWrap:"wrap"}}>
+                                    <div style={{fontSize:13,color:"rgba(184,180,172,0.7)"}}>Starting at</div>
+                                    <div className="spot-bid-value">{spotMailer.bidLo||spotMailer.bid}</div>
+                                  </div>
+                                  {spotMailer.bidHi&&<div style={{fontSize:12,color:"rgba(184,180,172,0.6)",marginTop:2}}>Up to {spotMailer.bidHi} depending on scope</div>}
+                                  {spotMailer.includes&&<div style={{fontSize:10,color:"rgba(184,180,172,0.45)",marginTop:4}}>Includes: {spotMailer.includes}</div>}
+                                </div>
+                                <div style={{flexShrink:0,background:"var(--orange)",color:"white",padding:"8px 14px",borderRadius:6,fontSize:11,fontWeight:700,textAlign:"center"}}>CALL NOW<br/><span style={{fontSize:13,fontFamily:"DM Mono,monospace"}}>918-896-6737</span></div>
+                              </div>
+                              <div style={{marginTop:10,fontSize:10,color:"rgba(184,180,172,0.5)"}}>{spotMailer.urgencyLine}</div>
+                            </div>
+                            <div className="spot-bar"/>
                           </div>
                         </div>
-                        <div className="spot-bar"/>
-                        </div>{/* spot-front-content */}
-                        </div>{/* spot-photo-wrap */}
-                      </div>{/* spot-front */}
+                      </div>
                     </div>
 
                     <div className="page-tag">Back of Postcard</div>
