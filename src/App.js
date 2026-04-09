@@ -2056,6 +2056,30 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               <div key={i} className={`pin-dot${i<pin.length?pinError?" error":" filled":""}`}/>
             ))}
           </div>
+          {/* Hidden input captures physical keyboard */}
+          <input
+            type="tel"
+            inputMode="numeric"
+            maxLength={4}
+            value={pin}
+            onChange={e=>{
+              const val=e.target.value.replace(/\D/g,"").slice(0,4);
+              setPin(val);
+              setPinError(false);
+              if(val.length===4){
+                const CORRECT="8966";
+                if(val===CORRECT){
+                  if(rememberMe){try{localStorage.setItem(STORAGE_KEY,"true");}catch{}}
+                  setUnlocked(true);
+                } else {
+                  setPinError(true);setShaking(true);
+                  setTimeout(()=>{setPin("");setPinError(false);setShaking(false);},600);
+                }
+              }
+            }}
+            autoFocus
+            style={{position:"absolute",opacity:0,width:1,height:1,pointerEvents:"none"}}
+          />
           <div className="keypad">
             {["1","2","3","4","5","6","7","8","9"].map(k=>(
               <button key={k} className="key-btn" onClick={()=>pressKey(k)}>{k}</button>
@@ -2366,37 +2390,61 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
                 {spotMode==="photo"&&(
                   <div>
-                    <label className="photo-drop" onClick={()=>document.getElementById('photo-input').click()}>
-                      {spotPhoto ? <><img src={spotPhoto} className="photo-preview" alt="driveway"/><div style={{fontSize:11,color:spotPhotoUrl?"var(--green2)":"var(--yellow)",textAlign:"center",marginTop:4}}>{spotPhotoUrl?"✓ Photo uploaded & ready":"⏳ Uploading photo..."}</div></> : <><div className="pd-icon">📷</div><div className="pd-label">Tap to take photo or upload<br/><span style={{fontSize:10,color:"var(--gravel)"}}>AI reads the damage automatically</span></div></>}
-                      <input id="photo-input" type="file" accept="image/*" capture="environment" onChange={async e=>{
-  const f=e.target.files[0];
-  if(!f) return;
-  const reader=new FileReader();
-  reader.onload=async ev=>{
-    const base64=ev.target.result;
-    setSpotPhoto(base64); // store base64 for desktop preview
-    // immediately upload to imgbb for mobile-compatible URL
-    showToast("📷 Uploading photo...","info");
-    try {
-      const imageData=base64.split(",")[1];
-      const formData=new FormData();
-      formData.append("key","1de580a4e5bbefe4b3b892494b4a6d7a");
-      formData.append("image",imageData);
-      const res=await fetch(IMGBB_PROXY,{method:"POST",body:formData});
-      const data=await res.json();
-      if(data.success){
-        const hostedUrl = data.data.url;
-        setSpotPhotoUrl(hostedUrl);
-        spotPhotoUrlRef.current = hostedUrl;
-        console.log("Photo uploaded to imgbb:", hostedUrl);
-        showToast("📷 Photo ready","success");
-      }
-    } catch(err){ console.error("imgbb upload failed:",err); }
-  };
-  reader.readAsDataURL(f);
-}}/>
-                    </label>
-                    {spotPhoto&&<button className="btn btn-ghost btn-sm" style={{width:"100%",marginTop:4}} onClick={e=>{e.stopPropagation();setSpotPhoto(null);setSpotPhotoUrl(null);spotPhotoUrlRef.current=null;}}>✕ Remove Photo</button>}
+                    <input
+                      id="photo-input"
+                      type="file"
+                      accept="image/*"
+                      style={{display:"none"}}
+                      onClick={e=>{ e.target.value=null; }}
+                      onChange={async e=>{
+                        const f=e.target.files[0];
+                        if(!f) return;
+                        const reader=new FileReader();
+                        reader.onload=async ev=>{
+                          const base64=ev.target.result;
+                          setSpotPhoto(base64);
+                          showToast("📷 Uploading photo...","info");
+                          try {
+                            const imageData=base64.split(",")[1];
+                            const formData=new FormData();
+                            formData.append("key","1de580a4e5bbefe4b3b892494b4a6d7a");
+                            formData.append("image",imageData);
+                            const res=await fetch(IMGBB_PROXY,{method:"POST",body:formData});
+                            const data=await res.json();
+                            if(data.success){
+                              const hostedUrl=data.data.url;
+                              setSpotPhotoUrl(hostedUrl);
+                              spotPhotoUrlRef.current=hostedUrl;
+                              showToast("📷 Photo ready","success");
+                            }
+                          } catch(err){ console.error("imgbb upload failed:",err); }
+                        };
+                        reader.readAsDataURL(f);
+                      }}
+                    />
+                    <div
+                      className="photo-drop"
+                      onClick={()=>document.getElementById('photo-input').click()}
+                    >
+                      {spotPhoto ? (
+                        <>
+                          <img src={spotPhoto} className="photo-preview" alt="driveway"/>
+                          <div style={{fontSize:11,color:spotPhotoUrl?"var(--green2)":"var(--yellow)",textAlign:"center",marginTop:4}}>
+                            {spotPhotoUrl?"✓ Photo uploaded & ready":"⏳ Uploading photo..."}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="pd-icon">📷</div>
+                          <div className="pd-label">Tap to take photo or upload<br/><span style={{fontSize:10,color:"var(--gravel)"}}>AI reads the damage automatically</span></div>
+                        </>
+                      )}
+                    </div>
+                    {spotPhoto&&(
+                      <button className="btn btn-ghost btn-sm" style={{width:"100%",marginTop:4}} onClick={()=>{setSpotPhoto(null);setSpotPhotoUrl(null);spotPhotoUrlRef.current=null;setCanvasDataUrl(null);}}>
+                        ✕ Remove Photo
+                      </button>
+                    )}
                   </div>
                 )}
 
