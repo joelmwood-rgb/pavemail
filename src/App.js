@@ -1286,15 +1286,44 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
     ctx.fillText('CALL NOW',W-63,by+17);
     ctx.font='bold 11px monospace'; ctx.fillText('918-896-6737',W-63,by+34);
     ctx.textAlign='left';
-    setDataUrl(canvas.toDataURL('image/jpeg',0.92));
+    try {
+      setDataUrl(canvas.toDataURL('image/jpeg',0.92));
+    } catch(e) {
+      // Canvas tainted by cross-origin image — show raw photo instead
+      console.log('Canvas tainted, using raw photo');
+      setDataUrl(null);
+    }
   }
 
   if(photoSrc){
+    // First try with crossOrigin for canvas export
     var img=new Image();
     img.crossOrigin='anonymous';
-    img.onload=function(){draw(img);};
-    img.onerror=function(){draw(null);};
-    img.src=photoSrc;
+    img.onload=function(){ 
+      try {
+        draw(img);
+        // Test if canvas is tainted by trying toDataURL
+        canvas.toDataURL('image/jpeg',0.1);
+      } catch(e) {
+        // Canvas tainted — retry without crossOrigin
+        // Safari blocks cross-origin canvas reads
+        var img2=new Image();
+        img2.onload=function(){ draw(img2); };
+        img2.onerror=function(){ draw(null); };
+        img2.src=photoSrc;
+      }
+    };
+    img.onerror=function(){
+      // crossOrigin failed to load — try without it
+      var img2=new Image();
+      img2.onload=function(){ 
+        try { draw(img2); } catch(e){ draw(null); }
+      };
+      img2.onerror=function(){ draw(null); };
+      img2.src=photoSrc;
+    };
+    // Add cache buster for Safari
+    img.src=photoSrc+(photoSrc.includes('?')?'&':'?')+'cb='+Date.now();
   } else {
     draw(null);
   }
@@ -2680,6 +2709,30 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                               alt="Postcard preview"
                               style={{width:"100%",height:320,objectFit:"cover",display:"block",borderRadius:"8px 8px 0 0"}}
                             />
+                          ) : (spotMailer.photoUrl||spotMailer.photoData) ? (
+                            // Safari fallback — raw photo with CSS overlay
+                            <div style={{position:"relative",height:320,overflow:"hidden",borderRadius:"8px 8px 0 0"}}>
+                              <img
+                                src={spotMailer.photoUrl||spotMailer.photoData}
+                                alt="driveway"
+                                style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}
+                              />
+                              <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,rgba(10,9,8,0.25) 0%,rgba(10,9,8,0.7) 50%,rgba(10,9,8,0.97) 100%)"}}/>
+                              <div style={{position:"absolute",inset:0,padding:20,display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
+                                <div style={{fontSize:10,color:"rgba(245,240,230,0.6)",marginBottom:4}}>{spotMailer.address}, {spotMailer.city}</div>
+                                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,color:"#f5f0e6",letterSpacing:1,lineHeight:1,marginBottom:8}}>{spotMailer.headline}</div>
+                                <div style={{background:"rgba(0,0,0,0.5)",borderLeft:"3px solid rgba(232,86,10,0.7)",borderRadius:6,padding:"8px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                                  <div>
+                                    <div style={{fontSize:7,color:"rgba(232,86,10,0.8)",fontWeight:700,letterSpacing:2,textTransform:"uppercase"}}>Your Estimate</div>
+                                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:"#f5f0e6"}}>{spotMailer.bidLo||spotMailer.bid}</div>
+                                  </div>
+                                  <div style={{background:"#e8560a",borderRadius:5,padding:"6px 10px",textAlign:"center"}}>
+                                    <div style={{fontSize:8,fontWeight:700,color:"white"}}>CALL NOW</div>
+                                    <div style={{fontSize:11,fontFamily:"monospace",color:"white"}}>918-896-6737</div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           ) : (
                             <>
                               <div className="spot-front-no-photo"/>
