@@ -994,7 +994,7 @@ export default function App(){
     try{
       const prompt=`You are a direct mail copywriter for a concrete driveway contractor in Tulsa, Oklahoma. Company: ${COMPANY.name}, Phone: ${COMPANY.phone}. Neighborhood: ${form.neighborhood}, OK. Season: ${form.season}, Service: ${form.angle}, Offer: ${form.offer}, Promo: ${form.promoCode}. Notes: ${form.extraNotes||"Tulsa area, Oklahoma weather"}.
 Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subheadline":"string","badgeTop":"string","badgeMain":"string","badgeBottom":"string"},"page2":{"headline":"string","intro":"string","benefits":[{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"}],"whyTitle":"string","whyText":"string"},"page3":{"headline":"string","intro":"string","steps":[{"title":"string","desc":"string"},{"title":"string","desc":"string"},{"title":"string","desc":"string"},{"title":"string","desc":"string"}],"offerHeadline":"string","offerSub":"string"},"page4":{"eyebrow":"string","headline":"string","sub":"string","guarantee":"string"}}`;
-      const res=await fetch(ANTHROPIC_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
+      const res=await fetch(ANTHROPIC_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
       const data=await res.json();
       const raw=data.content?.map(b=>b.text||"").join("");
       const parsed=parseJSON(raw);
@@ -1085,21 +1085,19 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       let detectedDamage=spotForm.damage;
 
       // STEP 1: If photo uploaded, use vision to analyze damage first
-      if(capturedPhoto){
+      if(capturedPhoto && capturedPhotoUrl){
         showToast("📷 Analyzing photo...","info");
-        const base64=capturedPhoto.split(",")[1];
-        const mediaType=capturedPhoto.split(";")[0].split(":")[1]||"image/jpeg";
         const visionRes=await fetch(ANTHROPIC_PROXY,{
           method:"POST",
           headers:{"Content-Type":"application/json"},
           body:JSON.stringify({
-            model:"claude-sonnet-4-20250514",
+            model:"claude-sonnet-4-5",
             max_tokens:400,
             messages:[{
               role:"user",
               content:[
-                {type:"image",source:{type:"base64",media_type:mediaType,data:base64}},
-                {type:"text",text:`You are a concrete driveway expert. Analyze this photo of a driveway and identify all visible damage or issues. Be specific and technical. Return ONLY JSON: {"damage":["issue1","issue2"],"severity":"minor|moderate|severe","summary":"one sentence description of overall condition"}`}
+                {type:"image",source:{type:"url",url:capturedPhotoUrl}},
+                {type:"text",text:`You are a concrete driveway expert. Analyze this photo and identify all visible damage or issues. Return ONLY JSON: {"damage":["issue1","issue2"],"severity":"minor|moderate|severe","summary":"one sentence description of overall condition"}`}
               ]
             }]
           })
@@ -1124,7 +1122,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       const res=await fetch(ANTHROPIC_PROXY,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:400,messages:[{role:"user",content:prompt}]})
+        body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:400,messages:[{role:"user",content:prompt}]})
       });
       const data=await res.json();
       const raw=data.content?.map(b=>b.text||"").join("");
