@@ -449,7 +449,11 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .spot-send-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
 .spot-send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
 .spot-mailer{background:#faf7f2;border-radius:8px;overflow:hidden;box-shadow:0 6px 30px rgba(0,0,0,0.6);font-family:'Syne',sans-serif;}
-.spot-front{padding:32px;position:relative;overflow:hidden;min-height:280px;}.spot-photo-bg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;-webkit-transform:translateZ(0);transform:translateZ(0);z-index:0;display:block;}.spot-photo-overlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;background:linear-gradient(to bottom,rgba(10,9,8,0.4) 0%,rgba(10,9,8,0.78) 55%,rgba(10,9,8,0.97) 100%);}.spot-front-content{position:relative;z-index:2;}
+.spot-front{padding:0;position:relative;overflow:hidden;min-height:320px;border-radius:inherit;}
+.spot-photo-bg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);z-index:0;display:block;border:none;margin:0;}
+.spot-photo-overlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;background:linear-gradient(to bottom,rgba(10,9,8,0.35) 0%,rgba(10,9,8,0.75) 50%,rgba(10,9,8,0.97) 100%);}
+.spot-front-content{position:relative;z-index:2;padding:28px;display:flex;flex-direction:column;min-height:320px;}
+.spot-front-no-photo{position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(145deg,#111009 0%,#2a2720 100%);z-index:0;}
 .spot-front-texture{position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,rgba(184,180,172,0.025) 0,rgba(184,180,172,0.025) 1px,transparent 0,transparent 8px);}
 .spot-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:10px;position:relative;}
 .spot-address{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f5f0e6;position:relative;letter-spacing:1px;margin-bottom:8px;}
@@ -1087,6 +1091,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       // STEP 1: If photo uploaded, use vision to analyze damage first
       if(capturedPhoto && capturedPhotoUrl){
         showToast("📷 Analyzing photo...","info");
+        console.log("Sending vision request with URL:", capturedPhotoUrl);
         const visionRes=await fetch(ANTHROPIC_PROXY,{
           method:"POST",
           headers:{"Content-Type":"application/json"},
@@ -1097,19 +1102,22 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               role:"user",
               content:[
                 {type:"image",source:{type:"url",url:capturedPhotoUrl}},
-                {type:"text",text:`You are a concrete driveway expert. Analyze this photo and identify all visible damage or issues. Return ONLY JSON: {"damage":["issue1","issue2"],"severity":"minor|moderate|severe","summary":"one sentence description of overall condition"}`}
+                {type:"text",text:"You are a concrete driveway expert. Analyze this photo and identify all visible damage or issues. Return ONLY a JSON object with no markdown: {"damage":["issue1","issue2"],"severity":"minor or moderate or severe","summary":"one sentence"}"}
               ]
             }]
           })
         });
         const visionData=await visionRes.json();
+        console.log("Vision response:", JSON.stringify(visionData).slice(0,200));
         const visionRaw=visionData.content?.map(b=>b.text||"").join("");
         const visionParsed=parseJSON(visionRaw);
         if(visionParsed?.damage){
           detectedDamage=[...new Set([...spotForm.damage,...visionParsed.damage])];
           const newLevel = visionParsed.severity==="severe"?"Severe":visionParsed.severity==="minor"?"Minor":"Moderate";
           setSpotForm(f=>({...f,damage:detectedDamage,damageLevel:newLevel,overridePrice:false}));
-          showToast(`📷 AI detected: ${visionParsed.summary}`,"info");
+          showToast("AI detected: "+visionParsed.summary,"info");
+        } else {
+          console.log("Vision parse failed, raw:", visionRaw?.slice(0,200));
         }
       }
 
@@ -1833,11 +1841,11 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                           </>
                         ) : (
                           <>
-                            <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,background:"linear-gradient(145deg,#111009 0%,#2a2720 100%)"}}/>
+                            <div className="spot-front-no-photo"/>
                             <div className="spot-front-texture"/>
                           </>
                         )}
-                        <div className="spot-front-content" style={{display:"flex",flexDirection:"column",height:"100%"}}>
+                        <div className="spot-front-content">
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"auto"}}>
                             <div className="spot-tag" style={{margin:0}}>JWood LLC · Tulsa, OK</div>
                             {(spotMailer.photoUrl||spotMailer.photoData)&&<div style={{background:"rgba(232,86,10,0.9)",color:"white",fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:4,letterSpacing:1}}>📷 YOUR DRIVEWAY</div>}
