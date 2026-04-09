@@ -1193,6 +1193,16 @@ function MailerPreview({mailer,form}){
 // ─────────────────────────────────────────────
 // MAIN APP
 // ─────────────────────────────────────────────
+// Capacity config - module scope for stability
+const CAPACITY_CONFIG = { crewSize:12, maxJobs:6, weeklyTarget:40000 };
+
+const CAPACITY_MODES = {
+    hungry:   { label:"Hungry",   color:"#b83232", bg:"rgba(184,50,50,0.12)",   icon:"🔥", desc:"Aggressive outbound — large radius, fast follow-up, low bid threshold" },
+    normal:   { label:"Normal",   color:"#c4a020", bg:"rgba(196,160,32,0.12)",  icon:"✅", desc:"Standard outbound — normal radius, normal pricing" },
+    selective:{ label:"Selective",color:"#1a6fa8", bg:"rgba(26,111,168,0.12)",  icon:"🎯", desc:"High-value leads only — bids +15%, radius reduced" },
+    paused:   { label:"Paused",   color:"#6a6662", bg:"rgba(106,102,98,0.12)",  icon:"⏸️", desc:"Fully booked — campaigns paused, AI agent books 3 weeks out" },
+  };
+
 export default function App(){
   // ── AUTH ──
   const ACCESS_CODE = "8966";
@@ -1269,7 +1279,7 @@ export default function App(){
   const[pipelineView,setPipelineView]=useState("kanban");
 
   // ── CAPACITY ENGINE ──
-  const CAPACITY_CONFIG = { crewSize:12, maxJobs:6, weeklyTarget:40000 };
+  // CAPACITY_CONFIG moved to module scope
   const[capacity,setCapacity]=useState({
     activeJobs: 0,
     weeklyRevenue: 0,
@@ -1277,6 +1287,18 @@ export default function App(){
     mode: "hungry", // hungry | normal | selective | paused
     manualOverride: null,
   });
+  const showToast=(msg,type="success")=>{setToast({msg,type});setTimeout(()=>setToast(null),4000);};
+  const toggleRoute=(id)=>setSelectedRoutes(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
+
+
+  const[pipeline,setPipeline]=useState([
+    {id:"PL-001",address:"4821 Oak Ridge Dr",city:"Broken Arrow",neighborhood:"Broken Arrow",stage:"won",bidLo:"$1,200",bidHi:"$1,800",spotted:"Mar 28",mailerSent:"Apr 03",calledBack:"Apr 08",jobWon:"Apr 10",notes:"Full driveway replacement",value:1600},
+    {id:"PL-002",address:"7234 S Memorial Dr",city:"Tulsa",neighborhood:"South Tulsa",stage:"called",bidLo:"$800",bidHi:"$1,100",spotted:"Apr 01",mailerSent:"Apr 06",calledBack:"Apr 09",jobWon:null,notes:"Interested, getting HOA approval",value:950},
+    {id:"PL-003",address:"1892 E 91st St",city:"Tulsa",neighborhood:"South Tulsa",stage:"sent",bidLo:"$2,400",bidHi:"$3,200",spotted:"Apr 03",mailerSent:"Apr 07",calledBack:null,jobWon:null,notes:"Large 3-car garage",value:2800},
+    {id:"PL-004",address:"3341 S Peoria Ave",city:"Tulsa",neighborhood:"Midtown",stage:"sent",bidLo:"$600",bidHi:"$900",spotted:"Apr 04",mailerSent:"Apr 07",calledBack:null,jobWon:null,notes:"Crack repair only",value:750},
+    {id:"PL-005",address:"9102 N 129th E Ave",city:"Owasso",neighborhood:"Owasso",stage:"spotted",bidLo:"$1,800",bidHi:"$2,600",spotted:"Apr 06",mailerSent:null,calledBack:null,jobWon:null,notes:"Saw severe cracking from road",value:2200},
+    {id:"PL-006",address:"2847 E 51st St",city:"Tulsa",neighborhood:"Midtown",stage:"spotted",bidLo:"$400",bidHi:"$700",spotted:"Apr 07",mailerSent:null,calledBack:null,jobWon:null,notes:"Minor sealing job",value:550},
+  ]);
 
   // Recalculate capacity whenever pipeline changes
   React.useEffect(()=>{
@@ -1298,12 +1320,7 @@ export default function App(){
     }));
   },[pipeline]);
 
-  const CAPACITY_MODES = {
-    hungry:   { label:"Hungry",   color:"#b83232", bg:"rgba(184,50,50,0.12)",   icon:"🔥", desc:"Aggressive outbound — large radius, fast follow-up, low bid threshold" },
-    normal:   { label:"Normal",   color:"#c4a020", bg:"rgba(196,160,32,0.12)",  icon:"✅", desc:"Standard outbound — normal radius, normal pricing" },
-    selective:{ label:"Selective",color:"#1a6fa8", bg:"rgba(26,111,168,0.12)",  icon:"🎯", desc:"High-value leads only — bids +15%, radius reduced" },
-    paused:   { label:"Paused",   color:"#6a6662", bg:"rgba(106,102,98,0.12)",  icon:"⏸️", desc:"Fully booked — campaigns paused, AI agent books 3 weeks out" },
-  };
+  // CAPACITY_MODES moved to module scope
 
   // Lead scoring (1-100)
   const scoreLead = (lead) => {
@@ -1372,14 +1389,6 @@ export default function App(){
   };
   const[showAddLead,setShowAddLead]=useState(false);
   const[newLead,setNewLead]=useState({address:"",city:"Tulsa",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
-  const[pipeline,setPipeline]=useState([
-    {id:"PL-001",address:"4821 Oak Ridge Dr",city:"Broken Arrow",neighborhood:"Broken Arrow",stage:"won",bidLo:"$1,200",bidHi:"$1,800",spotted:"Mar 28",mailerSent:"Apr 03",calledBack:"Apr 08",jobWon:"Apr 10",notes:"Full driveway replacement",value:1600},
-    {id:"PL-002",address:"7234 S Memorial Dr",city:"Tulsa",neighborhood:"South Tulsa",stage:"called",bidLo:"$800",bidHi:"$1,100",spotted:"Apr 01",mailerSent:"Apr 06",calledBack:"Apr 09",jobWon:null,notes:"Interested, getting HOA approval",value:950},
-    {id:"PL-003",address:"1892 E 91st St",city:"Tulsa",neighborhood:"South Tulsa",stage:"sent",bidLo:"$2,400",bidHi:"$3,200",spotted:"Apr 03",mailerSent:"Apr 07",calledBack:null,jobWon:null,notes:"Large 3-car garage",value:2800},
-    {id:"PL-004",address:"3341 S Peoria Ave",city:"Tulsa",neighborhood:"Midtown",stage:"sent",bidLo:"$600",bidHi:"$900",spotted:"Apr 04",mailerSent:"Apr 07",calledBack:null,jobWon:null,notes:"Crack repair only",value:750},
-    {id:"PL-005",address:"9102 N 129th E Ave",city:"Owasso",neighborhood:"Owasso",stage:"spotted",bidLo:"$1,800",bidHi:"$2,600",spotted:"Apr 06",mailerSent:null,calledBack:null,jobWon:null,notes:"Saw severe cracking from road",value:2200},
-    {id:"PL-006",address:"2847 E 51st St",city:"Tulsa",neighborhood:"Midtown",stage:"spotted",bidLo:"$400",bidHi:"$700",spotted:"Apr 07",mailerSent:null,calledBack:null,jobWon:null,notes:"Minor sealing job",value:550},
-  ]);
 
   const STAGES = [
     {id:"spotted", label:"Spotted",    icon:"🚗", color:"#7a7670", bg:"rgba(122,118,112,0.15)"},
@@ -1568,8 +1577,6 @@ export default function App(){
   const DAMAGES=["Freeze-thaw cracking","Surface spalling","Tree root damage","Drainage issues","Sunken sections","Edge crumbling","Oil stains","Full replacement needed"];
 
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
-  const showToast=(msg,type="success")=>{setToast({msg,type});setTimeout(()=>setToast(null),4000);};
-  const toggleRoute=(id)=>setSelectedRoutes(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
 
   const proceedToCreate=()=>{
     const r=selectedRoutes.map(id=>liveRoutes.find(x=>x.id===id)?.name).filter(Boolean);
