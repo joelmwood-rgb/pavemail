@@ -2714,17 +2714,31 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <div className="page-tag">Back of Postcard</div>
                     <div className="spot-mailer">
                       <div className="spot-back">
-                        {/* Header bar */}
+                        {/* Header bar — dynamic based on damage type */}
                         <div className="spot-back-header">
                           <div>
-                            <div className="spot-back-header-title">We Noticed Your Driveway</div>
-                            <div className="spot-back-header-sub">{spotMailer.address}, {spotMailer.city}</div>
+                            <div className="spot-back-header-title">
+                              {spotMailer.damage?.length>0
+                                ? spotMailer.damage[0].toLowerCase().includes("crack") ? "We Spotted Cracks in Your Driveway"
+                                : spotMailer.damage[0].toLowerCase().includes("spall") ? "Your Driveway Surface Is Breaking Down"
+                                : spotMailer.damage[0].toLowerCase().includes("drain") ? "Your Driveway Has a Drainage Problem"
+                                : spotMailer.damage[0].toLowerCase().includes("root") ? "Tree Roots Are Damaging Your Driveway"
+                                : spotMailer.damage[0].toLowerCase().includes("sink") || spotMailer.damage[0].toLowerCase().includes("sunken") ? "Your Driveway Is Sinking"
+                                : spotMailer.damage[0].toLowerCase().includes("oil") ? "Oil Stains Are Damaging Your Concrete"
+                                : spotMailer.damage[0].toLowerCase().includes("full") || spotMailer.damage[0].toLowerCase().includes("replace") ? "Your Driveway Needs Replacement"
+                                : spotMailer.photoUsed ? "We Photographed Your Driveway"
+                                : "We Noticed Your Driveway Needs Work"
+                                : spotMailer.photoUsed ? "We Photographed Your Driveway"
+                                : "We Noticed Your Driveway Needs Work"
+                              }
+                            </div>
+                            <div className="spot-back-header-sub">{spotMailer.address} · {spotMailer.city}, OK</div>
                           </div>
-                          <div style={{background:"rgba(0,0,0,0.2)",borderRadius:6,padding:"4px 10px",fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.9)",letterSpacing:1}}>FREE ESTIMATE</div>
+                          <div style={{background:"rgba(255,255,255,0.08)",borderRadius:6,padding:"4px 10px",fontSize:9,fontWeight:700,color:"rgba(184,180,172,0.7)",letterSpacing:1,flexShrink:0}}>FREE ESTIMATE</div>
                         </div>
                         <div className="spot-back-body">
                           {/* Damage findings */}
-                          <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"rgba(232,86,10,0.8)",marginBottom:8}}>What We Found</div>
+                          <div style={{fontSize:8,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"#8a8680",marginBottom:8}}>What We Observed</div>
                           <div className="spot-damage-list">
                             {spotMailer.damage?.length>0 ? spotMailer.damage.slice(0,3).map((d,i)=>(
                               <div key={i} className="spot-damage-item">
@@ -2732,19 +2746,19 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                 {d}
                               </div>
                             )) : (
-                              <div className="spot-damage-item"><div className="spot-damage-dot"/>General wear and surface deterioration</div>
+                              <div className="spot-damage-item"><div className="spot-damage-dot"/>General surface wear and aging concrete</div>
                             )}
                           </div>
                           {/* Bid strip */}
                           <div className="spot-bid-strip">
                             <div className="spot-bid-strip-left">
-                              <div className="spot-bid-strip-label">Your Neighbor Rate</div>
-                              <div className="spot-bid-strip-amount">{spotMailer.bidLo||spotMailer.bid}{spotMailer.bidHi&&<span style={{fontSize:16,color:"rgba(245,240,230,0.5)"}}>–{spotMailer.bidHi}</span>}</div>
+                              <div className="spot-bid-strip-label">Your Estimate</div>
+                              <div className="spot-bid-strip-amount">{spotMailer.bidLo||spotMailer.bid}{spotMailer.bidHi&&<span style={{fontSize:15,color:"rgba(245,240,230,0.4)"}}>–{spotMailer.bidHi}</span>}</div>
                               {spotMailer.includes&&<div className="spot-bid-strip-includes">✓ {spotMailer.includes}</div>}
                             </div>
                             <div style={{textAlign:"right"}}>
-                              <div style={{fontSize:9,color:"#5a5652",marginBottom:4}}>Scan to call</div>
-                              <QRCode value="tel:9188966737" size={52}/>
+                              <div style={{fontSize:9,color:"rgba(184,180,172,0.4)",marginBottom:4}}>Scan to call</div>
+                              <QRCode value="tel:9188966737" size={50} fgColor="#f5f0e6" bgColor="#1c1a17"/>
                             </div>
                           </div>
                           {/* CTA */}
@@ -2753,9 +2767,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                               <h4>CALL OR TEXT JOEL</h4>
                               <p>918-896-6737 · Free estimate · No obligation</p>
                             </div>
-                            <div style={{background:"rgba(0,0,0,0.2)",borderRadius:6,padding:"8px 12px",textAlign:"center",flexShrink:0}}>
-                              <div style={{fontFamily:"'DM Mono',monospace",fontSize:13,fontWeight:700,color:"white",letterSpacing:1}}>918-896-6737</div>
-                            </div>
+                            <div style={{fontFamily:"'DM Mono',monospace",fontSize:12,fontWeight:700,color:"rgba(184,180,172,0.7)",letterSpacing:0.5,flexShrink:0}}>918-896-6737</div>
                           </div>
                           {/* Trust line */}
                           <div className="spot-guarantee">
