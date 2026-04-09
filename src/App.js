@@ -1131,64 +1131,69 @@ const ANGLES  = ["Crack Repair","New Installation","Resurfacing","Sealing"];
 
 function PhotoPostcardCanvas({photoUrl,photoData,headline,personalNote,address,bid,phone}){
   const canvasRef=React.useRef(null);
-  const draw=React.useCallback((img)=>{
-    const canvas=canvasRef.current;
-    if(!canvas)return;
-    const ctx=canvas.getContext('2d');
-    const W=canvas.width,H=canvas.height;
-    ctx.fillStyle='#111009';
-    ctx.fillRect(0,0,W,H);
-    if(img&&img.complete&&img.naturalWidth>0){
-      const iR=img.naturalWidth/img.naturalHeight,cR=W/H;
-      let sx=0,sy=0,sw=img.naturalWidth,sh=img.naturalHeight;
-      if(iR>cR){sw=img.naturalHeight*cR;sx=(img.naturalWidth-sw)/2;}
-      else{sh=img.naturalWidth/cR;sy=(img.naturalHeight-sh)/2;}
-      ctx.drawImage(img,sx,sy,sw,sh,0,0,W,H);
-    }
-    const g=ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'rgba(10,9,8,0.3)');g.addColorStop(0.5,'rgba(10,9,8,0.75)');g.addColorStop(1,'rgba(10,9,8,0.97)');
-    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#e8560a';ctx.font='bold 8px Arial';ctx.textAlign='left';
-    ctx.fillText('JWOOD LLC · TULSA, OK',20,32);
-    if(img&&img.complete&&img.naturalWidth>0){
-      ctx.fillStyle='rgba(232,86,10,0.9)';ctx.fillRect(W-108,14,92,20);
-      ctx.fillStyle='white';ctx.font='bold 8px Arial';ctx.textAlign='right';
-      ctx.fillText('YOUR DRIVEWAY',W-16,28);ctx.textAlign='left';
-    }
-    ctx.fillStyle='rgba(245,240,230,0.65)';ctx.font='bold 12px Arial';
-    ctx.fillText(address||'',20,H-180);
-    ctx.fillStyle='#f5f0e6';ctx.font='bold 20px Arial';
-    const hw=(headline||'').split(' ');let hl='',hy=H-155;
-    hw.forEach(w=>{const t=hl+w+' ';if(ctx.measureText(t).width>W-40&&hl){ctx.fillText(hl.trim(),20,hy);hl=w+' ';hy+=24;}else hl=t;});
-    if(hl)ctx.fillText(hl.trim(),20,hy);
-    ctx.fillStyle='rgba(184,180,172,0.8)';ctx.font='10px Arial';
-    const nw=(personalNote||'').slice(0,100).split(' ');let nl='',ny=hy+22,nc=0;
-    nw.forEach(w=>{if(nc>=3)return;const t=nl+w+' ';if(ctx.measureText(t).width>W-40&&nl){ctx.fillText(nl.trim(),20,ny);nl=w+' ';ny+=15;nc++;}else nl=t;});
-    if(nl&&nc<3)ctx.fillText(nl.trim(),20,ny);
-    const by=H-68;
-    ctx.fillStyle='rgba(232,86,10,0.2)';ctx.strokeStyle='rgba(232,86,10,0.5)';ctx.lineWidth=1;
-    ctx.fillRect(14,by,W-28,50);ctx.strokeRect(14,by,W-28,50);
-    ctx.fillStyle='#e8560a';ctx.font='bold 7px Arial';ctx.fillText('YOUR PERSONALIZED ESTIMATE',22,by+13);
-    ctx.fillStyle='#f5f0e6';ctx.font='bold 18px Arial';ctx.fillText(bid||'Call for estimate',22,by+34);
-    ctx.fillStyle='#e8560a';ctx.fillRect(W-108,by+4,94,42);
-    ctx.fillStyle='white';ctx.font='bold 8px Arial';ctx.textAlign='center';
-    ctx.fillText('CALL NOW',W-61,by+18);ctx.font='bold 11px monospace';
-    ctx.fillText(phone||'918-896-6737',W-61,by+34);ctx.textAlign='left';
-  },[headline,personalNote,address,bid,phone]);
 
   React.useEffect(()=>{
     const canvas=canvasRef.current;
     if(!canvas)return;
-    canvas.width=600;canvas.height=320;
-    const src=photoUrl||photoData||null;
+    canvas.width=600;
+    canvas.height=320;
+    const ctx=canvas.getContext('2d');
+    const W=canvas.width,H=canvas.height;
+
+    function renderCanvas(img){
+      ctx.fillStyle='#111009';
+      ctx.fillRect(0,0,W,H);
+      if(img&&img.complete&&img.naturalWidth>0){
+        const iR=img.naturalWidth/img.naturalHeight,cR=W/H;
+        let sx=0,sy=0,sw=img.naturalWidth,sh=img.naturalHeight;
+        if(iR>cR){sw=img.naturalHeight*cR;sx=(img.naturalWidth-sw)/2;}
+        else{sh=img.naturalWidth/cR;sy=(img.naturalHeight-sh)/2;}
+        ctx.drawImage(img,sx,sy,sw,sh,0,0,W,H);
+      }
+      const g=ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,'rgba(10,9,8,0.3)');
+      g.addColorStop(0.5,'rgba(10,9,8,0.75)');
+      g.addColorStop(1,'rgba(10,9,8,0.97)');
+      ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#e8560a';ctx.font='bold 8px Arial';ctx.textAlign='left';
+      ctx.fillText('JWOOD LLC · TULSA, OK',20,32);
+      if(img&&img.complete&&img.naturalWidth>0){
+        ctx.fillStyle='rgba(232,86,10,0.9)';ctx.fillRect(W-108,14,92,20);
+        ctx.fillStyle='white';ctx.font='bold 8px Arial';ctx.textAlign='right';
+        ctx.fillText('YOUR DRIVEWAY',W-16,28);ctx.textAlign='left';
+      }
+      ctx.fillStyle='rgba(245,240,230,0.65)';ctx.font='bold 12px Arial';
+      ctx.fillText(address||'',20,H-180);
+      ctx.fillStyle='#f5f0e6';ctx.font='bold 20px Arial';
+      var hw=(headline||'').split(' '),hl='',hy=H-155;
+      hw.forEach(function(w){var t=hl+w+' ';if(ctx.measureText(t).width>W-40&&hl){ctx.fillText(hl.trim(),20,hy);hl=w+' ';hy+=24;}else hl=t;});
+      if(hl)ctx.fillText(hl.trim(),20,hy);
+      ctx.fillStyle='rgba(184,180,172,0.8)';ctx.font='10px Arial';
+      var nw=(personalNote||'').slice(0,100).split(' '),nl='',ny=hy+22,nc=0;
+      nw.forEach(function(w){if(nc>=3)return;var t=nl+w+' ';if(ctx.measureText(t).width>W-40&&nl){ctx.fillText(nl.trim(),20,ny);nl=w+' ';ny+=15;nc++;}else nl=t;});
+      if(nl&&nc<3)ctx.fillText(nl.trim(),20,ny);
+      var by=H-68;
+      ctx.fillStyle='rgba(232,86,10,0.2)';ctx.strokeStyle='rgba(232,86,10,0.5)';ctx.lineWidth=1;
+      ctx.fillRect(14,by,W-28,50);ctx.strokeRect(14,by,W-28,50);
+      ctx.fillStyle='#e8560a';ctx.font='bold 7px Arial';ctx.fillText('YOUR PERSONALIZED ESTIMATE',22,by+13);
+      ctx.fillStyle='#f5f0e6';ctx.font='bold 18px Arial';ctx.fillText(bid||'Call for estimate',22,by+34);
+      ctx.fillStyle='#e8560a';ctx.fillRect(W-108,by+4,94,42);
+      ctx.fillStyle='white';ctx.font='bold 8px Arial';ctx.textAlign='center';
+      ctx.fillText('CALL NOW',W-61,by+18);ctx.font='bold 11px monospace';
+      ctx.fillText(phone||'918-896-6737',W-61,by+34);ctx.textAlign='left';
+    }
+
+    var src=photoUrl||photoData||null;
     if(src){
-      const img=new Image();
+      var img=new Image();
       img.crossOrigin='anonymous';
-      img.onload=()=>draw(img);
-      img.onerror=()=>draw(null);
+      img.onload=function(){renderCanvas(img);};
+      img.onerror=function(){renderCanvas(null);};
       img.src=src;
-    } else { draw(null); }
-  },[photoUrl,photoData,draw]);
+    } else {
+      renderCanvas(null);
+    }
+  },[photoUrl,photoData,headline,personalNote,address,bid,phone]);
 
   return React.createElement('canvas',{ref:canvasRef,className:'spot-canvas-preview'});
 }
