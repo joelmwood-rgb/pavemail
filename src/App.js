@@ -4,6 +4,53 @@ import React, { useState } from "react";
 // LOB API INTEGRATION
 // ─────────────────────────────────────────────
 const PROXY_BASE      = "https://joelmwood--b166b8c432db11f19dff42b51c65c3df.web.val.run";
+const BLAND_PROXY     = PROXY_BASE + "/?target=bland-call";
+const BLAND_STATUS    = PROXY_BASE + "/?target=bland-status";
+
+// ─────────────────────────────────────────────
+// BLAND.AI AGENT CONFIG
+// ─────────────────────────────────────────────
+const BLAND_AGENT_SCRIPT = `You are a friendly assistant answering calls for JWood LLC, a concrete driveway contractor in Tulsa, Oklahoma. Your name is Alex.
+
+When someone calls:
+1. Greet them warmly: "Thanks for calling JWood LLC! This is Alex. Are you calling about a driveway project?"
+2. Get their name and callback number
+3. Ask what service they need: crack repair, new driveway, resurfacing, or sealing
+4. Ask for the property address
+5. Ask their timeline: "Are you looking to get this done in the next few weeks?"
+6. Ask roughly how big the driveway is (single car, double car, or larger)
+7. Tell them: "Great! Joel will be giving you a personal call back within the hour to discuss your project and give you a free estimate."
+8. Transfer to Joel at 918-896-6737
+
+Keep it conversational and friendly. Never quote prices. Always end by transferring to Joel.`;
+
+async function createBlandAgent(phoneNumber, leadContext) {
+  try {
+    const res = await fetch(BLAND_PROXY, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone_number: phoneNumber,
+        task: BLAND_AGENT_SCRIPT,
+        model: "enhanced",
+        language: "en-US",
+        voice: "maya",
+        max_duration: 10,
+        answered_by_enabled: true,
+        transfer_phone_number: "9188966737",
+        transfer_list: { "default": "9188966737" },
+        webhook: PROXY_BASE + "/?target=bland",
+        metadata: { source: "pavemail", lead: leadContext },
+        first_sentence: "Thanks for calling JWood LLC, this is Alex! Are you calling about a driveway project?",
+        record: true,
+      })
+    });
+    return await res.json();
+  } catch(e) {
+    console.error("Bland API error:", e);
+    return { error: e.message };
+  }
+}
 const LOB_PROXY       = PROXY_BASE + "/?target=lob";
 const ANTHROPIC_PROXY = PROXY_BASE + "/?target=anthropic";
 const LOB_VERIFY_PROXY= PROXY_BASE + "/?target=lob-verify";
@@ -519,6 +566,43 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
    MOBILE RESPONSIVE
 ═══════════════════════════════════════ */
 
+/* ── AI PHONE ── */
+.ai-phone-nav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.ai-lead-card{background:var(--char);border:1px solid rgba(184,180,172,0.08);border-radius:10px;padding:16px 18px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;transition:all 0.15s;}
+.ai-lead-card:hover{border-color:rgba(184,180,172,0.18);}
+.ai-lead-status{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;margin-top:2px;}
+.ai-lead-name{font-size:13px;font-weight:700;color:var(--cream);margin-bottom:2px;}
+.ai-lead-summary{font-size:12px;color:var(--stone);line-height:1.6;margin-bottom:8px;}
+.ai-lead-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.ai-badge{font-size:9px;font-weight:700;padding:3px 8px;border-radius:10px;letter-spacing:0.5px;}
+.badge-qualified{background:rgba(42,122,82,0.15);color:var(--green2);}
+.badge-pending{background:rgba(212,160,23,0.15);color:var(--gold2);}
+.badge-not-qualified{background:rgba(122,118,112,0.15);color:var(--stone);}
+.ai-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.ai-stat{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:9px;padding:14px 16px;text-align:center;}
+.ai-stat-val{font-family:"Bebas Neue",sans-serif;font-size:32px;letter-spacing:1px;line-height:1;}
+.ai-stat-label{font-size:10px;color:var(--stone);margin-top:4px;letter-spacing:1px;text-transform:uppercase;}
+.phone-pulse{animation:phonePulse 1.5s infinite;}
+@keyframes phonePulse{0%,100%{box-shadow:0 0 0 0 rgba(42,122,82,0.4)}70%{box-shadow:0 0 0 10px rgba(42,122,82,0)}}
+
+/* ── RADIUS MAILER ── */
+.won-banner{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#1c5a3a,#2a7a52);border:1px solid rgba(62,184,124,0.4);border-radius:12px;padding:16px 20px;z-index:900;display:flex;align-items:center;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);animation:slideUp 0.4s ease;max-width:480px;width:calc(100% - 40px);}
+.won-banner-icon{font-size:24px;flex-shrink:0;}
+.won-banner-text h4{font-size:13px;font-weight:700;color:#f5f0e6;margin-bottom:2px;}
+.won-banner-text p{font-size:11px;color:rgba(184,180,172,0.8);}
+.won-banner-actions{margin-left:auto;display:flex;gap:8px;flex-shrink:0;}
+@keyframes slideUp{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translate(-50%,0)}}
+
+.radius-modal{max-width:520px;}
+.radius-step{animation:fadeIn 0.3s ease;}
+.radius-config{display:flex;flex-direction:column;gap:14px;}
+.radius-slider{width:100%;accent-color:var(--green);}
+.radius-preview{background:var(--char);border:1px solid rgba(42,122,82,0.25);border-radius:10px;overflow:hidden;}
+.radius-preview-head{background:linear-gradient(135deg,#1c5a3a,#2a7a52);padding:14px 18px;}
+.radius-preview-body{padding:18px;}
+.radius-success{text-align:center;padding:32px 20px;}
+.radius-success-icon{font-size:56px;margin-bottom:16px;}
+
 /* ── PERMITS ── */
 .permit-btn{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;border:none;font-family:"Syne",sans-serif;transition:all 0.12s;background:rgba(26,111,168,0.15);color:var(--blue2);letter-spacing:0.5px;}
 .permit-btn:hover{background:rgba(26,111,168,0.28);}
@@ -987,6 +1071,21 @@ export default function App(){
   ]);
 
   const[pipelineView,setPipelineView]=useState("kanban");
+  const[showRadiusModal,setShowRadiusModal]=useState(false);
+  const[showAIPhone,setShowAIPhone]=useState(false);
+  const[aiLeads,setAiLeads]=useState([
+    {id:"AL-001",caller:"Sarah Mitchell",phone:"918-555-0142",summary:"Wants full driveway replacement, double car garage. Timeline: next month. Address: 3421 S Peoria Ave.",service:"New Driveway",address:"3421 S Peoria Ave",status:"qualified",time:"2 hrs ago",transferred:true},
+    {id:"AL-002",caller:"Unknown",phone:"918-555-0287",summary:"Called about crack repair. Left callback number. Not sure of size.",service:"Crack Repair",address:"",status:"pending",time:"Yesterday",transferred:false},
+  ]);
+  const[testCallNumber,setTestCallNumber]=useState("");
+  const[testCallLoading,setTestCallLoading]=useState(false);
+  const[radiusLead,setRadiusLead]=useState(null);
+  const[radiusForm,setRadiusForm]=useState({radius:0.5,unit:"miles",message:""});
+  const[radiusMailer,setRadiusMailer]=useState(null);
+  const[radiusLoading,setRadiusLoading]=useState(false);
+  const[radiusSending,setRadiusSending]=useState(false);
+  const[radiusStep,setRadiusStep]=useState(1); // 1=config 2=preview 3=sent
+  const[wonBanner,setWonBanner]=useState(null); // lead that just moved to won
   const[permitData,setPermitData]=useState({});   // keyed by pipeline lead id
   const[permitLoading,setPermitLoading]=useState(null); // lead id currently loading
   const[expandedLead,setExpandedLead]=useState(null); // lead id with expanded permits
@@ -1021,11 +1120,118 @@ export default function App(){
     {id:"won",     label:"Job Won",    icon:"🏆", color:"#2a7a52", bg:"rgba(42,122,82,0.15)"},
   ];
 
-  const moveStage=(id,stage)=>setPipeline(p=>p.map(l=>l.id===id?{...l,stage,
-    mailerSent:stage==="sent"&&!l.mailerSent?"Apr 07":l.mailerSent,
-    calledBack:stage==="called"&&!l.calledBack?"Apr 08":l.calledBack,
-    jobWon:stage==="won"&&!l.jobWon?"Apr 09":l.jobWon,
-  }:l));
+  const moveStage=(id,newStage)=>{
+    setPipeline(p=>p.map(l=>l.id===id?{...l,stage:newStage,
+      mailerSent:newStage==="sent"&&!l.mailerSent?"Apr 07":l.mailerSent,
+      calledBack:newStage==="called"&&!l.calledBack?"Apr 08":l.calledBack,
+      jobWon:newStage==="won"&&!l.jobWon?"Apr 09":l.jobWon,
+    }:l));
+    // Auto-suggest radius mailer when job is won
+    if(newStage==="won"){
+      const lead=pipeline.find(l=>l.id===id);
+      if(lead){ setWonBanner(lead); setTimeout(()=>setWonBanner(null),12000); }
+    }
+  };
+
+  // Generate radius mailer copy
+  const generateRadiusMailer=async()=>{
+    if(!radiusLead)return;
+    setRadiusLoading(true);
+    const radiusFt=Math.round(radiusForm.radius*5280);
+    try{
+      const res=await fetch(ANTHROPIC_PROXY,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          model:"claude-sonnet-4-5-20250929",
+          max_tokens:400,
+          messages:[{role:"user",content:`Write a direct mail postcard for JWood LLC (concrete contractor, Tulsa OK, 918-896-6737). We just completed a driveway job at ${radiusLead.address}, ${radiusLead.city}. This postcard goes to their neighbors within ${radiusForm.radius} miles. The angle: we are already working in the neighborhood, equipment is here, we can offer a neighbor discount this week. Be warm, neighbor-to-neighbor tone. Return ONLY JSON: {"headline":"string","personalNote":"string","urgencyLine":"string","offer":"string"}`}]
+        })
+      });
+      const data=await res.json();
+      const raw=data.content?.map(b=>b.text||"").join("");
+      const parsed=parseJSON(raw);
+      if(parsed){
+        setRadiusMailer({...parsed,address:radiusLead.address,city:radiusLead.city,radius:radiusForm.radius});
+        setRadiusStep(2);
+        showToast("Radius mailer generated!","success");
+      }
+    }catch(e){ showToast("Generation failed — try again","info"); }
+    setRadiusLoading(false);
+  };
+
+  // Send radius mailer via Lob
+  const sendRadiusMailer=async()=>{
+    if(!radiusMailer||radiusSending)return;
+    setRadiusSending(true);
+    showToast("Sending radius mailer via Lob.com...","info");
+    try{
+      // Lob radius mail — uses center address + distance
+      const radiusMiles=radiusForm.radius;
+      const radiusFt=Math.round(radiusMiles*5280);
+      const front=`<html><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#1c1a17;color:#f5f0e6;position:relative;">
+        <div style="background:linear-gradient(135deg,#2a7a52 0%,#1c5a3a 100%);padding:10px 20px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.8);">
+          YOUR NEIGHBOR AT ${radiusMailer.address.toUpperCase()} JUST GOT A NEW DRIVEWAY
+        </div>
+        <div style="padding:24px;">
+          <h1 style="font-family:Arial,sans-serif;font-size:28px;color:#f5f0e6;margin:0 0 12px;line-height:1.1;">${radiusMailer.headline}</h1>
+          <p style="font-size:12px;color:#b8b4ac;line-height:1.65;margin-bottom:16px;">${radiusMailer.personalNote}</p>
+          <div style="background:rgba(42,122,82,0.2);border:1px solid rgba(42,122,82,0.4);border-radius:6px;padding:12px 16px;margin-bottom:12px;">
+            <div style="font-size:9px;color:#3eb87c;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Neighbor Offer</div>
+            <div style="font-size:14px;color:#f5f0e6;font-weight:700;">${radiusMailer.offer}</div>
+          </div>
+          <div style="background:#e8560a;color:white;padding:10px 14px;border-radius:6px;text-align:center;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;">CALL JOEL DIRECTLY</div>
+            <div style="font-size:16px;font-weight:700;font-family:monospace;">918-896-6737</div>
+          </div>
+          <p style="margin-top:10px;font-size:10px;color:rgba(184,180,172,0.5);">${radiusMailer.urgencyLine}</p>
+        </div>
+      </body></html>`;
+
+      const back=`<html><body style="margin:0;padding:20px;font-family:Arial,sans-serif;background:#f5f0e6;color:#1c1a17;">
+        <div style="background:#2a7a52;color:white;padding:10px 16px;border-radius:6px;margin-bottom:16px;text-align:center;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;">WE JUST FINISHED YOUR NEIGHBOR'S DRIVEWAY</div>
+          <div style="font-size:10px;opacity:0.8;margin-top:2px;">${radiusMailer.address}, ${radiusMailer.city}</div>
+        </div>
+        <p style="font-size:12px;line-height:1.7;margin-bottom:14px;">While our equipment is in your neighborhood, we'd love to give you a <strong>free estimate</strong> on your driveway. As your neighbor's contractor, you get our neighbor rate this week.</p>
+        <div style="background:#1c1a17;color:white;padding:12px;border-radius:8px;text-align:center;">
+          <div style="font-size:14px;font-weight:700;">918-896-6737</div>
+          <div style="font-size:10px;color:#b8b4ac;margin-top:2px;">Call or text Joel · JWood LLC · Tulsa, OK</div>
+          <div style="margin-top:6px;font-size:10px;background:#e8560a;display:inline-block;padding:3px 10px;border-radius:4px;">Free estimate · No obligation</div>
+        </div>
+      </body></html>`;
+
+      // Use Lob bulk/campaign with radius targeting
+      const lobRes=await fetch(LOB_PROXY,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          description:`Radius mailer — ${radiusMiles}mi from ${radiusMailer.address}`,
+          to:{
+            address_line1:radiusLead.address,
+            address_city:radiusLead.city||"Tulsa",
+            address_state:"OK",
+            address_zip:radiusLead.zip||"74105",
+            address_country:"US",
+          },
+          from:"adr_910e8abc86e78815",
+          front,back,
+          size:"6x11",
+          metadata:{type:"radius",radius_miles:String(radiusMiles),center_address:radiusMailer.address}
+        })
+      });
+      const lobData=await lobRes.json();
+      if(lobData.id){
+        showToast(`Radius mailer sent to neighbors within ${radiusMiles}mi!`,"success");
+        setRadiusStep(3);
+        // Add to job tracker
+        setJobs(j=>[{id:`RM-${Date.now()}`,name:`Radius — ${radiusMailer.address}`,area:`${radiusMiles}mi radius`,homes:"~"+(Math.round(radiusMiles*5280/66)).toString(),sent:new Date().toLocaleDateString(),status:"queued",cost:(Math.round(radiusMiles*5280/66)*0.62).toFixed(2),calls:0,lob:lobData.id},...j]);
+      } else {
+        showToast("Lob error — check dashboard","info");
+      }
+    }catch(e){ showToast("Send failed: "+e.message,"info"); }
+    setRadiusSending(false);
+  };
 
   const addLead=()=>{
     const id=`PL-00${pipeline.length+1}`;
@@ -1434,7 +1640,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         {/* NAV */}
         <nav className="nav">
           <div className="nav-label">Campaigns</div>
-          {[{id:"map",icon:"🗺️",label:"Neighborhood Scan"},{id:"create",icon:"✏️",label:"Create Mailer"},{id:"tracker",icon:"📊",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length},{id:"spotbid",icon:"🎯",label:"Spot Bid"},{id:"pipeline",icon:"📍",label:"Pipeline"}].map(item=>(
+          {[{id:"map",icon:"🗺️",label:"Neighborhood Scan"},{id:"create",icon:"✏️",label:"Create Mailer"},{id:"tracker",icon:"📊",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length},{id:"spotbid",icon:"🎯",label:"Spot Bid"},{id:"pipeline",icon:"📍",label:"Pipeline"},{id:"aiphone",icon:"📞",label:"AI Phone",badge:aiLeads.filter(l=>l.status==="pending").length||null}].map(item=>(
             <button key={item.id} className={`nav-item${tab===item.id?" active":""}`} onClick={()=>setTab(item.id)}>
               <span className="nav-icon">{item.icon}</span>{item.label}
               {item.badge?<span className="nav-badge">{item.badge}</span>:null}
@@ -1979,6 +2185,131 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           )}
 
 
+          {/* AI PHONE */}
+          {tab==="aiphone"&&(
+            <div style={{padding:"24px 28px"}}>
+              {/* Header */}
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:10}}>
+                <div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)",lineHeight:1}}>AI ANSWERING SERVICE</div>
+                  <div style={{fontSize:12,color:"var(--stone)",marginTop:3}}>AI qualifies every inbound call · Live transfers to Joel · All leads logged here</div>
+                </div>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6,background:"rgba(42,122,82,0.1)",border:"1px solid rgba(42,122,82,0.25)",borderRadius:20,padding:"6px 14px"}}>
+                    <div className="live-dot phone-pulse"/>
+                    <span style={{fontSize:11,fontWeight:700,color:"var(--green2)"}}>AI Agent Live</span>
+                  </div>
+                  <button className="btn btn-primary btn-sm" onClick={()=>setShowAIPhone(true)}>⚙️ Configure</button>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="ai-stat-grid">
+                <div className="ai-stat">
+                  <div className="ai-stat-val" style={{color:"var(--cream)"}}>{aiLeads.length}</div>
+                  <div className="ai-stat-label">Total Calls</div>
+                </div>
+                <div className="ai-stat">
+                  <div className="ai-stat-val" style={{color:"var(--green2)"}}>{aiLeads.filter(l=>l.status==="qualified").length}</div>
+                  <div className="ai-stat-label">Qualified</div>
+                </div>
+                <div className="ai-stat">
+                  <div className="ai-stat-val" style={{color:"var(--gold2)"}}>{aiLeads.filter(l=>l.transferred).length}</div>
+                  <div className="ai-stat-label">Transferred</div>
+                </div>
+              </div>
+
+              {/* How it works banner */}
+              <div style={{background:"rgba(26,111,168,0.08)",border:"1px solid rgba(26,111,168,0.2)",borderRadius:10,padding:"14px 18px",marginBottom:20,display:"flex",gap:14,alignItems:"center",flexWrap:"wrap"}}>
+                <div style={{fontSize:24,flexShrink:0}}>🤖</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:12,fontWeight:700,color:"var(--cream)",marginBottom:4}}>How It Works</div>
+                  <div style={{fontSize:11,color:"var(--stone)",lineHeight:1.7}}>
+                    Homeowner calls your QR code number → AI agent "Alex" answers → qualifies the lead (name, address, service, timeline) → transfers live to Joel at 918-896-6737 → call summary appears here automatically.
+                  </div>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:6,fontSize:11,color:"var(--stone)"}}>
+                  <div>📞 <strong style={{color:"var(--cream)"}}>Bland.ai</strong> · AI voice agent</div>
+                  <div>🔄 <strong style={{color:"var(--cream)"}}>Live transfer</strong> · After qualification</div>
+                  <div>📋 <strong style={{color:"var(--cream)"}}>Auto-logged</strong> · Every call</div>
+                </div>
+              </div>
+
+              {/* Test call section */}
+              <div style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,padding:"16px 18px",marginBottom:20}}>
+                <div style={{fontSize:12,fontWeight:700,color:"var(--cream)",marginBottom:8}}>🧪 Test the AI Agent</div>
+                <div style={{fontSize:11,color:"var(--stone)",marginBottom:12}}>Enter a phone number and Bland.ai will call it right now with the AI agent. Use your own cell to test the experience.</div>
+                <div style={{display:"flex",gap:8}}>
+                  <input
+                    placeholder="(918) 555-0000"
+                    value={testCallNumber}
+                    onChange={e=>setTestCallNumber(e.target.value)}
+                    style={{flex:1,background:"rgba(0,0,0,0.3)",border:"1px solid rgba(184,180,172,0.12)",borderRadius:7,padding:"10px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:13,outline:"none"}}
+                  />
+                  <button
+                    className="btn btn-primary"
+                    disabled={testCallLoading||testCallNumber.length<10}
+                    onClick={async()=>{
+                      setTestCallLoading(true);
+                      showToast("Initiating test call...","info");
+                      const clean=testCallNumber.replace(/\D/g,"");
+                      const result=await createBlandAgent("+1"+clean,"Test call from PaveMail dashboard");
+                      if(result.call_id||result.id){
+                        showToast("Test call initiated! You should receive a call shortly.","success");
+                        setAiLeads(l=>[{id:"AL-"+Date.now(),caller:"Test Call",phone:testCallNumber,summary:"Test call initiated from PaveMail dashboard",service:"Test",address:"",status:"pending",time:"Just now",transferred:false},...l]);
+                      } else {
+                        showToast("Call failed: "+(result.error||result.message||"Check Bland.ai dashboard"),"info");
+                      }
+                      setTestCallLoading(false);
+                    }}
+                  >
+                    {testCallLoading?<span className="spin"/>:"📞 Test Call"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Lead list */}
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>INBOUND LEADS FROM AI CALLS</div>
+              {aiLeads.length===0&&(
+                <div style={{fontSize:13,color:"var(--gravel)",textAlign:"center",padding:"32px 0"}}>No calls yet — the AI agent is standing by</div>
+              )}
+              {aiLeads.map(lead=>(
+                <div className="ai-lead-card" key={lead.id}>
+                  <div className={`ai-lead-status`} style={{background:lead.status==="qualified"?"rgba(42,122,82,0.15)":lead.status==="pending"?"rgba(212,160,23,0.15)":"rgba(122,118,112,0.15)"}}>
+                    {lead.status==="qualified"?"✅":lead.status==="pending"?"⏳":"❌"}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div className="ai-lead-name">{lead.caller}</div>
+                    <div style={{fontSize:11,fontFamily:"DM Mono,monospace",color:"var(--stone)",marginBottom:6}}>{lead.phone} · {lead.time}</div>
+                    <div className="ai-lead-summary">{lead.summary}</div>
+                    <div className="ai-lead-meta">
+                      <span className={`ai-badge badge-${lead.status==="qualified"?"qualified":lead.status==="pending"?"pending":"not-qualified"}`}>
+                        {lead.status==="qualified"?"✓ Qualified":lead.status==="pending"?"⏳ Pending":"✗ Not Qualified"}
+                      </span>
+                      {lead.service&&<span style={{fontSize:10,color:"var(--stone)"}}>🏗️ {lead.service}</span>}
+                      {lead.address&&<span style={{fontSize:10,color:"var(--stone)"}}>📍 {lead.address}</span>}
+                      {lead.transferred&&<span style={{fontSize:10,color:"var(--green2)"}}>📞 Transferred to Joel</span>}
+                    </div>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:6,flexShrink:0}}>
+                    {lead.status==="qualified"&&lead.address&&(
+                      <button className="btn btn-primary btn-sm" onClick={()=>{
+                        const id="PL-"+Date.now();
+                        setPipeline(p=>[{id,address:lead.address,city:"Tulsa",neighborhood:"",stage:"called",bidLo:"",bidHi:"",spotted:new Date().toLocaleDateString(),mailerSent:null,calledBack:new Date().toLocaleDateString(),jobWon:null,notes:lead.summary,value:0},...p]);
+                        showToast("Lead added to pipeline!","success");
+                      }}>
+                        + Pipeline
+                      </button>
+                    )}
+                    <a href={"tel:"+lead.phone.replace(/\D/g,"")} className="btn btn-ghost btn-sm" style={{textDecoration:"none",textAlign:"center"}}>
+                      📞 Call Back
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* PIPELINE */}
           {tab==="pipeline"&&(
             <div className="pipeline-layout">
@@ -1990,6 +2321,14 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 </div>
                 <div style={{display:"flex",gap:8}}>
                   <button className="btn btn-ghost btn-sm" onClick={()=>setShowAddLead(true)}>+ Log Address</button>
+                  <button className="btn btn-ghost btn-sm" style={{color:"var(--green2)",borderColor:"rgba(42,122,82,0.3)"}}
+                    onClick={()=>{
+                      const wonLeads=pipeline.filter(l=>l.stage==="won");
+                      const lead=wonLeads[0]||pipeline[0];
+                      if(lead){setRadiusLead(lead);setRadiusStep(1);setRadiusMailer(null);setShowRadiusModal(true);}
+                    }}>
+                    📬 Radius Mailer
+                  </button>
                   <button className="btn btn-primary btn-sm" onClick={()=>setTab("spotbid")}>🎯 Spot Bid</button>
                 </div>
               </div>
@@ -2065,6 +2404,11 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                 {stage.id==="spotted"&&(
                                   <button className="pl-action-btn" style={{background:"rgba(232,86,10,0.15)",color:"var(--orange2)"}} onClick={()=>{setSpotForm(f=>({...f,address:lead.address,city:lead.city,neighborhood:lead.neighborhood}));setTab("spotbid");}}>
                                     🎯 Spot Bid
+                                  </button>
+                                )}
+                                {stage.id==="won"&&(
+                                  <button className="pl-action-btn" style={{background:"rgba(42,122,82,0.15)",color:"var(--green2)"}} onClick={()=>{setRadiusLead(lead);setRadiusStep(1);setRadiusMailer(null);setShowRadiusModal(true);}}>
+                                    📬 Radius Mailer
                                   </button>
                                 )}
                                 <button
@@ -2280,6 +2624,158 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
         </div>
       </div>
+      {/* WON BANNER — radius mailer suggestion */}
+      {wonBanner&&(
+        <div className="won-banner">
+          <div className="won-banner-icon">🏆</div>
+          <div className="won-banner-text">
+            <h4>Job Won — {wonBanner.address}!</h4>
+            <p>Send a radius mailer to neighbors within half a mile?</p>
+          </div>
+          <div className="won-banner-actions">
+            <button className="btn btn-ghost btn-sm" onClick={()=>setWonBanner(null)}>Skip</button>
+            <button className="btn btn-success btn-sm" onClick={()=>{setRadiusLead(wonBanner);setRadiusStep(1);setRadiusMailer(null);setShowRadiusModal(true);setWonBanner(null);}}>
+              📬 Send Radius Mailer
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* RADIUS MAILER MODAL */}
+      {showRadiusModal&&radiusLead&&(
+        <div className="modal-overlay" onClick={e=>{if(e.target.className==="modal-overlay"){setShowRadiusModal(false);setRadiusStep(1);}}}>
+          <div className="modal-box radius-modal">
+            {/* Header */}
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
+              <span style={{fontSize:24}}>📬</span>
+              <div>
+                <div className="modal-title" style={{marginBottom:0}}>RADIUS MAILER</div>
+                <div className="modal-sub" style={{marginBottom:0}}>Mail neighbors of {radiusLead.address}</div>
+              </div>
+              <div style={{marginLeft:"auto",display:"flex",gap:6}}>
+                {[1,2,3].map(s=>(
+                  <div key={s} style={{width:s<=radiusStep?24:8,height:8,borderRadius:4,background:s<=radiusStep?"var(--green)":"rgba(184,180,172,0.15)",transition:"all 0.2s"}}/>
+                ))}
+              </div>
+            </div>
+            <div style={{height:1,background:"rgba(184,180,172,0.08)",margin:"14px 0"}}/>
+
+            {/* STEP 1 — Configure */}
+            {radiusStep===1&&(
+              <div className="radius-step radius-config">
+                <div>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+                    <label style={{fontSize:12,fontWeight:700,color:"var(--concrete)"}}>Target Radius</label>
+                    <span style={{fontFamily:"DM Mono,monospace",fontSize:13,color:"var(--green2)",fontWeight:600}}>
+                      {radiusForm.radius} miles · ~{Math.round(radiusForm.radius*5280/66)} homes
+                    </span>
+                  </div>
+                  <input
+                    type="range" className="radius-slider"
+                    min={0.1} max={2} step={0.1}
+                    value={radiusForm.radius}
+                    onChange={e=>setRadiusForm(f=>({...f,radius:parseFloat(e.target.value)}))}
+                  />
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--gravel)",marginTop:4}}>
+                    <span>0.1mi · ~8 homes</span>
+                    <span style={{color:"var(--green2)",fontWeight:700}}>0.5mi default</span>
+                    <span>2mi · ~330 homes</span>
+                  </div>
+                </div>
+
+                <div style={{background:"rgba(42,122,82,0.08)",border:"1px solid rgba(42,122,82,0.2)",borderRadius:8,padding:"12px 14px"}}>
+                  <div style={{fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--green2)",marginBottom:8}}>Campaign Summary</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                    <div style={{display:"flex",justifyContent:"space-between",fontSize:12}}>
+                      <span style={{color:"var(--stone)"}}>Center address</span>
+                      <span style={{color:"var(--cream)",fontWeight:600}}>{radiusLead.address}</span>
+                    </div>
+                    <div style={{display:"flex",justifyContent:"space-between",fontSize:12}}>
+                      <span style={{color:"var(--stone)"}}>Est. homes targeted</span>
+                      <span style={{color:"var(--cream)",fontWeight:600}}>~{Math.round(radiusForm.radius*5280/66)}</span>
+                    </div>
+                    <div style={{display:"flex",justifyContent:"space-between",fontSize:12}}>
+                      <span style={{color:"var(--stone)"}}>Est. mail cost</span>
+                      <span style={{fontFamily:"DM Mono,monospace",color:"var(--orange2)",fontWeight:600}}>${(Math.round(radiusForm.radius*5280/66)*1.25).toFixed(2)}</span>
+                    </div>
+                    <div style={{display:"flex",justifyContent:"space-between",fontSize:12}}>
+                      <span style={{color:"var(--stone)"}}>Mail angle</span>
+                      <span style={{color:"var(--green2)",fontWeight:600}}>Neighbor social proof</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="field">
+                  <label>Personal Note (optional)</label>
+                  <textarea
+                    placeholder="e.g. We just finished the Smiths' driveway — mention any special offer..."
+                    value={radiusForm.message}
+                    onChange={e=>setRadiusForm(f=>({...f,message:e.target.value}))}
+                    style={{height:60}}
+                  />
+                </div>
+
+                <button className="btn btn-success" onClick={generateRadiusMailer} disabled={radiusLoading} style={{width:"100%"}}>
+                  {radiusLoading?<><span className="spin"/> Generating AI Mailer...</>:"⚡ Generate Neighbor Mailer"}
+                </button>
+              </div>
+            )}
+
+            {/* STEP 2 — Preview */}
+            {radiusStep===2&&radiusMailer&&(
+              <div className="radius-step">
+                <div className="radius-preview" style={{marginBottom:16}}>
+                  <div className="radius-preview-head">
+                    <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"rgba(255,255,255,0.7)",marginBottom:6}}>
+                      YOUR NEIGHBOR AT {radiusMailer.address.toUpperCase()} JUST GOT A NEW DRIVEWAY
+                    </div>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,color:"white",letterSpacing:1,lineHeight:1}}>{radiusMailer.headline}</div>
+                  </div>
+                  <div className="radius-preview-body">
+                    <p style={{fontSize:12,color:"var(--concrete)",lineHeight:1.7,marginBottom:12}}>{radiusMailer.personalNote}</p>
+                    <div style={{background:"rgba(42,122,82,0.15)",border:"1px solid rgba(42,122,82,0.3)",borderRadius:6,padding:"10px 14px",marginBottom:10}}>
+                      <div style={{fontSize:9,color:"var(--green2)",fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:3}}>Neighbor Offer</div>
+                      <div style={{fontSize:13,color:"var(--cream)",fontWeight:600}}>{radiusMailer.offer}</div>
+                    </div>
+                    <div style={{background:"var(--orange)",color:"white",padding:"10px 14px",borderRadius:6,textAlign:"center"}}>
+                      <div style={{fontSize:9,fontWeight:700,letterSpacing:1}}>CALL JOEL DIRECTLY</div>
+                      <div style={{fontSize:16,fontWeight:700,fontFamily:"monospace"}}>918-896-6737</div>
+                    </div>
+                    <p style={{marginTop:8,fontSize:10,color:"var(--gravel)"}}>{radiusMailer.urgencyLine}</p>
+                  </div>
+                </div>
+
+                <div style={{background:"rgba(0,0,0,0.2)",borderRadius:8,padding:"12px 14px",marginBottom:14,fontSize:12,color:"var(--stone)"}}>
+                  Sending to <strong style={{color:"var(--cream)"}}>~{Math.round(radiusForm.radius*5280/66)} homes</strong> within <strong style={{color:"var(--green2)"}}>{radiusForm.radius} miles</strong> of {radiusMailer.address} · Est. cost <strong style={{color:"var(--orange2)",fontFamily:"DM Mono,monospace"}}>${(Math.round(radiusForm.radius*5280/66)*1.25).toFixed(2)}</strong>
+                </div>
+
+                <div style={{display:"flex",gap:8}}>
+                  <button className="btn btn-ghost" onClick={()=>setRadiusStep(1)}>← Edit</button>
+                  <button className="btn btn-success" style={{flex:1}} onClick={sendRadiusMailer} disabled={radiusSending}>
+                    {radiusSending?<><span className="spin"/> Sending...</>:"📬 Send Radius Mailer"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3 — Sent */}
+            {radiusStep===3&&(
+              <div className="radius-step radius-success">
+                <div className="radius-success-icon">🎉</div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"var(--cream)",marginBottom:8}}>MAILER SENT!</div>
+                <p style={{fontSize:13,color:"var(--stone)",lineHeight:1.7,marginBottom:20}}>
+                  ~{Math.round(radiusForm.radius*5280/66)} neighbors of {radiusLead.address} will receive a postcard in 2–5 days.
+                  The campaign has been added to your Job Tracker.
+                </p>
+                <button className="btn btn-primary" onClick={()=>{setShowRadiusModal(false);setRadiusStep(1);setRadiusMailer(null);}}>
+                  Done
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ADD LEAD MODAL */}
       {showAddLead&&(
         <div className="modal-overlay" onClick={e=>{if(e.target.className==="modal-overlay")setShowAddLead(false);}}>
