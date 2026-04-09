@@ -719,25 +719,25 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .spot-bid-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange2);}
 .spot-bid-value{font-family:'Bebas Neue',sans-serif;font-size:32px;color:#f5f0e6;letter-spacing:1px;line-height:1;}
 .spot-bar{position:absolute;bottom:0;left:0;right:0;height:4px;background:var(--orange);}
-.spot-back{background:linear-gradient(160deg,#1a1814 0%,#111009 100%);padding:0;overflow:hidden;position:relative;}
-.spot-back-header{background:linear-gradient(90deg,#e8560a,#c94400);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
-.spot-back-header-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:white;}
-.spot-back-header-sub{font-size:9px;color:rgba(255,255,255,0.75);letter-spacing:1px;text-transform:uppercase;}
+.spot-back{background:#f7f3ed;padding:0;overflow:hidden;position:relative;}
+.spot-back-header{background:#1c1a17;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+.spot-back-header-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:#f5f0e6;}
+.spot-back-header-sub{font-size:9px;color:rgba(184,180,172,0.5);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
 .spot-back-body{padding:16px 20px;}
-.spot-damage-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
-.spot-damage-item{display:flex;align-items:center;gap:8px;font-size:11px;color:#c8c4bc;line-height:1.4;}
-.spot-damage-dot{width:6px;height:6px;border-radius:50%;background:#e8560a;flex-shrink:0;}
-.spot-bid-strip{background:rgba(232,86,10,0.1);border:1px solid rgba(232,86,10,0.25);border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.spot-damage-list{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.spot-damage-item{display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#3a3835;line-height:1.5;}
+.spot-damage-dot{width:5px;height:5px;border-radius:50%;background:#2a2720;flex-shrink:0;margin-top:5px;}
+.spot-bid-strip{background:#1c1a17;border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .spot-bid-strip-left{display:flex;flex-direction:column;gap:2px;}
-.spot-bid-strip-label{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#e8560a;}
+.spot-bid-strip-label{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(184,180,172,0.45);}
 .spot-bid-strip-amount{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f5f0e6;letter-spacing:1px;line-height:1;}
-.spot-bid-strip-includes{font-size:9px;color:#7a7670;margin-top:2px;}
-.spot-cta-box{background:#e8560a;border-radius:8px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
-.spot-cta-text h4{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:white;margin-bottom:2px;}
-.spot-cta-text p{font-size:10px;color:rgba(255,255,255,0.8);font-family:'DM Mono',monospace;}
-.spot-guarantee{display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(184,180,172,0.08);}
-.spot-guarantee-icon{font-size:14px;}
-.spot-guarantee-text{font-size:9px;color:#5a5652;line-height:1.5;}
+.spot-bid-strip-includes{font-size:9px;color:#5a5652;margin-top:2px;}
+.spot-cta-box{background:#2a2720;border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.spot-cta-text h4{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px;color:#f5f0e6;margin-bottom:2px;}
+.spot-cta-text p{font-size:10px;color:rgba(184,180,172,0.5);font-family:'DM Mono',monospace;}
+.spot-guarantee{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(28,26,23,0.12);}
+.spot-guarantee-icon{font-size:12px;}
+.spot-guarantee-text{font-size:9px;color:#8a8680;line-height:1.5;}
 .spot-jobs{margin-top:20px;}
 .spot-job-row{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:8px;padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:background 0.12s;}
 .spot-job-row:hover{background:rgba(184,180,172,0.03);}
