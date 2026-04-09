@@ -1257,20 +1257,20 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
     }
     if(nl&&nc<3)ctx.fillText(nl.trim(),18,ny);
     // Dark footer strip
-    var by=H-66;
-    ctx.fillStyle='rgba(8,7,6,0.75)'; ctx.fillRect(0,by-6,W,H-(by-6));
+    var by=H-82;
+    ctx.fillStyle='rgba(8,7,6,0.82)'; ctx.fillRect(0,by-10,W,H-(by-10));
     // Bid box
-    ctx.fillStyle='rgba(232,86,10,0.12)'; ctx.fillRect(12,by,W-130,52);
-    ctx.strokeStyle='rgba(232,86,10,0.35)'; ctx.lineWidth=1; ctx.strokeRect(12,by,W-130,52);
+    ctx.fillStyle='rgba(232,86,10,0.15)'; ctx.fillRect(12,by,W-130,62);
+    ctx.strokeStyle='rgba(232,86,10,0.4)'; ctx.lineWidth=1; ctx.strokeRect(12,by,W-130,62);
     ctx.fillStyle='#e8560a'; ctx.font='bold 7px Arial';
-    ctx.fillText('YOUR ESTIMATE',20,by+13);
-    ctx.fillStyle='#f5f0e6'; ctx.font='bold 20px Arial';
-    ctx.fillText(mailer.bidLo||mailer.bid||'Call for estimate',20,by+36);
+    ctx.fillText('YOUR ESTIMATE',20,by+14);
+    ctx.fillStyle='#f5f0e6'; ctx.font='bold 22px Arial';
+    ctx.fillText(mailer.bidLo||mailer.bid||'Call for estimate',20,by+42);
     // Call button
-    ctx.fillStyle='#e8560a'; ctx.fillRect(W-114,by+4,100,44);
+    ctx.fillStyle='#e8560a'; ctx.fillRect(W-118,by+6,104,50);
     ctx.fillStyle='white'; ctx.font='bold 9px Arial'; ctx.textAlign='center';
-    ctx.fillText('CALL NOW',W-64,by+20);
-    ctx.font='bold 12px monospace'; ctx.fillText('918-896-6737',W-64,by+38);
+    ctx.fillText('CALL NOW',W-66,by+24);
+    ctx.font='bold 12px monospace'; ctx.fillText('918-896-6737',W-66,by+44);
     ctx.textAlign='left';
     setDataUrl(canvas.toDataURL('image/jpeg',0.92));
   }
