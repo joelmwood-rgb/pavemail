@@ -1287,7 +1287,7 @@ export default function App(){
     mode: "hungry", // hungry | normal | selective | paused
     manualOverride: null,
   });
-  const showToast=(msg,type="success")=>{setToast({msg,type});setTimeout(()=>setToast(null),4000);};
+  function showToast(msg,type="success") {
   const toggleRoute=(id)=>setSelectedRoutes(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
 
 
@@ -1599,7 +1599,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     }catch(_){}
     await new Promise(r=>setTimeout(r,1600));
     const demo=getDemoMailer(form.season,form.angle,form.offer);
-  const renderPostcardCanvas = (photoSrc, mailer, setDataUrl) => {
+  function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
     const canvas = document.createElement('canvas');
     canvas.width = 600; canvas.height = 320;
     const ctx = canvas.getContext('2d');
@@ -1659,7 +1659,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     } else {
       draw(null);
     }
-  };
+  }
 
     setMailer({...demo,page1:{...demo.page1,eyebrow:`${form.neighborhood} — ${demo.page1.eyebrow}`}});
     setLoading(false);
