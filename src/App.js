@@ -1205,9 +1205,11 @@ const CAPACITY_MODES = {
 
 function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
   const canvas = document.createElement('canvas');
-  canvas.width = 600; canvas.height = 320;
+  const SCALE = 2;
+  canvas.width = 600 * SCALE; canvas.height = 320 * SCALE;
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+  ctx.scale(SCALE, SCALE);
+  const W = 600, H = 320;
 
   function draw(img) {
     ctx.fillStyle='#111009'; ctx.fillRect(0,0,W,H);
@@ -1219,39 +1221,58 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
       ctx.drawImage(img,sx,sy,sw,sh,0,0,W,H);
     }
     const g=ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'rgba(10,9,8,0.3)');
-    g.addColorStop(0.5,'rgba(10,9,8,0.75)');
+    g.addColorStop(0,'rgba(10,9,8,0.25)');
+    g.addColorStop(0.45,'rgba(10,9,8,0.65)');
     g.addColorStop(1,'rgba(10,9,8,0.97)');
     ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#e8560a'; ctx.font='bold 8px Arial'; ctx.textAlign='left';
-    ctx.fillText('JWOOD LLC · TULSA, OK', 20, 32);
-    if(img) {
-      ctx.fillStyle='rgba(232,86,10,0.9)'; ctx.fillRect(W-108,14,92,20);
+    // YOUR DRIVEWAY badge
+    if(img){
+      ctx.fillStyle='rgba(232,86,10,0.92)'; ctx.fillRect(W-110,12,96,22);
       ctx.fillStyle='white'; ctx.font='bold 8px Arial'; ctx.textAlign='right';
-      ctx.fillText('YOUR DRIVEWAY', W-16, 28); ctx.textAlign='left';
+      ctx.fillText('YOUR DRIVEWAY',W-14,27); ctx.textAlign='left';
     }
-    ctx.fillStyle='rgba(245,240,230,0.65)'; ctx.font='bold 12px Arial';
-    ctx.fillText((mailer.address||'')+', '+(mailer.city||''), 20, H-180);
-    ctx.fillStyle='#f5f0e6'; ctx.font='bold 20px Arial';
-    var hw=(mailer.headline||'').split(' '),hl='',hy=H-155;
-    for(var j=0;j<hw.length;j++){var t=hl+hw[j]+' ';if(ctx.measureText(t).width>W-40&&hl){ctx.fillText(hl.trim(),20,hy);hl=hw[j]+' ';hy+=24;}else hl=t;}
-    if(hl)ctx.fillText(hl.trim(),20,hy);
-    ctx.fillStyle='rgba(184,180,172,0.8)'; ctx.font='10px Arial';
-    var nw=(mailer.personalNote||'').slice(0,100).split(' '),nl='',ny=hy+22,nc=0;
-    for(var k=0;k<nw.length;k++){if(nc>=3)break;var nt=nl+nw[k]+' ';if(ctx.measureText(nt).width>W-40&&nl){ctx.fillText(nl.trim(),20,ny);nl=nw[k]+' ';ny+=15;nc++;}else nl=nt;}
-    if(nl&&nc<3)ctx.fillText(nl.trim(),20,ny);
-    var by=H-68;
-    ctx.fillStyle='rgba(232,86,10,0.2)'; ctx.strokeStyle='rgba(232,86,10,0.5)'; ctx.lineWidth=1;
-    ctx.fillRect(14,by,W-28,50); ctx.strokeRect(14,by,W-28,50);
+    // Company tag
+    ctx.fillStyle='#e8560a'; ctx.font='bold 8px Arial';
+    ctx.fillText('JWOOD LLC \xb7 TULSA, OK',18,28);
+    // Address
+    ctx.fillStyle='rgba(245,240,230,0.7)'; ctx.font='500 11px Arial';
+    ctx.fillText((mailer.address||'')+', '+(mailer.city||''),18,H-170);
+    // Headline word wrap max 2 lines
+    ctx.fillStyle='#f5f0e6'; ctx.font='bold 22px Arial';
+    var hw=(mailer.headline||'').split(' '),hl='',hy=H-150,hlines=0;
+    for(var j=0;j<hw.length;j++){
+      var t=hl+hw[j]+' ';
+      if(ctx.measureText(t).width>W-36&&hl){ctx.fillText(hl.trim(),18,hy);hl=hw[j]+' ';hy+=26;hlines++;if(hlines>=2){hl='';break;}}
+      else hl=t;
+    }
+    if(hl&&hlines<2)ctx.fillText(hl.trim(),18,hy);
+    // Personal note max 3 lines
+    ctx.fillStyle='rgba(200,196,188,0.9)'; ctx.font='11px Arial';
+    var nw=(mailer.personalNote||'').slice(0,140).split(' '),nl='',ny=hy+22,nc=0;
+    for(var k=0;k<nw.length;k++){
+      if(nc>=3)break;
+      var nt=nl+nw[k]+' ';
+      if(ctx.measureText(nt).width>W-36&&nl){ctx.fillText(nl.trim(),18,ny);nl=nw[k]+' ';ny+=15;nc++;}
+      else nl=nt;
+    }
+    if(nl&&nc<3)ctx.fillText(nl.trim(),18,ny);
+    // Dark footer strip
+    var by=H-66;
+    ctx.fillStyle='rgba(8,7,6,0.75)'; ctx.fillRect(0,by-6,W,H-(by-6));
+    // Bid box
+    ctx.fillStyle='rgba(232,86,10,0.12)'; ctx.fillRect(12,by,W-130,52);
+    ctx.strokeStyle='rgba(232,86,10,0.35)'; ctx.lineWidth=1; ctx.strokeRect(12,by,W-130,52);
     ctx.fillStyle='#e8560a'; ctx.font='bold 7px Arial';
-    ctx.fillText('YOUR PERSONALIZED ESTIMATE',22,by+13);
-    ctx.fillStyle='#f5f0e6'; ctx.font='bold 18px Arial';
-    ctx.fillText(mailer.bidLo||mailer.bid||'Call for estimate',22,by+34);
-    ctx.fillStyle='#e8560a'; ctx.fillRect(W-108,by+4,94,42);
-    ctx.fillStyle='white'; ctx.font='bold 8px Arial'; ctx.textAlign='center';
-    ctx.fillText('CALL NOW',W-61,by+18); ctx.font='bold 11px monospace';
-    ctx.fillText('918-896-6737',W-61,by+34); ctx.textAlign='left';
-    setDataUrl(canvas.toDataURL('image/jpeg', 0.85));
+    ctx.fillText('YOUR ESTIMATE',20,by+13);
+    ctx.fillStyle='#f5f0e6'; ctx.font='bold 20px Arial';
+    ctx.fillText(mailer.bidLo||mailer.bid||'Call for estimate',20,by+36);
+    // Call button
+    ctx.fillStyle='#e8560a'; ctx.fillRect(W-114,by+4,100,44);
+    ctx.fillStyle='white'; ctx.font='bold 9px Arial'; ctx.textAlign='center';
+    ctx.fillText('CALL NOW',W-64,by+20);
+    ctx.font='bold 12px monospace'; ctx.fillText('918-896-6737',W-64,by+38);
+    ctx.textAlign='left';
+    setDataUrl(canvas.toDataURL('image/jpeg',0.92));
   }
 
   if(photoSrc){
