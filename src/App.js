@@ -713,6 +713,22 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
    MOBILE RESPONSIVE
 ═══════════════════════════════════════ */
 
+/* ── CAPACITY ENGINE ── */
+.capacity-bar-wrap{background:rgba(0,0,0,0.3);border-radius:20px;height:8px;overflow:hidden;margin:8px 0;}
+.capacity-bar{height:100%;border-radius:20px;transition:width 0.5s ease;}
+.capacity-gauge{position:relative;width:120px;height:60px;margin:0 auto;}
+.mode-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px;cursor:pointer;transition:all 0.15s;border:1px solid transparent;}
+.mode-pill.active{border-color:currentColor;}
+.capacity-widget{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:10px;padding:14px 16px;}
+.score-pill{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;font-family:"DM Mono",monospace;}
+.score-high{background:rgba(42,122,82,0.15);color:var(--green2);}
+.score-mid{background:rgba(196,160,32,0.15);color:var(--gold2);}
+.score-low{background:rgba(184,50,50,0.15);color:#f08080;}
+.smart-suggest{background:linear-gradient(135deg,rgba(26,111,168,0.08),rgba(26,111,168,0.04));border:1px solid rgba(26,111,168,0.2);border-radius:8px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:10px;}
+.smart-suggest-icon{font-size:18px;flex-shrink:0;}
+.smart-suggest-text{font-size:11px;color:var(--concrete);line-height:1.6;}
+.smart-suggest-text strong{color:var(--cream);}
+
 /* ── AI PHONE ── */
 .ai-phone-nav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
 .ai-lead-card{background:var(--char);border:1px solid rgba(184,180,172,0.08);border-radius:10px;padding:16px 18px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;transition:all 0.15s;}
@@ -1218,6 +1234,78 @@ export default function App(){
   ]);
 
   const[pipelineView,setPipelineView]=useState("kanban");
+
+  // ── CAPACITY ENGINE ──
+  const CAPACITY_CONFIG = { crewSize:12, maxJobs:6, weeklyTarget:40000 };
+  const[capacity,setCapacity]=useState({
+    activeJobs: 0,
+    weeklyRevenue: 0,
+    weeksBooked: 0,
+    mode: "hungry", // hungry | normal | selective | paused
+    manualOverride: null,
+  });
+
+  // Recalculate capacity whenever pipeline changes
+  React.useEffect(()=>{
+    const activeJobs = pipeline.filter(l=>l.stage==="won").length;
+    const weeklyRevenue = pipeline
+      .filter(l=>l.stage==="won")
+      .reduce((s,l)=>s+(l.value||0), 0);
+    const pct = activeJobs / CAPACITY_CONFIG.maxJobs;
+    let mode = "hungry";
+    if(pct >= 1.0) mode = "paused";
+    else if(pct >= 0.8) mode = "selective";
+    else if(pct >= 0.5) mode = "normal";
+    setCapacity(c=>({
+      ...c,
+      activeJobs,
+      weeklyRevenue,
+      weeksBooked: Math.ceil(activeJobs / CAPACITY_CONFIG.maxJobs),
+      mode: c.manualOverride || mode,
+    }));
+  },[pipeline]);
+
+  const CAPACITY_MODES = {
+    hungry:   { label:"Hungry",   color:"#b83232", bg:"rgba(184,50,50,0.12)",   icon:"🔥", desc:"Aggressive outbound — large radius, fast follow-up, low bid threshold" },
+    normal:   { label:"Normal",   color:"#c4a020", bg:"rgba(196,160,32,0.12)",  icon:"✅", desc:"Standard outbound — normal radius, normal pricing" },
+    selective:{ label:"Selective",color:"#1a6fa8", bg:"rgba(26,111,168,0.12)",  icon:"🎯", desc:"High-value leads only — bids +15%, radius reduced" },
+    paused:   { label:"Paused",   color:"#6a6662", bg:"rgba(106,102,98,0.12)",  icon:"⏸️", desc:"Fully booked — campaigns paused, AI agent books 3 weeks out" },
+  };
+
+  // Lead scoring (1-100)
+  const scoreLead = (lead) => {
+    let score = 50;
+    // Value score (up to +30)
+    if(lead.value > 3000) score += 30;
+    else if(lead.value > 1500) score += 20;
+    else if(lead.value > 500) score += 10;
+    // Stage score (further = higher)
+    if(lead.stage === "called") score += 15;
+    else if(lead.stage === "sent") score += 5;
+    // Recency (older spotted = lower)
+    if(lead.spotted) {
+      const days = Math.floor((Date.now() - new Date(lead.spotted)) / 86400000);
+      if(days > 14) score -= 20;
+      else if(days > 7) score -= 10;
+    }
+    // Capacity adjustment
+    if(capacity.mode === "selective") { if(lead.value < 2000) score -= 25; }
+    if(capacity.mode === "paused") score = Math.min(score, 20);
+    return Math.max(0, Math.min(100, score));
+  };
+
+  const getRadiusForMode = () => {
+    if(capacity.mode === "hungry") return 1.0;
+    if(capacity.mode === "normal") return 0.5;
+    if(capacity.mode === "selective") return 0.25;
+    return 0;
+  };
+
+  const getBidMultiplierForMode = () => {
+    if(capacity.mode === "selective") return 1.15;
+    if(capacity.mode === "paused") return 1.25;
+    return 1.0;
+  };
   const[showRadiusModal,setShowRadiusModal]=useState(false);
   const[showAIPhone,setShowAIPhone]=useState(false);
   const[aiLeads,setAiLeads]=useState([
@@ -1833,7 +1921,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         {/* NAV */}
         <nav className="nav">
           <div className="nav-label">Campaigns</div>
-          {[{id:"map",icon:"🗺️",label:"Neighborhood Scan"},{id:"create",icon:"✏️",label:"Create Mailer"},{id:"tracker",icon:"📊",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length},{id:"spotbid",icon:"🎯",label:"Spot Bid"},{id:"pipeline",icon:"📍",label:"Pipeline"},{id:"aiphone",icon:"📞",label:"AI Phone",badge:aiLeads.filter(l=>l.status==="pending").length||null}].map(item=>(
+          {[{id:"map",icon:"🗺️",label:"Neighborhood Scan"},{id:"create",icon:"✏️",label:"Create Mailer"},{id:"tracker",icon:"📊",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length},{id:"spotbid",icon:"🎯",label:"Spot Bid"},{id:"pipeline",icon:"📍",label:"Pipeline"},{id:"capacity",icon:"⚡",label:"Capacity"},{id:"aiphone",icon:"📞",label:"AI Phone",badge:aiLeads.filter(l=>l.status==="pending").length||null}].map(item=>(
             <button key={item.id} className={`nav-item${tab===item.id?" active":""}`} onClick={()=>setTab(item.id)}>
               <span className="nav-icon">{item.icon}</span>{item.label}
               {item.badge?<span className="nav-badge">{item.badge}</span>:null}
@@ -1842,6 +1930,34 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           <div className="nav-divider"/>
           <div className="nav-label">Account</div>
           <button className={`nav-item${tab==="settings"?" active":""}`} onClick={()=>setTab("settings")}><span className="nav-icon">⚙️</span>Settings</button>
+          <div className="nav-mini">
+            {/* CAPACITY WIDGET */}
+            <div className="capacity-widget" style={{marginBottom:8}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)"}}>Crew Capacity</div>
+                <div style={{fontSize:10,fontWeight:700,color:CAPACITY_MODES[capacity.mode].color}}>{CAPACITY_MODES[capacity.mode].icon} {CAPACITY_MODES[capacity.mode].label}</div>
+              </div>
+              <div className="capacity-bar-wrap">
+                <div className="capacity-bar" style={{
+                  width:`${Math.min(100,Math.round(capacity.activeJobs/CAPACITY_CONFIG.maxJobs*100))}%`,
+                  background:capacity.mode==="hungry"?"#b83232":capacity.mode==="normal"?"#c4a020":capacity.mode==="selective"?"#1a6fa8":"#6a6662"
+                }}/>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"var(--gravel)",marginTop:4}}>
+                <span>{capacity.activeJobs} active jobs</span>
+                <span>{CAPACITY_CONFIG.maxJobs} max</span>
+              </div>
+              <div style={{display:"flex",gap:4,marginTop:8,flexWrap:"wrap"}}>
+                {Object.entries(CAPACITY_MODES).map(([mode,cfg])=>(
+                  <button key={mode} className={`mode-pill${capacity.manualOverride===mode?" active":""}`}
+                    style={{background:capacity.manualOverride===mode?cfg.bg:"transparent",color:cfg.color,fontSize:8}}
+                    onClick={()=>setCapacity(c=>({...c,manualOverride:c.manualOverride===mode?null:mode,mode:c.manualOverride===mode?(()=>{const pct=c.activeJobs/CAPACITY_CONFIG.maxJobs;return pct>=1?"paused":pct>=0.8?"selective":pct>=0.5?"normal":"hungry";})():mode}))}>
+                    {cfg.icon} {cfg.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
           <div className="nav-mini">
             <div className="mini-card">
               <div className="mini-label">This Month</div>
@@ -2377,6 +2493,112 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             </div>
           )}
 
+
+          {/* CAPACITY */}
+          {tab==="capacity"&&(
+            <div style={{padding:"24px 28px"}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>CAPACITY ENGINE</div>
+              <div style={{fontSize:12,color:"var(--stone)",marginBottom:20}}>12-man crew · {CAPACITY_CONFIG.maxJobs} jobs/week max · ${CAPACITY_CONFIG.weeklyTarget.toLocaleString()} weekly target</div>
+
+              {/* Current mode banner */}
+              <div style={{background:CAPACITY_MODES[capacity.mode].bg,border:`1px solid ${CAPACITY_MODES[capacity.mode].color}40`,borderRadius:12,padding:"20px 24px",marginBottom:20,display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+                <div style={{fontSize:40}}>{CAPACITY_MODES[capacity.mode].icon}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2,color:CAPACITY_MODES[capacity.mode].color}}>{CAPACITY_MODES[capacity.mode].label.toUpperCase()} MODE</div>
+                  <div style={{fontSize:12,color:"var(--concrete)",marginTop:4}}>{CAPACITY_MODES[capacity.mode].desc}</div>
+                  <div style={{fontSize:11,color:"var(--stone)",marginTop:6}}>
+                    Auto radius: <strong style={{color:"var(--cream)"}}>{getRadiusForMode()}mi</strong> ·
+                    Bid multiplier: <strong style={{color:"var(--cream)"}}>{getBidMultiplierForMode()}x</strong> ·
+                    AI agent: <strong style={{color:"var(--cream)"}}>{capacity.mode==="paused"?"Booking 3 weeks out":capacity.mode==="selective"?"High value only":"Normal"}</strong>
+                  </div>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {Object.entries(CAPACITY_MODES).map(([mode,cfg])=>(
+                    <button key={mode} className={`mode-pill${capacity.mode===mode?" active":""}`}
+                      style={{background:capacity.mode===mode?cfg.bg:"transparent",color:cfg.color}}
+                      onClick={()=>setCapacity(c=>({...c,mode,manualOverride:mode}))}>
+                      {cfg.icon} {cfg.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stats grid */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
+                {[
+                  {label:"Active Jobs",value:capacity.activeJobs,max:CAPACITY_CONFIG.maxJobs,color:"var(--orange2)"},
+                  {label:"Capacity Used",value:`${Math.round(capacity.activeJobs/CAPACITY_CONFIG.maxJobs*100)}%`,color:CAPACITY_MODES[capacity.mode].color},
+                  {label:"Weekly Revenue",value:`$${capacity.weeklyRevenue.toLocaleString()}`,color:"var(--green2)"},
+                  {label:"Target Gap",value:`$${Math.max(0,CAPACITY_CONFIG.weeklyTarget-capacity.weeklyRevenue).toLocaleString()}`,color:capacity.weeklyRevenue>=CAPACITY_CONFIG.weeklyTarget?"var(--green2)":"var(--gold2)"},
+                ].map((s,i)=>(
+                  <div key={i} style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:9,padding:"14px 16px"}}>
+                    <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",marginBottom:6}}>{s.label}</div>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:s.color,letterSpacing:1,lineHeight:1}}>{s.value}</div>
+                    {s.max&&<div style={{marginTop:6}}><div className="capacity-bar-wrap"><div className="capacity-bar" style={{width:`${Math.min(100,Math.round(s.value/s.max*100))}%`,background:s.color}}/></div></div>}
+                  </div>
+                ))}
+              </div>
+
+              {/* Smart suggestions */}
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>SMART SUGGESTIONS</div>
+              {capacity.mode==="hungry"&&(
+                <div className="smart-suggest">
+                  <div className="smart-suggest-icon">🔥</div>
+                  <div className="smart-suggest-text">
+                    <strong>You have open capacity.</strong> Consider sending a radius mailer from your most recent Won job, or running a new neighborhood campaign in a high-income ZIP. Radius auto-set to <strong>1.0 miles</strong> in Hungry mode.
+                    <div style={{marginTop:8}}>
+                      <button className="btn btn-primary btn-sm" onClick={()=>{const won=pipeline.find(l=>l.stage==="won");if(won){setRadiusLead(won);setRadiusForm(f=>({...f,radius:1.0}));setRadiusStep(1);setRadiusMailer(null);setShowRadiusModal(true);}else showToast("Mark a job as Won first","info");}}>
+                        📬 Send Radius Mailer
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {capacity.mode==="paused"&&(
+                <div className="smart-suggest">
+                  <div className="smart-suggest-icon">⏸️</div>
+                  <div className="smart-suggest-text">
+                    <strong>You are fully booked.</strong> Outbound campaigns are paused. The AI phone agent is telling callers you are booking 3 weeks out. When a job completes and is removed from Won, capacity will auto-resume.
+                  </div>
+                </div>
+              )}
+              {capacity.mode==="selective"&&(
+                <div className="smart-suggest">
+                  <div className="smart-suggest-icon">🎯</div>
+                  <div className="smart-suggest-text">
+                    <strong>Nearly full — focus on high-value leads only.</strong> Pipeline leads with a score below 50 are deprioritized. Bids are automatically increased by 15% to maximize margin on remaining capacity.
+                    {pipeline.filter(l=>scoreLead(l)<50&&l.stage!=="won").length>0&&(
+                      <div style={{marginTop:6}}>⚠️ {pipeline.filter(l=>scoreLead(l)<50&&l.stage!=="won").length} low-score leads in pipeline — consider deprioritizing</div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Lead scores */}
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginTop:20,marginBottom:12}}>LEAD PRIORITY SCORES</div>
+              <div style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,overflow:"hidden"}}>
+                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",padding:"10px 16px",background:"rgba(0,0,0,0.2)",fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",borderBottom:"1px solid rgba(184,180,172,0.07)"}}>
+                  <div>Address</div><div>Stage</div><div>Value</div><div>Score</div>
+                </div>
+                {[...pipeline].filter(l=>l.stage!=="won").sort((a,b)=>scoreLead(b)-scoreLead(a)).slice(0,10).map(lead=>{
+                  const score=scoreLead(lead);
+                  return(
+                    <div key={lead.id} style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",padding:"11px 16px",borderBottom:"1px solid rgba(184,180,172,0.05)",alignItems:"center",cursor:"pointer"}} onClick={()=>setTab("pipeline")}>
+                      <div style={{fontSize:12,fontWeight:600,color:"var(--cream)"}}>{lead.address}<div style={{fontSize:10,color:"var(--stone)"}}>{lead.city}</div></div>
+                      <div style={{fontSize:11,color:"var(--concrete)"}}>{STAGES.find(s=>s.id===lead.stage)?.icon} {STAGES.find(s=>s.id===lead.stage)?.label}</div>
+                      <div style={{fontFamily:"DM Mono,monospace",fontSize:12,color:"var(--orange2)"}}>{lead.value?`$${lead.value.toLocaleString()}`:"—"}</div>
+                      <div>
+                        <span className={`score-pill ${score>=70?"score-high":score>=40?"score-mid":"score-low"}`}>{score}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+                {pipeline.filter(l=>l.stage!=="won").length===0&&(
+                  <div style={{padding:"20px",textAlign:"center",fontSize:12,color:"var(--gravel)"}}>No active pipeline leads</div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* AI PHONE */}
           {tab==="aiphone"&&(
