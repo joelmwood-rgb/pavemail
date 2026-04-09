@@ -1815,18 +1815,19 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       <div className="preview-meta"><span>📍 <strong>{spotMailer.address}</strong></span><span>💵 <strong>{spotMailer.bid}</strong></span></div>
                     </div>
 
-                    <div className="page-tag">Front of Postcard {spotMailer.photoData&&<span style={{marginLeft:6,background:"rgba(232,86,10,0.25)",color:"var(--orange2)",padding:"2px 7px",borderRadius:4,fontSize:9,fontWeight:700}}>📷 Photo Background</span>}</div>
+                    <div className="page-tag">Front of Postcard {(spotMailer.photoUrl||spotMailer.photoData)&&<span style={{marginLeft:6,background:"rgba(232,86,10,0.25)",color:"var(--orange2)",padding:"2px 7px",borderRadius:4,fontSize:9,fontWeight:700}}>📷 Photo Background</span>}</div>
                     <div className="spot-mailer" style={{marginBottom:18}}>
                       <div className="spot-front" style={{position:"relative",overflow:"hidden"}}>
-                        {/* Photo background — uses img tag for iOS Safari compatibility */}
-                        {spotMailer.photoData ? (
+                        {/* Photo background — prioritizes hosted URL for iOS Safari */}
+                        {(spotMailer.photoUrl||spotMailer.photoData) ? (
                           <>
                             <img
-                              src={spotMailer.photoUrl||spotPhotoUrl||spotMailer.photoData}
+                              src={spotMailer.photoUrl||spotPhotoUrlRef.current||spotPhotoUrl||spotMailer.photoData}
                               className="spot-photo-bg"
                               alt=""
                               role="presentation"
-                              onError={e=>{if(spotMailer.photoData)e.target.src=spotMailer.photoData;}}
+                              onLoad={()=>console.log("Photo img loaded successfully")}
+                              onError={e=>console.log("Photo img failed to load:",e.target.src?.slice(0,80))}
                             />
                             <div className="spot-photo-overlay"/>
                           </>
@@ -1839,7 +1840,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                         <div className="spot-front-content" style={{display:"flex",flexDirection:"column",height:"100%"}}>
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"auto"}}>
                             <div className="spot-tag" style={{margin:0}}>JWood LLC · Tulsa, OK</div>
-                            {spotMailer.photoData&&<div style={{background:"rgba(232,86,10,0.9)",color:"white",fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:4,letterSpacing:1}}>📷 YOUR DRIVEWAY</div>}
+                            {(spotMailer.photoUrl||spotMailer.photoData)&&<div style={{background:"rgba(232,86,10,0.9)",color:"white",fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:4,letterSpacing:1}}>📷 YOUR DRIVEWAY</div>}
                           </div>
                           <div style={{paddingTop:16}}>
                             <div className="spot-address">{spotMailer.address}, {spotMailer.city}</div>
