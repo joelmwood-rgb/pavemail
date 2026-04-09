@@ -2028,7 +2028,9 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div className="kanban">
                   {STAGES.map(stage=>{
                     const leads=pipeline.filter(l=>l.stage===stage.id);
-                    const nextStage=STAGES[STAGES.findIndex(s=>s.id===stage.id)+1];
+                    const stageIdx=STAGES.findIndex(s=>s.id===stage.id);
+                    const nextStage=STAGES[stageIdx+1];
+                    const prevStage=STAGES[stageIdx-1];
                     return(
                       <div className="kanban-col" key={stage.id}>
                         <div className="kanban-head" style={{borderTop:`3px solid ${stage.color}`}}>
@@ -2050,8 +2052,13 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                 {lead.jobWon&&` · Won ${lead.jobWon}`}
                               </div>
                               <div className="pl-card-actions">
+                                {prevStage&&(
+                                  <button className="pl-action-btn" style={{background:prevStage.bg,color:prevStage.color,opacity:0.75}} onClick={()=>moveStage(lead.id,prevStage.id)} title={`Move back to ${prevStage.label}`}>
+                                    ← {prevStage.label}
+                                  </button>
+                                )}
                                 {nextStage&&(
-                                  <button className="pl-action-btn" style={{background:nextStage.bg,color:nextStage.color}} onClick={()=>moveStage(lead.id,nextStage.id)}>
+                                  <button className="pl-action-btn" style={{background:nextStage.bg,color:nextStage.color}} onClick={()=>moveStage(lead.id,nextStage.id)} title={`Move forward to ${nextStage.label}`}>
                                     → {nextStage.label}
                                   </button>
                                 )}
@@ -2066,6 +2073,16 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                 >
                                   {permitLoading===lead.id?"⏳ Loading...":"🏛️ Permits"}
                                 </button>
+                                <select
+                                  value={lead.stage}
+                                  onChange={e=>moveStage(lead.id,e.target.value)}
+                                  style={{fontSize:9,fontWeight:700,background:"rgba(0,0,0,0.3)",border:"1px solid rgba(184,180,172,0.15)",borderRadius:5,padding:"3px 6px",color:"var(--stone)",fontFamily:"'Syne',sans-serif",cursor:"pointer",outline:"none"}}
+                                  title="Jump to any stage"
+                                >
+                                  {STAGES.map(s=>(
+                                    <option key={s.id} value={s.id} style={{background:"var(--char)"}}>{s.icon} {s.label}</option>
+                                  ))}
+                                </select>
                               </div>
                               {/* PERMIT PANEL */}
                               {expandedLead===lead.id&&(
