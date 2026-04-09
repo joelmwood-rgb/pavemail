@@ -269,6 +269,31 @@ async function fetchUSPSRoutes(zip) {
   }
 }
 
+// ─────────────────────────────────────────────
+// GPS → ADDRESS (Reverse Geocoding via Nominatim)
+// ─────────────────────────────────────────────
+async function reverseGeocode(lat, lng) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+      { headers: { "User-Agent": "PaveMail/1.0 (joelmwood@gmail.com)" } }
+    );
+    const data = await res.json();
+    if (!data || data.error) return null;
+    const a = data.address || {};
+    const houseNumber = a.house_number || "";
+    const road = a.road || a.pedestrian || a.path || "";
+    const city = a.city || a.town || a.village || a.suburb || "Tulsa";
+    const state = a.state_code || a.state || "OK";
+    const zip = a.postcode || "";
+    const streetAddress = houseNumber ? `${houseNumber} ${road}` : road;
+    return { address: streetAddress.trim(), city, state, zip, lat, lng, full: data.display_name };
+  } catch(e) {
+    console.error("Geocoding failed:", e);
+    return null;
+  }
+}
+
 async function verifyAddress(address, city, state, zip) {
   try {
     const res = await fetch(LOB_VERIFY_PROXY, {
@@ -470,6 +495,9 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .btn-ghost{background:rgba(184,180,172,0.07);border:1px solid rgba(184,180,172,0.13);color:var(--concrete);}
 .btn-ghost:hover{background:rgba(184,180,172,0.13);color:var(--cream);}
 .btn-success{background:var(--green);color:white;}
+.btn-success:hover{background:var(--green2);}
+@keyframes gpsPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.7;transform:scale(0.95)}}
+.gps-loading{animation:gpsPulse 0.8s infinite;}
 .btn-success:hover{background:var(--green2);}
 .btn-sm{padding:6px 12px;font-size:11px;}
 .btn-lg{padding:12px 24px;font-size:14px;}
@@ -1205,6 +1233,8 @@ export default function App(){
   const[zipSearch,setZipSearch]=useState("");
   const[searchedZips,setSearchedZips]=useState([]);
   const[verifyResult,setVerifyResult]=useState(null);
+  const[gpsLoading,setGpsLoading]=useState(false);
+  const[gpsAccuracy,setGpsAccuracy]=useState(null);
   const[verifying,setVerifying]=useState(false);
   const[form,setForm]=useState({company:COMPANY.name,phone:COMPANY.phone,neighborhood:"",city:COMPANY.city,season:"Spring",offer:"Free Estimate",angle:"Crack Repair",homes:"200",promoCode:COMPANY.promo,extraNotes:""});
   const[loading,setLoading]=useState(false);
@@ -1852,6 +1882,49 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
   const clearRoutes = () => { setLiveRoutes([]); setSelectedRoutes([]); setSearchedZips([]); setRouteError(null); };
 
+  const getGpsAddress = async () => {
+    if (!navigator.geolocation) {
+      showToast("GPS not available on this device", "info");
+      return;
+    }
+    setGpsLoading(true);
+    showToast("Getting your location...", "info");
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        setGpsAccuracy(Math.round(accuracy));
+        console.log("GPS:", latitude, longitude, "accuracy:", accuracy, "m");
+        const result = await reverseGeocode(latitude, longitude);
+        if (result && result.address) {
+          setSpotForm(f => ({
+            ...f,
+            address: result.address,
+            city: result.city || "Tulsa",
+            state: result.state || "OK",
+            zip: result.zip || "",
+          }));
+          setVerifyResult(null);
+          showToast(
+            accuracy < 20
+              ? "📍 Address locked — " + result.address
+              : `📍 Got address (±${Math.round(accuracy)}m accuracy)`,
+            "success"
+          );
+        } else {
+          showToast("Could not determine address — try moving outside", "info");
+        }
+        setGpsLoading(false);
+      },
+      (err) => {
+        setGpsLoading(false);
+        if (err.code === 1) showToast("Location access denied — enable in browser settings", "info");
+        else if (err.code === 2) showToast("GPS signal not found — try outside", "info");
+        else showToast("Location error: " + err.message, "info");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
   const verifySpotAddress = async () => {
     if (!spotForm.address) return;
     setVerifying(true); setVerifyResult(null);
@@ -2238,11 +2311,37 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div className="field">
                   <label>Street Address *</label>
                   <div style={{display:"flex",gap:8}}>
-                    <input placeholder="e.g. 4821 Oak Ridge Dr" value={spotForm.address} onChange={e=>{setSpot("address",e.target.value);setVerifyResult(null);}} style={{flex:1}}/>
-                    <button className="btn btn-ghost btn-sm" onClick={verifySpotAddress} disabled={verifying||!spotForm.address} style={{flexShrink:0,padding:"0 10px"}} title="Verify with USPS">
-                      {verifying?<span className="spin"/>:"Verify"}
+                    <input
+                      placeholder="e.g. 4821 Oak Ridge Dr"
+                      value={spotForm.address}
+                      onChange={e=>{setSpot("address",e.target.value);setVerifyResult(null);setGpsAccuracy(null);}}
+                      style={{flex:1}}
+                    />
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={getGpsAddress}
+                      disabled={gpsLoading}
+                      style={{flexShrink:0,padding:"0 12px",background:"var(--green)",whiteSpace:"nowrap"}}
+                      title="Auto-fill from GPS — tap while parked outside the house"
+                    >
+                      {gpsLoading?<span className="spin"/>:"📍 GPS"}
+                    </button>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={verifySpotAddress}
+                      disabled={verifying||!spotForm.address}
+                      style={{flexShrink:0,padding:"0 10px"}}
+                      title="Verify address with USPS"
+                    >
+                      {verifying?<span className="spin"/>:"✓ Verify"}
                     </button>
                   </div>
+                  {gpsAccuracy&&spotForm.address&&(
+                    <div style={{display:"flex",alignItems:"center",gap:6,marginTop:6,fontSize:10,color:gpsAccuracy<15?"var(--green2)":gpsAccuracy<40?"var(--gold2)":"var(--stone)"}}>
+                      <div style={{width:6,height:6,borderRadius:"50%",background:gpsAccuracy<15?"var(--green2)":gpsAccuracy<40?"var(--gold2)":"var(--stone)"}}/>
+                      {gpsAccuracy<15?"High accuracy":gpsAccuracy<40?"Good accuracy":"Moderate accuracy — verify address"} · GPS ±{gpsAccuracy}m
+                    </div>
+                  )}
                 </div>
                 {verifyResult&&(
                   <div style={{marginBottom:10,borderRadius:7,padding:"10px 14px",fontSize:11,lineHeight:1.7,background:verifyResult.valid?"rgba(42,122,82,0.1)":"rgba(184,50,50,0.1)",border:`1px solid ${verifyResult.valid?"rgba(42,122,82,0.25)":"rgba(184,50,50,0.25)"}`,color:verifyResult.valid?"var(--green2)":"#f08080"}}>
