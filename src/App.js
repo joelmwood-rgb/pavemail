@@ -8,6 +8,39 @@ const LOB_PROXY       = PROXY_BASE + "/?target=lob";
 const ANTHROPIC_PROXY = PROXY_BASE + "/?target=anthropic";
 const LOB_VERIFY_PROXY= PROXY_BASE + "/?target=lob-verify";
 const IMGBB_PROXY     = PROXY_BASE + "/?target=imgbb";
+const PERMIT_PROXY    = PROXY_BASE + "/?target=permits";
+
+// ─────────────────────────────────────────────
+// TULSA PERMIT LOOKUP (Tyler EnerGov CSS API)
+// ─────────────────────────────────────────────
+const TULSA_CSS_BASE = "https://tulsaok-energovweb.tylerhost.net/apps/selfservice";
+const TULSA_CSS_API  = "https://tulsaok-energovweb.tylerhost.net/apps/selfservice/api/CSS";
+
+async function fetchTulsaPermits(address) {
+  try {
+    // Format address for Tulsa CSS portal (uppercase, no punctuation)
+    const formatted = address.toUpperCase().replace(/[.,#]/g, "").trim();
+    const res = await fetch(`${PERMIT_PROXY}&address=${encodeURIComponent(formatted)}`);
+    const data = await res.json();
+    if (data.error) return { permits: [], error: data.error };
+    const permits = (data.Result || data.results || data.permits || []).slice(0, 10);
+    return { permits, raw: data };
+  } catch(e) {
+    return { permits: [], error: e.message };
+  }
+}
+
+function getTulsaPortalUrl(address) {
+  // Deep link to CSS portal search — guest access, no login needed
+  const formatted = address.toUpperCase().replace(/[.,#]/g, "").trim();
+  return `${TULSA_CSS_BASE}#/search?query=${encodeURIComponent(formatted)}&module=Permits`;
+}
+
+function getTulsaCountyUrl(address) {
+  // Tulsa County SmartGov portal
+  const formatted = encodeURIComponent(address);
+  return `https://co-tulsa-ok.smartgovcommunity.com/ApplicationPublic/ApplicationSearch?address=${formatted}`;
+}
 const USPS_PROXY      = PROXY_BASE + "/?target=usps";
 
 const ROUTE_COLORS = ["#e8560a","#2a7a52","#1a6fa8","#8b5e3c","#6a3a8a","#2a6a6a","#b83232","#c4a020","#4a6a2a","#6a2a6a"];
@@ -486,6 +519,26 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
    MOBILE RESPONSIVE
 ═══════════════════════════════════════ */
 
+/* ── PERMITS ── */
+.permit-btn{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;border:none;font-family:"Syne",sans-serif;transition:all 0.12s;background:rgba(26,111,168,0.15);color:var(--blue2);letter-spacing:0.5px;}
+.permit-btn:hover{background:rgba(26,111,168,0.28);}
+.permit-btn.loading{opacity:0.6;cursor:wait;}
+.permit-panel{margin-top:10px;background:rgba(26,111,168,0.06);border:1px solid rgba(26,111,168,0.2);border-radius:6px;overflow:hidden;}
+.permit-panel-head{padding:8px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(26,111,168,0.12);}
+.permit-panel-title{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue2);}
+.permit-row{padding:8px 12px;border-bottom:1px solid rgba(184,180,172,0.05);display:flex;flex-direction:column;gap:3px;}
+.permit-row:last-child{border-bottom:none;}
+.permit-type{font-size:11px;font-weight:600;color:var(--cream);}
+.permit-meta{font-size:10px;color:var(--stone);display:flex;gap:10px;flex-wrap:wrap;}
+.permit-status{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;}
+.permit-status.issued{background:rgba(42,122,82,0.15);color:var(--green2);}
+.permit-status.pending{background:rgba(212,160,23,0.15);color:var(--gold2);}
+.permit-status.expired{background:rgba(122,118,112,0.15);color:var(--stone);}
+.permit-links{display:flex;gap:6px;padding:8px 12px;border-top:1px solid rgba(26,111,168,0.12);}
+.permit-link{font-size:10px;font-weight:600;color:var(--blue2);text-decoration:none;padding:3px 8px;border-radius:4px;background:rgba(26,111,168,0.1);transition:background 0.15s;}
+.permit-link:hover{background:rgba(26,111,168,0.2);}
+.permit-empty{padding:12px;font-size:11px;color:var(--gravel);text-align:center;}
+
 /* ── PIPELINE ── */
 .pipeline-layout{padding:20px 24px;}
 .pipeline-view-tabs{display:flex;gap:6px;margin-bottom:20px;}
@@ -520,8 +573,8 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 
 /* LIST VIEW */
 .pl-list{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:10px;overflow:hidden;}
-.pl-list-head{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1fr 1fr 120px;gap:10px;padding:10px 16px;background:rgba(0,0,0,0.2);border-bottom:1px solid rgba(184,180,172,0.07);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);}
-.pl-list-row{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1fr 1fr 120px;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(184,180,172,0.05);align-items:center;transition:background 0.12s;cursor:pointer;}
+.pl-list-head{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1fr 1fr 120px 80px;gap:10px;padding:10px 16px;background:rgba(0,0,0,0.2);border-bottom:1px solid rgba(184,180,172,0.07);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);}
+.pl-list-row{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1fr 1fr 120px 80px;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(184,180,172,0.05);align-items:center;transition:background 0.12s;cursor:pointer;}
 .pl-list-row:last-child{border-bottom:none;}
 .pl-list-row:hover{background:rgba(184,180,172,0.03);}
 .pl-addr{font-size:12px;font-weight:600;color:var(--cream);}
@@ -934,6 +987,22 @@ export default function App(){
   ]);
 
   const[pipelineView,setPipelineView]=useState("kanban");
+  const[permitData,setPermitData]=useState({});   // keyed by pipeline lead id
+  const[permitLoading,setPermitLoading]=useState(null); // lead id currently loading
+  const[expandedLead,setExpandedLead]=useState(null); // lead id with expanded permits
+
+  const loadPermits = async (lead) => {
+    if(permitData[lead.id] || permitLoading) return;
+    setPermitLoading(lead.id);
+    const result = await fetchTulsaPermits(`${lead.address} ${lead.city} OK`);
+    setPermitData(p => ({...p, [lead.id]: result}));
+    setPermitLoading(null);
+    if(result.permits?.length > 0) {
+      showToast(`Found ${result.permits.length} permit${result.permits.length!==1?"s":""} for ${lead.address}`, "success");
+    } else {
+      showToast(`No permits found — check manually`, "info");
+    }
+  };
   const[showAddLead,setShowAddLead]=useState(false);
   const[newLead,setNewLead]=useState({address:"",city:"Tulsa",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
   const[pipeline,setPipeline]=useState([
@@ -1991,7 +2060,54 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                     🎯 Spot Bid
                                   </button>
                                 )}
+                                <button
+                                  className={`permit-btn${permitLoading===lead.id?" loading":""}`}
+                                  onClick={()=>{loadPermits(lead);setExpandedLead(expandedLead===lead.id?null:lead.id);}}
+                                >
+                                  {permitLoading===lead.id?"⏳ Loading...":"🏛️ Permits"}
+                                </button>
                               </div>
+                              {/* PERMIT PANEL */}
+                              {expandedLead===lead.id&&(
+                                <div className="permit-panel">
+                                  <div className="permit-panel-head">
+                                    <div className="permit-panel-title">Tulsa Permit History</div>
+                                    <div style={{fontSize:9,color:"var(--gravel)"}}>City of Tulsa CSS</div>
+                                  </div>
+                                  {!permitData[lead.id]&&<div className="permit-empty">Tap Permits to load...</div>}
+                                  {permitData[lead.id]?.error&&(
+                                    <div className="permit-empty">
+                                      API unavailable — use manual lookup below
+                                    </div>
+                                  )}
+                                  {permitData[lead.id]?.permits?.length===0&&!permitData[lead.id]?.error&&(
+                                    <div className="permit-empty">No permits found for this address</div>
+                                  )}
+                                  {permitData[lead.id]?.permits?.map((p,i)=>(
+                                    <div className="permit-row" key={i}>
+                                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                                        <div className="permit-type">{p.PermitType||p.type||p.permitType||"Building Permit"}</div>
+                                        <span className={`permit-status ${(p.StatusDescription||p.status||"").toLowerCase().includes("issued")?"issued":(p.StatusDescription||p.status||"").toLowerCase().includes("pending")?"pending":"expired"}`}>
+                                          {p.StatusDescription||p.status||"Unknown"}
+                                        </span>
+                                      </div>
+                                      <div className="permit-meta">
+                                        {(p.PermitNumber||p.permitNumber)&&<span>#{p.PermitNumber||p.permitNumber}</span>}
+                                        {(p.IssuedDate||p.issuedDate||p.ApplicationDate)&&<span>Issued: {p.IssuedDate||p.issuedDate||p.ApplicationDate}</span>}
+                                        {(p.Description||p.description)&&<span>{(p.Description||p.description).slice(0,60)}</span>}
+                                      </div>
+                                    </div>
+                                  ))}
+                                  <div className="permit-links">
+                                    <a href={getTulsaPortalUrl(`${lead.address} ${lead.city}`)} target="_blank" rel="noreferrer" className="permit-link">
+                                      🔍 City of Tulsa Portal
+                                    </a>
+                                    <a href={getTulsaCountyUrl(`${lead.address} ${lead.city} OK`)} target="_blank" rel="noreferrer" className="permit-link">
+                                      🏛️ Tulsa County
+                                    </a>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           ))}
                           {leads.length===0&&<div style={{fontSize:11,color:"var(--gravel)",textAlign:"center",padding:"16px 0"}}>No leads here yet</div>}
@@ -2006,7 +2122,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               {pipelineView==="list"&&(
                 <div className="pl-list">
                   <div className="pl-list-head">
-                    <div>Address</div><div>Neighborhood</div><div>Spotted</div><div>Sent</div><div>Called</div><div>Bid</div><div>Status</div>
+                    <div>Address</div><div>Neighborhood</div><div>Spotted</div><div>Sent</div><div>Called</div><div>Bid</div><div>Status</div><div>Permits</div>
                   </div>
                   {pipeline.map(lead=>{
                     const stage=STAGES.find(s=>s.id===lead.stage);
@@ -2022,6 +2138,11 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                           <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",borderRadius:12,fontSize:10,fontWeight:700,background:stage?.bg,color:stage?.color}}>
                             {stage?.icon} {stage?.label}
                           </span>
+                        </div>
+                        <div>
+                          <a href={getTulsaPortalUrl(`${lead.address} ${lead.city}`)} target="_blank" rel="noreferrer" className="permit-link" style={{fontSize:9}}>
+                            🔍 Lookup
+                          </a>
                         </div>
                       </div>
                     );
