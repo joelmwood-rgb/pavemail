@@ -919,6 +919,7 @@ export default function App(){
   const[autoPrice,setAutoPrice]=useState({lo:0,hi:0});
   const[spotPhoto,setSpotPhoto]=useState(null);
   const[spotPhotoUrl,setSpotPhotoUrl]=useState(null); // hosted URL for Lob printing
+  const spotPhotoUrlRef=React.useRef(null); // ref for sync access in async functions
   const[spotMailer,setSpotMailer]=useState(null);
   const[spotLoading,setSpotLoading]=useState(false);
   const[spotSending,setSpotSending]=useState(false);
@@ -1064,9 +1065,10 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
   const generateSpot=async()=>{
     if(!spotForm.address)return;
-    // Capture photo synchronously before any async calls
+    // Capture both photo and URL synchronously before any async calls
     const capturedPhoto = spotPhoto;
-    console.log("generateSpot called, photo:", capturedPhoto ? "YES ("+capturedPhoto.length+" chars)" : "NO");
+    const capturedPhotoUrl = spotPhotoUrlRef.current || spotPhotoUrl;
+    console.log("generateSpot called, photo:", capturedPhoto ? "YES" : "NO", "url:", capturedPhotoUrl || "NONE");
     setSpotLoading(true);setSpotMailer(null);
 
     const lo = spotForm.bidLow ? `$${parseInt(spotForm.bidLow).toLocaleString()}` : null;
@@ -1129,7 +1131,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       const parsed=parseJSON(raw);
       if(parsed){
         console.log("Setting mailer with photo:", capturedPhoto ? "YES" : "NO");
-        setSpotMailer({...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,damage:detectedDamage,photoUsed:!!capturedPhoto,photoData:capturedPhoto||null,photoUrl:spotPhotoUrl||null});
+        console.log("Setting mailer photoUrl:", capturedPhotoUrl||"NONE");
+        setSpotMailer({...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,damage:detectedDamage,photoUsed:!!capturedPhoto,photoData:capturedPhoto||null,photoUrl:capturedPhotoUrl||null});
         setSpotLoading(false);
         return;
       }
@@ -1150,7 +1153,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       damage:detectedDemo,
       photoUsed:!!capturedPhoto,
       photoData:capturedPhoto||null,
-      photoUrl:spotPhotoUrl||null
+      photoUrl:capturedPhotoUrl||null
     });
     setSpotLoading(false);
     showToast(capturedPhoto?"📷 Photo analyzed + mailer ready":"✨ Spot bid mailer ready","info");
@@ -1617,7 +1620,10 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       const res=await fetch(IMGBB_PROXY,{method:"POST",body:formData});
       const data=await res.json();
       if(data.success){
-        setSpotPhotoUrl(data.data.url);
+        const hostedUrl = data.data.url;
+        setSpotPhotoUrl(hostedUrl);
+        spotPhotoUrlRef.current = hostedUrl;
+        console.log("Photo uploaded to imgbb:", hostedUrl);
         showToast("📷 Photo ready","success");
       }
     } catch(err){ console.error("imgbb upload failed:",err); }
@@ -1625,7 +1631,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
   reader.readAsDataURL(f);
 }}/>
                     </label>
-                    {spotPhoto&&<button className="btn btn-ghost btn-sm" style={{width:"100%",marginTop:4}} onClick={e=>{e.stopPropagation();setSpotPhoto(null);}}>✕ Remove Photo</button>}
+                    {spotPhoto&&<button className="btn btn-ghost btn-sm" style={{width:"100%",marginTop:4}} onClick={e=>{e.stopPropagation();setSpotPhoto(null);setSpotPhotoUrl(null);spotPhotoUrlRef.current=null;}}>✕ Remove Photo</button>}
                   </div>
                 )}
 
