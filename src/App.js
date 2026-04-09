@@ -719,13 +719,25 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .spot-bid-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange2);}
 .spot-bid-value{font-family:'Bebas Neue',sans-serif;font-size:32px;color:#f5f0e6;letter-spacing:1px;line-height:1;}
 .spot-bar{position:absolute;bottom:0;left:0;right:0;height:4px;background:var(--orange);}
-.spot-back{background:#f5f1e8;padding:32px;}
-.spot-back h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:#1c1a17;margin-bottom:12px;}
-.spot-damage-list{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
-.spot-damage-item{background:#f0ebe0;border-left:4px solid var(--orange);padding:10px 14px;border-radius:4px;font-size:12px;color:#3a3835;}
-.spot-cta-box{background:#1c1a17;border-radius:8px;padding:18px;display:flex;align-items:center;gap:16px;}
-.spot-cta-text h4{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:#f5f0e6;}
-.spot-cta-text p{font-size:11px;color:#7a7670;margin-top:3px;}
+.spot-back{background:linear-gradient(160deg,#1a1814 0%,#111009 100%);padding:0;overflow:hidden;position:relative;}
+.spot-back-header{background:linear-gradient(90deg,#e8560a,#c94400);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+.spot-back-header-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:white;}
+.spot-back-header-sub{font-size:9px;color:rgba(255,255,255,0.75);letter-spacing:1px;text-transform:uppercase;}
+.spot-back-body{padding:16px 20px;}
+.spot-damage-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.spot-damage-item{display:flex;align-items:center;gap:8px;font-size:11px;color:#c8c4bc;line-height:1.4;}
+.spot-damage-dot{width:6px;height:6px;border-radius:50%;background:#e8560a;flex-shrink:0;}
+.spot-bid-strip{background:rgba(232,86,10,0.1);border:1px solid rgba(232,86,10,0.25);border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.spot-bid-strip-left{display:flex;flex-direction:column;gap:2px;}
+.spot-bid-strip-label{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#e8560a;}
+.spot-bid-strip-amount{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f5f0e6;letter-spacing:1px;line-height:1;}
+.spot-bid-strip-includes{font-size:9px;color:#7a7670;margin-top:2px;}
+.spot-cta-box{background:#e8560a;border-radius:8px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.spot-cta-text h4{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:white;margin-bottom:2px;}
+.spot-cta-text p{font-size:10px;color:rgba(255,255,255,0.8);font-family:'DM Mono',monospace;}
+.spot-guarantee{display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(184,180,172,0.08);}
+.spot-guarantee-icon{font-size:14px;}
+.spot-guarantee-text{font-size:9px;color:#5a5652;line-height:1.5;}
 .spot-jobs{margin-top:20px;}
 .spot-job-row{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:8px;padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:background 0.12s;}
 .spot-job-row:hover{background:rgba(184,180,172,0.03);}
@@ -2702,28 +2714,54 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <div className="page-tag">Back of Postcard</div>
                     <div className="spot-mailer">
                       <div className="spot-back">
-                        <h3>WHAT WE NOTICED AT YOUR HOME</h3>
-                        <div className="spot-damage-list">
-                          {spotMailer.damage?.length>0 ? spotMailer.damage.map((d,i)=><div key={i} className="spot-damage-item">⚠️ {d}</div>) : <div className="spot-damage-item">General driveway wear and aging concrete</div>}
-                        </div>
-                        <div style={{background:"rgba(232,86,10,0.08)",border:"1px solid rgba(232,86,10,0.2)",borderRadius:8,padding:"12px 16px",marginBottom:12}}>
-                          <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--orange)",marginBottom:6}}>Your Personalized Estimate</div>
-                          <div style={{display:"flex",alignItems:"baseline",gap:6,flexWrap:"wrap"}}>
-                            <span style={{fontSize:11,color:"#6a6864"}}>Starting at</span>
-                            <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,color:"#1c1a17",letterSpacing:1}}>{spotMailer.bidLo||spotMailer.bid}</span>
-                            {spotMailer.bidHi&&<span style={{fontSize:11,color:"#6a6864"}}>— up to {spotMailer.bidHi}</span>}
+                        {/* Header bar */}
+                        <div className="spot-back-header">
+                          <div>
+                            <div className="spot-back-header-title">We Noticed Your Driveway</div>
+                            <div className="spot-back-header-sub">{spotMailer.address}, {spotMailer.city}</div>
                           </div>
-                          {spotMailer.includes&&<div style={{fontSize:10,color:"#8a8680",marginTop:4}}>✓ Includes: {spotMailer.includes}</div>}
+                          <div style={{background:"rgba(0,0,0,0.2)",borderRadius:6,padding:"4px 10px",fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.9)",letterSpacing:1}}>FREE ESTIMATE</div>
                         </div>
-                        <div className="spot-cta-box">
-                          <div style={{display:"flex",alignItems:"center",gap:10}}>
-                            <div style={{width:40,height:40,background:"var(--orange)",borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>🏗️</div>
-                            <div className="spot-cta-text">
-                              <h4>CALL JOEL DIRECTLY</h4>
-                              <p>918-896-6737 · joelmwood@gmail.com</p>
+                        <div className="spot-back-body">
+                          {/* Damage findings */}
+                          <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"rgba(232,86,10,0.8)",marginBottom:8}}>What We Found</div>
+                          <div className="spot-damage-list">
+                            {spotMailer.damage?.length>0 ? spotMailer.damage.slice(0,3).map((d,i)=>(
+                              <div key={i} className="spot-damage-item">
+                                <div className="spot-damage-dot"/>
+                                {d}
+                              </div>
+                            )) : (
+                              <div className="spot-damage-item"><div className="spot-damage-dot"/>General wear and surface deterioration</div>
+                            )}
+                          </div>
+                          {/* Bid strip */}
+                          <div className="spot-bid-strip">
+                            <div className="spot-bid-strip-left">
+                              <div className="spot-bid-strip-label">Your Neighbor Rate</div>
+                              <div className="spot-bid-strip-amount">{spotMailer.bidLo||spotMailer.bid}{spotMailer.bidHi&&<span style={{fontSize:16,color:"rgba(245,240,230,0.5)"}}>–{spotMailer.bidHi}</span>}</div>
+                              {spotMailer.includes&&<div className="spot-bid-strip-includes">✓ {spotMailer.includes}</div>}
+                            </div>
+                            <div style={{textAlign:"right"}}>
+                              <div style={{fontSize:9,color:"#5a5652",marginBottom:4}}>Scan to call</div>
+                              <QRCode value="tel:9188966737" size={52}/>
                             </div>
                           </div>
-                          <QRCode value="tel:9188966737" size={64}/>
+                          {/* CTA */}
+                          <div className="spot-cta-box">
+                            <div className="spot-cta-text">
+                              <h4>CALL OR TEXT JOEL</h4>
+                              <p>918-896-6737 · Free estimate · No obligation</p>
+                            </div>
+                            <div style={{background:"rgba(0,0,0,0.2)",borderRadius:6,padding:"8px 12px",textAlign:"center",flexShrink:0}}>
+                              <div style={{fontFamily:"'DM Mono',monospace",fontSize:13,fontWeight:700,color:"white",letterSpacing:1}}>918-896-6737</div>
+                            </div>
+                          </div>
+                          {/* Trust line */}
+                          <div className="spot-guarantee">
+                            <div className="spot-guarantee-icon">🛡️</div>
+                            <div className="spot-guarantee-text">Licensed & insured · Tulsa, OK · JWood LLC · We stand behind every pour</div>
+                          </div>
                         </div>
                       </div>
                     </div>
