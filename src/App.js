@@ -449,11 +449,12 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .spot-send-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
 .spot-send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
 .spot-mailer{background:#faf7f2;border-radius:8px;overflow:hidden;box-shadow:0 6px 30px rgba(0,0,0,0.6);font-family:'Syne',sans-serif;}
-.spot-front{padding:0;position:relative;overflow:hidden;min-height:320px;border-radius:inherit;}
-.spot-photo-bg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);z-index:0;display:block;border:none;margin:0;}
-.spot-photo-overlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;background:linear-gradient(to bottom,rgba(10,9,8,0.35) 0%,rgba(10,9,8,0.75) 50%,rgba(10,9,8,0.97) 100%);}
-.spot-front-content{position:relative;z-index:2;padding:28px;display:flex;flex-direction:column;min-height:320px;}
-.spot-front-no-photo{position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(145deg,#111009 0%,#2a2720 100%);z-index:0;}
+.spot-front{padding:0;position:relative;min-height:320px;border-radius:inherit;background:#111009;}
+.spot-photo-wrap{position:relative;min-height:320px;border-radius:inherit;overflow:hidden;background:#111009;}
+.spot-photo-bg{width:100%;height:320px;object-fit:cover;object-position:center;display:block;border:none;margin:0;padding:0;-webkit-transform:translate3d(0,0,0);}
+.spot-photo-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(to bottom,rgba(10,9,8,0.35) 0%,rgba(10,9,8,0.75) 50%,rgba(10,9,8,0.97) 100%);}
+.spot-front-content{position:absolute;top:0;left:0;right:0;bottom:0;padding:28px;display:flex;flex-direction:column;z-index:2;}
+.spot-front-no-photo{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(145deg,#111009 0%,#2a2720 100%);}
 .spot-front-texture{position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,rgba(184,180,172,0.025) 0,rgba(184,180,172,0.025) 1px,transparent 0,transparent 8px);}
 .spot-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:10px;position:relative;}
 .spot-address{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f5f0e6;position:relative;letter-spacing:1px;margin-bottom:8px;}
@@ -1825,8 +1826,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
                     <div className="page-tag">Front of Postcard {(spotMailer.photoUrl||spotMailer.photoData)&&<span style={{marginLeft:6,background:"rgba(232,86,10,0.25)",color:"var(--orange2)",padding:"2px 7px",borderRadius:4,fontSize:9,fontWeight:700}}>📷 Photo Background</span>}</div>
                     <div className="spot-mailer" style={{marginBottom:18}}>
-                      <div className="spot-front" style={{position:"relative",overflow:"hidden"}}>
-                        {/* Photo background — prioritizes hosted URL for iOS Safari */}
+                      <div className="spot-front">
+                        <div className="spot-photo-wrap">
                         {(spotMailer.photoUrl||spotMailer.photoData) ? (
                           <>
                             <img
@@ -1834,8 +1835,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                               className="spot-photo-bg"
                               alt=""
                               role="presentation"
-                              onLoad={()=>console.log("Photo img loaded successfully")}
-                              onError={e=>console.log("Photo img failed to load:",e.target.src?.slice(0,80))}
+                              onLoad={()=>console.log("Photo loaded on screen!")}
+                              onError={e=>{ console.log("Photo load error"); if(spotMailer.photoData&&e.target.src!==spotMailer.photoData) e.target.src=spotMailer.photoData; }}
                             />
                             <div className="spot-photo-overlay"/>
                           </>
@@ -1870,7 +1871,9 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                           </div>
                         </div>
                         <div className="spot-bar"/>
-                      </div>
+                        </div>{/* spot-front-content */}
+                        </div>{/* spot-photo-wrap */}
+                      </div>{/* spot-front */}
                     </div>
 
                     <div className="page-tag">Back of Postcard</div>
