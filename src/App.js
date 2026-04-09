@@ -705,11 +705,12 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .spot-send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
 .spot-mailer{background:#faf7f2;border-radius:8px;overflow:hidden;box-shadow:0 6px 30px rgba(0,0,0,0.6);font-family:'Syne',sans-serif;}
 .spot-front{padding:0;position:relative;min-height:320px;border-radius:inherit;background:#111009;}
-.spot-photo-wrap{position:relative;min-height:320px;border-radius:inherit;overflow:hidden;background:#111009;}
-.spot-photo-bg{width:100%;height:320px;object-fit:cover;object-position:center;display:block;border:none;margin:0;padding:0;-webkit-transform:translate3d(0,0,0);}
-.spot-photo-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(to bottom,rgba(10,9,8,0.35) 0%,rgba(10,9,8,0.75) 50%,rgba(10,9,8,0.97) 100%);}
-.spot-front-content{position:absolute;top:0;left:0;right:0;bottom:0;padding:28px;display:flex;flex-direction:column;z-index:2;}
+.spot-photo-wrap{position:relative;min-height:320px;border-radius:inherit;background:#111009;}
+.spot-photo-bg{width:100%;height:320px;object-fit:cover;object-position:center;display:block;border:none;margin:0;padding:0;}
+.spot-photo-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(to bottom,rgba(10,9,8,0.35) 0%,rgba(10,9,8,0.75) 50%,rgba(10,9,8,0.97) 100%);pointer-events:none;}
+.spot-front-content{position:absolute;top:0;left:0;right:0;bottom:0;padding:28px;display:flex;flex-direction:column;}
 .spot-front-no-photo{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(145deg,#111009 0%,#2a2720 100%);}
+.spot-canvas-preview{width:100%;height:320px;display:block;border-radius:inherit;}
 .spot-front-texture{position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,rgba(184,180,172,0.025) 0,rgba(184,180,172,0.025) 1px,transparent 0,transparent 8px);}
 .spot-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:10px;position:relative;}
 .spot-address{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f5f0e6;position:relative;letter-spacing:1px;margin-bottom:8px;}
@@ -1127,6 +1128,70 @@ const PINS = [
 const SEASONS = ["Spring","Summer","Fall","Winter"];
 const OFFERS  = ["Free Estimate","10% Off","$200 Off","Free Sealing"];
 const ANGLES  = ["Crack Repair","New Installation","Resurfacing","Sealing"];
+
+function PhotoPostcardCanvas({photoUrl,photoData,headline,personalNote,address,bid,phone}){
+  const canvasRef=React.useRef(null);
+  const draw=React.useCallback((img)=>{
+    const canvas=canvasRef.current;
+    if(!canvas)return;
+    const ctx=canvas.getContext('2d');
+    const W=canvas.width,H=canvas.height;
+    ctx.fillStyle='#111009';
+    ctx.fillRect(0,0,W,H);
+    if(img&&img.complete&&img.naturalWidth>0){
+      const iR=img.naturalWidth/img.naturalHeight,cR=W/H;
+      let sx=0,sy=0,sw=img.naturalWidth,sh=img.naturalHeight;
+      if(iR>cR){sw=img.naturalHeight*cR;sx=(img.naturalWidth-sw)/2;}
+      else{sh=img.naturalWidth/cR;sy=(img.naturalHeight-sh)/2;}
+      ctx.drawImage(img,sx,sy,sw,sh,0,0,W,H);
+    }
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'rgba(10,9,8,0.3)');g.addColorStop(0.5,'rgba(10,9,8,0.75)');g.addColorStop(1,'rgba(10,9,8,0.97)');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#e8560a';ctx.font='bold 8px Arial';ctx.textAlign='left';
+    ctx.fillText('JWOOD LLC · TULSA, OK',20,32);
+    if(img&&img.complete&&img.naturalWidth>0){
+      ctx.fillStyle='rgba(232,86,10,0.9)';ctx.fillRect(W-108,14,92,20);
+      ctx.fillStyle='white';ctx.font='bold 8px Arial';ctx.textAlign='right';
+      ctx.fillText('YOUR DRIVEWAY',W-16,28);ctx.textAlign='left';
+    }
+    ctx.fillStyle='rgba(245,240,230,0.65)';ctx.font='bold 12px Arial';
+    ctx.fillText(address||'',20,H-180);
+    ctx.fillStyle='#f5f0e6';ctx.font='bold 20px Arial';
+    const hw=(headline||'').split(' ');let hl='',hy=H-155;
+    hw.forEach(w=>{const t=hl+w+' ';if(ctx.measureText(t).width>W-40&&hl){ctx.fillText(hl.trim(),20,hy);hl=w+' ';hy+=24;}else hl=t;});
+    if(hl)ctx.fillText(hl.trim(),20,hy);
+    ctx.fillStyle='rgba(184,180,172,0.8)';ctx.font='10px Arial';
+    const nw=(personalNote||'').slice(0,100).split(' ');let nl='',ny=hy+22,nc=0;
+    nw.forEach(w=>{if(nc>=3)return;const t=nl+w+' ';if(ctx.measureText(t).width>W-40&&nl){ctx.fillText(nl.trim(),20,ny);nl=w+' ';ny+=15;nc++;}else nl=t;});
+    if(nl&&nc<3)ctx.fillText(nl.trim(),20,ny);
+    const by=H-68;
+    ctx.fillStyle='rgba(232,86,10,0.2)';ctx.strokeStyle='rgba(232,86,10,0.5)';ctx.lineWidth=1;
+    ctx.fillRect(14,by,W-28,50);ctx.strokeRect(14,by,W-28,50);
+    ctx.fillStyle='#e8560a';ctx.font='bold 7px Arial';ctx.fillText('YOUR PERSONALIZED ESTIMATE',22,by+13);
+    ctx.fillStyle='#f5f0e6';ctx.font='bold 18px Arial';ctx.fillText(bid||'Call for estimate',22,by+34);
+    ctx.fillStyle='#e8560a';ctx.fillRect(W-108,by+4,94,42);
+    ctx.fillStyle='white';ctx.font='bold 8px Arial';ctx.textAlign='center';
+    ctx.fillText('CALL NOW',W-61,by+18);ctx.font='bold 11px monospace';
+    ctx.fillText(phone||'918-896-6737',W-61,by+34);ctx.textAlign='left';
+  },[headline,personalNote,address,bid,phone]);
+
+  React.useEffect(()=>{
+    const canvas=canvasRef.current;
+    if(!canvas)return;
+    canvas.width=600;canvas.height=320;
+    const src=photoUrl||photoData||null;
+    if(src){
+      const img=new Image();
+      img.crossOrigin='anonymous';
+      img.onload=()=>draw(img);
+      img.onerror=()=>draw(null);
+      img.src=src;
+    } else { draw(null); }
+  },[photoUrl,photoData,draw]);
+
+  return React.createElement('canvas',{ref:canvasRef,className:'spot-canvas-preview'});
+}
 
 function parseJSON(t){try{const m=t.match(/\{[\s\S]*\}/);if(m)return JSON.parse(m[0]);}catch{}return null;}
 function stepIndex(s){if(s==="sent")return 2;if(s==="delivered")return 3;return 1;}
@@ -2512,48 +2577,44 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       <div className="spot-front">
                         <div className="spot-photo-wrap">
                           {(spotMailer.photoUrl||spotMailer.photoData) ? (
-                            <>
-                              <img
-                                src={spotMailer.photoUrl||spotPhotoUrlRef.current||spotPhotoUrl||spotMailer.photoData}
-                                className="spot-photo-bg"
-                                alt=""
-                                role="presentation"
-                                onLoad={()=>console.log("Photo loaded on screen!")}
-                                onError={e=>{ console.log("Photo load error"); if(spotMailer.photoData&&e.target.src!==spotMailer.photoData) e.target.src=spotMailer.photoData; }}
-                              />
-                              <div className="spot-photo-overlay"/>
-                            </>
+                            <PhotoPostcardCanvas
+                              photoUrl={spotMailer.photoUrl||spotPhotoUrlRef.current||spotPhotoUrl||null}
+                              photoData={(!spotMailer.photoUrl&&!spotPhotoUrlRef.current&&!spotPhotoUrl)?spotMailer.photoData:null}
+                              headline={spotMailer.headline}
+                              personalNote={spotMailer.personalNote}
+                              address={spotMailer.address+", "+spotMailer.city}
+                              bid={spotMailer.bidLo||spotMailer.bid}
+                              phone="918-896-6737"
+                            />
                           ) : (
                             <>
                               <div className="spot-front-no-photo"/>
                               <div className="spot-front-texture"/>
+                              <div className="spot-front-content">
+                                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"auto"}}>
+                                  <div className="spot-tag" style={{margin:0}}>JWood LLC · Tulsa, OK</div>
+                                </div>
+                                <div style={{paddingTop:16}}>
+                                  <div className="spot-address">{spotMailer.address}, {spotMailer.city}</div>
+                                  <div className="spot-headline" style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:34,color:"#f5f0e6",letterSpacing:1,marginBottom:10,lineHeight:1}}>{spotMailer.headline}</div>
+                                  <div className="spot-note">{spotMailer.personalNote}</div>
+                                  <div className="spot-bid-box">
+                                    <div style={{flex:1}}>
+                                      <div className="spot-bid-label">Your Personalized Estimate</div>
+                                      <div style={{display:"flex",alignItems:"baseline",gap:8,marginTop:4,flexWrap:"wrap"}}>
+                                        <div style={{fontSize:13,color:"rgba(184,180,172,0.7)"}}>Starting at</div>
+                                        <div className="spot-bid-value">{spotMailer.bidLo||spotMailer.bid}</div>
+                                      </div>
+                                      {spotMailer.bidHi&&<div style={{fontSize:12,color:"rgba(184,180,172,0.6)",marginTop:2}}>Up to {spotMailer.bidHi}</div>}
+                                    </div>
+                                    <div style={{flexShrink:0,background:"var(--orange)",color:"white",padding:"8px 14px",borderRadius:6,fontSize:11,fontWeight:700,textAlign:"center"}}>CALL NOW<br/><span style={{fontSize:13,fontFamily:"DM Mono,monospace"}}>918-896-6737</span></div>
+                                  </div>
+                                  <div style={{marginTop:10,fontSize:10,color:"rgba(184,180,172,0.5)"}}>{spotMailer.urgencyLine}</div>
+                                </div>
+                                <div className="spot-bar"/>
+                              </div>
                             </>
                           )}
-                          <div className="spot-front-content">
-                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"auto"}}>
-                              <div className="spot-tag" style={{margin:0}}>JWood LLC · Tulsa, OK</div>
-                              {(spotMailer.photoUrl||spotMailer.photoData)&&<div style={{background:"rgba(232,86,10,0.9)",color:"white",fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:4,letterSpacing:1}}>YOUR DRIVEWAY</div>}
-                            </div>
-                            <div style={{paddingTop:16}}>
-                              <div className="spot-address">{spotMailer.address}, {spotMailer.city}</div>
-                              <div className="spot-headline" style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:34,color:"#f5f0e6",letterSpacing:1,marginBottom:10,lineHeight:1,textShadow:"0 2px 8px rgba(0,0,0,0.8)"}}>{spotMailer.headline}</div>
-                              <div className="spot-note" style={{textShadow:"0 1px 4px rgba(0,0,0,0.9)"}}>{spotMailer.personalNote}</div>
-                              <div className="spot-bid-box">
-                                <div style={{flex:1}}>
-                                  <div className="spot-bid-label">Your Personalized Estimate</div>
-                                  <div style={{display:"flex",alignItems:"baseline",gap:8,marginTop:4,flexWrap:"wrap"}}>
-                                    <div style={{fontSize:13,color:"rgba(184,180,172,0.7)"}}>Starting at</div>
-                                    <div className="spot-bid-value">{spotMailer.bidLo||spotMailer.bid}</div>
-                                  </div>
-                                  {spotMailer.bidHi&&<div style={{fontSize:12,color:"rgba(184,180,172,0.6)",marginTop:2}}>Up to {spotMailer.bidHi} depending on scope</div>}
-                                  {spotMailer.includes&&<div style={{fontSize:10,color:"rgba(184,180,172,0.45)",marginTop:4}}>Includes: {spotMailer.includes}</div>}
-                                </div>
-                                <div style={{flexShrink:0,background:"var(--orange)",color:"white",padding:"8px 14px",borderRadius:6,fontSize:11,fontWeight:700,textAlign:"center"}}>CALL NOW<br/><span style={{fontSize:13,fontFamily:"DM Mono,monospace"}}>918-896-6737</span></div>
-                              </div>
-                              <div style={{marginTop:10,fontSize:10,color:"rgba(184,180,172,0.5)"}}>{spotMailer.urgencyLine}</div>
-                            </div>
-                            <div className="spot-bar"/>
-                          </div>
                         </div>
                       </div>
                     </div>
