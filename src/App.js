@@ -1103,7 +1103,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               role:"user",
               content:[
                 {type:"image",source:{type:"url",url:capturedPhotoUrl}},
-                {type:"text",text:"You are a concrete driveway expert. Analyze this photo and identify all visible damage or issues. Return ONLY a JSON object with no markdown: {"damage":["issue1","issue2"],"severity":"minor or moderate or severe","summary":"one sentence"}"}
+                {type:"text",text:"Analyze this driveway photo. List all visible damage. Reply with only valid JSON, no markdown: damage array of strings, severity as minor or moderate or severe, summary as one sentence."}
               ]
             }]
           })
