@@ -704,13 +704,13 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .spot-send-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
 .spot-send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
 .spot-mailer{background:#faf7f2;border-radius:8px;overflow:hidden;box-shadow:0 6px 30px rgba(0,0,0,0.6);font-family:'Syne',sans-serif;}
-.spot-front{padding:0;position:relative;min-height:320px;border-radius:inherit;background:#111009;}
-.spot-photo-wrap{position:relative;min-height:320px;border-radius:inherit;background:#111009;}
+.spot-front{padding:0;position:relative;border-radius:inherit;background:#111009;}
+.spot-photo-wrap{position:relative;border-radius:inherit;background:#111009;}
 .spot-photo-bg{width:100%;height:320px;object-fit:cover;object-position:center;display:block;border:none;margin:0;padding:0;}
 .spot-photo-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(to bottom,rgba(10,9,8,0.35) 0%,rgba(10,9,8,0.75) 50%,rgba(10,9,8,0.97) 100%);pointer-events:none;}
 .spot-front-content{position:absolute;top:0;left:0;right:0;bottom:0;padding:28px;display:flex;flex-direction:column;}
 .spot-front-no-photo{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(145deg,#111009 0%,#2a2720 100%);}
-.spot-canvas-preview{width:100%;height:320px;display:block;border-radius:inherit;}
+.spot-canvas-preview{width:100%;height:auto;aspect-ratio:600/320;display:block;border-radius:inherit;}
 .spot-front-texture{position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,rgba(184,180,172,0.025) 0,rgba(184,180,172,0.025) 1px,transparent 0,transparent 8px);}
 .spot-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:10px;position:relative;}
 .spot-address{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f5f0e6;position:relative;letter-spacing:1px;margin-bottom:8px;}
@@ -2707,11 +2707,11 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                             <img
                               src={canvasDataUrl}
                               alt="Postcard preview"
-                              style={{width:"100%",height:320,objectFit:"cover",display:"block",borderRadius:"8px 8px 0 0"}}
+                              style={{width:"100%",height:"auto",aspectRatio:"600/320",display:"block",borderRadius:"8px 8px 0 0"}}
                             />
                           ) : (spotMailer.photoUrl||spotMailer.photoData) ? (
                             // Safari fallback — raw photo with CSS overlay
-                            <div style={{position:"relative",height:320,overflow:"hidden",borderRadius:"8px 8px 0 0"}}>
+                            <div style={{position:"relative",width:"100%",aspectRatio:"600/320",overflow:"hidden",borderRadius:"8px 8px 0 0"}}>
                               <img
                                 src={spotMailer.photoUrl||spotMailer.photoData}
                                 alt="driveway"
