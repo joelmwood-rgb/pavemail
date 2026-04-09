@@ -1239,11 +1239,26 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
     g.addColorStop(0.45,'rgba(10,9,8,0.65)');
     g.addColorStop(1,'rgba(10,9,8,0.97)');
     ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    // YOUR DRIVEWAY badge
+    // Dynamic badge — based on primary damage type
     if(img){
-      ctx.fillStyle='rgba(232,86,10,0.92)'; ctx.fillRect(W-110,12,96,22);
-      ctx.fillStyle='white'; ctx.font='bold 8px Arial'; ctx.textAlign='right';
-      ctx.fillText('YOUR DRIVEWAY',W-14,27); ctx.textAlign='left';
+      var dmg=(mailer.damage&&mailer.damage[0])||'';
+      var dmgL=dmg.toLowerCase();
+      var badge=dmgL.includes('crack')?'CRACKS DETECTED'
+        :dmgL.includes('spall')?'SURFACE DAMAGE'
+        :dmgL.includes('drain')?'DRAINAGE ISSUE'
+        :dmgL.includes('root')?'ROOT DAMAGE'
+        :dmgL.includes('sink')||dmgL.includes('sunken')?'SINKING SLAB'
+        :dmgL.includes('oil')?'OIL DAMAGE'
+        :dmgL.includes('full')||dmgL.includes('replace')?'NEEDS REPLACEMENT'
+        :dmgL.includes('seal')?'NEEDS SEALING'
+        :dmgL.includes('edge')?'EDGE CRUMBLING'
+        :'YOUR DRIVEWAY';
+      // Fit badge width to text
+      ctx.font='bold 7px Arial';
+      var bw=ctx.measureText(badge).width+16;
+      ctx.fillStyle='rgba(232,86,10,0.92)'; ctx.fillRect(W-bw-8,12,bw+4,20);
+      ctx.fillStyle='white'; ctx.textAlign='right';
+      ctx.fillText(badge,W-10,25); ctx.textAlign='left';
     }
     // Company tag
     ctx.fillStyle='#e8560a'; ctx.font='bold 8px Arial';
@@ -2773,19 +2788,25 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                         <div className="spot-back-header">
                           <div>
                             <div className="spot-back-header-title">
-                              {spotMailer.damage?.length>0
-                                ? spotMailer.damage[0].toLowerCase().includes("crack") ? "We Spotted Cracks in Your Driveway"
-                                : spotMailer.damage[0].toLowerCase().includes("spall") ? "Your Driveway Surface Is Breaking Down"
-                                : spotMailer.damage[0].toLowerCase().includes("drain") ? "Your Driveway Has a Drainage Problem"
-                                : spotMailer.damage[0].toLowerCase().includes("root") ? "Tree Roots Are Damaging Your Driveway"
-                                : spotMailer.damage[0].toLowerCase().includes("sink") || spotMailer.damage[0].toLowerCase().includes("sunken") ? "Your Driveway Is Sinking"
-                                : spotMailer.damage[0].toLowerCase().includes("oil") ? "Oil Stains Are Damaging Your Concrete"
-                                : spotMailer.damage[0].toLowerCase().includes("full") || spotMailer.damage[0].toLowerCase().includes("replace") ? "Your Driveway Needs Replacement"
-                                : spotMailer.photoUsed ? "We Photographed Your Driveway"
-                                : "We Noticed Your Driveway Needs Work"
-                                : spotMailer.photoUsed ? "We Photographed Your Driveway"
-                                : "We Noticed Your Driveway Needs Work"
-                              }
+                              {(()=>{
+                                const dmgList = spotMailer.damage||[];
+                                const allDmg = dmgList.join(' ').toLowerCase();
+                                const hasPhoto = spotMailer.photoUsed;
+                                if(allDmg.includes('full')||allDmg.includes('replace')) return "Your Driveway Needs Full Replacement";
+                                if(allDmg.includes('sink')||allDmg.includes('sunken')) return "Your Driveway Is Sinking — Act Now";
+                                if(allDmg.includes('root')) return "Tree Roots Are Destroying Your Driveway";
+                                if(allDmg.includes('drain')) return "Poor Drainage Is Damaging Your Driveway";
+                                if(allDmg.includes('spall')) return "Your Driveway Surface Is Breaking Apart";
+                                if(allDmg.includes('oil')) return "Oil Is Eating Through Your Concrete";
+                                if(allDmg.includes('edge')) return "Your Driveway Edges Are Crumbling";
+                                if(allDmg.includes('seal')) return "Your Driveway Needs Sealing Now";
+                                if(allDmg.includes('crack')&&dmgList.length>1) return `${dmgList.length} Issues Found on Your Driveway`;
+                                if(allDmg.includes('crack')) return "We Spotted Cracks in Your Driveway";
+                                if(dmgList.length>2) return `${dmgList.length} Problems Found — Free Estimate Inside`;
+                                if(dmgList.length>0) return "We Noticed Issues With Your Driveway";
+                                if(hasPhoto) return "We Assessed Your Driveway — Free Estimate Inside";
+                                return "Your Driveway Qualifies for a Free Estimate";
+                              })()}
                             </div>
                             <div className="spot-back-header-sub">{spotMailer.address} · {spotMailer.city}, OK</div>
                           </div>
