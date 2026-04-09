@@ -1236,26 +1236,26 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
     ctx.fillText('JWOOD LLC \xb7 TULSA, OK',18,28);
     // Address
     ctx.fillStyle='rgba(245,240,230,0.7)'; ctx.font='500 11px Arial';
-    ctx.fillText((mailer.address||'')+', '+(mailer.city||''),18,H-170);
+    ctx.fillText((mailer.address||'')+', '+(mailer.city||''),18,H-195);
     // Headline word wrap max 2 lines
     ctx.fillStyle='#f5f0e6'; ctx.font='bold 22px Arial';
-    var hw=(mailer.headline||'').split(' '),hl='',hy=H-150,hlines=0;
+    var hw=(mailer.headline||'').split(' '),hl='',hy=H-175,hlines=0;
     for(var j=0;j<hw.length;j++){
       var t=hl+hw[j]+' ';
       if(ctx.measureText(t).width>W-36&&hl){ctx.fillText(hl.trim(),18,hy);hl=hw[j]+' ';hy+=26;hlines++;if(hlines>=2){hl='';break;}}
       else hl=t;
     }
     if(hl&&hlines<2)ctx.fillText(hl.trim(),18,hy);
-    // Personal note max 3 lines
+    // Personal note max 2 lines — kept above footer
     ctx.fillStyle='rgba(200,196,188,0.9)'; ctx.font='11px Arial';
-    var nw=(mailer.personalNote||'').slice(0,140).split(' '),nl='',ny=hy+22,nc=0;
+    var nw=(mailer.personalNote||'').slice(0,120).split(' '),nl='',ny=hy+20,nc=0;
     for(var k=0;k<nw.length;k++){
-      if(nc>=3)break;
+      if(nc>=2)break;
       var nt=nl+nw[k]+' ';
       if(ctx.measureText(nt).width>W-36&&nl){ctx.fillText(nl.trim(),18,ny);nl=nw[k]+' ';ny+=15;nc++;}
       else nl=nt;
     }
-    if(nl&&nc<3)ctx.fillText(nl.trim(),18,ny);
+    if(nl&&nc<2)ctx.fillText(nl.trim(),18,ny);
     // Dark footer strip
     var by=H-105;
     ctx.fillStyle='rgba(8,7,6,0.85)'; ctx.fillRect(0,by-8,W,H-(by-8));
