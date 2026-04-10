@@ -69,8 +69,44 @@ function getAuthToken() {
   } catch { return null; }
 }
 
-async function sbFetch(path, options={}) {
-  const token = getAuthToken();
+function getRefreshToken() {
+  try {
+    const s = localStorage.getItem("pm_session");
+    return s ? JSON.parse(s).refresh_token : null;
+  } catch { return null; }
+}
+
+async function refreshSessionIfNeeded() {
+  try {
+    const s = localStorage.getItem("pm_session");
+    if (!s) return null;
+    const session = JSON.parse(s);
+    // Check if token expires within 5 minutes
+    const expiresAt = session.expires_at;
+    const now = Math.floor(Date.now() / 1000);
+    if (expiresAt && (expiresAt - now) > 300) return session.token; // still valid
+    // Need to refresh
+    const rt = session.refresh_token;
+    if (!rt) return session.token; // no refresh token, use existing
+    const data = await auth.refreshToken(rt);
+    if (data.access_token) {
+      const newSession = {
+        token: data.access_token,
+        refresh_token: data.refresh_token || rt,
+        expires_at: Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
+        user: data.user || session.user,
+      };
+      localStorage.setItem("pm_session", JSON.stringify(newSession));
+      return newSession.token;
+    }
+    return session.token;
+  } catch(e) {
+    return getAuthToken();
+  }
+}
+
+async function sbFetch(path, options={}, _retry=false) {
+  const token = await refreshSessionIfNeeded();
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...options,
     headers: {
@@ -81,6 +117,31 @@ async function sbFetch(path, options={}) {
       ...(options.headers || {}),
     },
   });
+  if (res.status === 401 && !_retry) {
+    // JWT expired — force refresh and retry once
+    try {
+      const s = localStorage.getItem("pm_session");
+      const session = s ? JSON.parse(s) : null;
+      if (session?.refresh_token) {
+        const data = await auth.refreshToken(session.refresh_token);
+        if (data.access_token) {
+          const newSession = {
+            token: data.access_token,
+            refresh_token: data.refresh_token || session.refresh_token,
+            expires_at: Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
+            user: data.user || session.user,
+          };
+          localStorage.setItem("pm_session", JSON.stringify(newSession));
+          return sbFetch(path, options, true); // retry once
+        }
+      }
+    } catch(e) {}
+    // Refresh failed — clear session and force re-login
+    localStorage.removeItem("pm_session");
+    localStorage.removeItem("pm_profile");
+    window.location.reload();
+    return null;
+  }
   if (!res.ok) {
     const err = await res.text();
     console.error("Supabase error:", res.status, err);
@@ -114,6 +175,14 @@ const auth = {
       method: "POST",
       headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}` },
     });
+  },
+  async refreshToken(refreshToken) {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    return res.json();
   },
   async resetPassword(email) {
     const res = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
@@ -323,8 +392,9 @@ const db = {
 
   // ── ADMIN ONLY ──
   async getAllContractors(token) {
+    const freshToken = await refreshSessionIfNeeded();
     const res = await fetch(`${SUPABASE_URL}/rest/v1/contractor_profiles?select=*&order=created_at.desc`, {
-      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${freshToken || token}`, "Content-Type": "application/json" },
     });
     return res.ok ? res.json() : [];
   },
@@ -667,7 +737,18 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 @keyframes slideInLeft{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
 @keyframes slideInRight{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
 @keyframes scaleIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}
-.avatar{width:30px;height:30px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;}
+.avatar{width:34px;height:34px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;cursor:pointer;transition:all 0.15s;flex-shrink:0;border:2px solid transparent;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+.avatar:hover{border-color:rgba(232,86,10,0.5);box-shadow:0 0 0 3px rgba(232,86,10,0.15);}
+.user-menu-wrap{position:relative;}
+.user-menu{position:fixed;top:52px;right:8px;background:var(--ink);border:1px solid rgba(184,180,172,0.12);border-radius:12px;padding:6px;min-width:220px;max-width:calc(100vw - 16px);z-index:500;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:fadeInFast 0.15s ease;}
+.user-menu-header{padding:10px 12px 8px;border-bottom:1px solid rgba(184,180,172,0.07);margin-bottom:4px;}
+.user-menu-name{font-size:13px;font-weight:700;color:var(--cream);margin-bottom:2px;}
+.user-menu-email{font-size:10px;color:var(--stone);font-family:'DM Mono',monospace;}
+.user-menu-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:12px;color:var(--concrete);transition:all 0.12s;border:none;background:none;width:100%;text-align:left;font-family:'Syne',sans-serif;touch-action:manipulation;}
+.user-menu-item:hover{background:rgba(184,180,172,0.06);color:var(--cream);}
+.user-menu-item.danger{color:var(--red);}
+.user-menu-item.danger:hover{background:rgba(184,50,50,0.08);}
+.user-menu-divider{height:1px;background:rgba(184,180,172,0.07);margin:4px 0;}
 .nav{background:var(--ink);border-right:1px solid rgba(184,180,172,0.08);display:flex;flex-direction:column;padding:14px 0;overflow-y:auto;}
 .nav-label{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gravel);padding:10px 18px 5px;}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;transition:all 0.15s;position:relative;font-size:13px;font-weight:500;color:var(--stone);border:none;background:none;text-align:left;width:100%;font-family:'Syne',sans-serif;touch-action:manipulation;}
@@ -720,7 +801,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .section-head{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gravel);margin:18px 0 10px;display:flex;align-items:center;gap:8px;}
 .section-head::after{content:'';flex:1;height:1px;background:rgba(184,180,172,0.08);}
 .divider{height:1px;background:rgba(184,180,172,0.07);margin:16px 0;}
-.map-layout{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 52px);overflow:hidden;}
+.map-layout{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 52px);height:calc(100dvh - 52px);overflow:hidden;}
 .map-sidebar{background:var(--ink);border-right:1px solid rgba(184,180,172,0.07);overflow-y:auto;}
 .map-sidebar-inner{padding:20px;}
 .map-panel{position:relative;background:#1a1a16;overflow:hidden;}
@@ -749,7 +830,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .sel-summary h4{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--orange2);margin-bottom:8px;}
 .sum-row{display:flex;justify-content:space-between;font-size:12px;color:var(--concrete);padding:2px 0;}
 .sum-row strong{color:var(--cream);}
-.create-layout{display:grid;grid-template-columns:340px 1fr;height:calc(100vh - 52px);overflow:hidden;}
+.create-layout{display:grid;grid-template-columns:340px 1fr;height:calc(100vh - 52px);height:calc(100dvh - 52px);overflow:hidden;}
 .create-form{background:var(--ink);border-right:1px solid rgba(184,180,172,0.08);overflow-y:auto;padding:20px;}
 .create-preview{overflow-y:auto;padding:24px 28px;background:#111009;}
 .cost-bar{background:rgba(0,0,0,0.3);border:1px solid rgba(184,180,172,0.1);border-radius:8px;padding:12px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
@@ -878,7 +959,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .toast.error{background:var(--red);}
 .toast.info{background:var(--blue);}
 /* ── SPOT BID ── */
-.spot-layout{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 52px);overflow:hidden;animation:fadeIn 0.2s ease;}
+.spot-layout{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 52px);height:calc(100dvh - 52px);overflow:hidden;animation:fadeIn 0.2s ease;}
 .spot-form{background:var(--ink);border-right:1px solid rgba(184,180,172,0.08);overflow-y:auto;padding:20px;}
 .spot-preview{overflow-y:auto;padding:24px 28px;background:#111009;}
 .mode-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:18px;}
@@ -989,7 +1070,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .admin-nav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
 .admin-nav-btn{padding:6px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(184,180,172,0.12);background:transparent;color:var(--stone);font-family:"Syne",sans-serif;transition:all 0.12s;}
 .admin-nav-btn.active{background:rgba(232,86,10,0.15);color:var(--orange2);border-color:rgba(232,86,10,0.3);}
-@media(max-width:768px){.admin-stat-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:768px){.admin-stat-grid{grid-template-columns:1fr 1fr;}.admin-layout{padding:16px;}}
 
 /* ── AI PHONE ── */
 .ai-phone-nav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
@@ -1104,7 +1185,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 
 /* ADD LEAD MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
-.modal-box{background:var(--ink);border:1px solid rgba(184,180,172,0.15);border-radius:16px;padding:28px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;}
+.modal-box{background:var(--ink);border:1px solid rgba(184,180,172,0.15);border-radius:16px;padding:28px;width:100%;max-width:440px;max-height:90vh;max-height:90dvh;overflow-y:auto;}
 .modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--cream);margin-bottom:4px;}
 .modal-sub{font-size:12px;color:var(--stone);margin-bottom:18px;}
 
@@ -1119,10 +1200,13 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 @media(max-width:480px){
   .kanban{grid-template-columns:1fr;}
   .pipeline-stats{grid-template-columns:1fr 1fr;}
+  /* Prevent iOS auto-zoom on focus */
+  input,select,textarea{font-size:16px !important;}
+  .field input,.field select,.field textarea{font-size:16px !important;}
 }
 
 /* ── LOGIN SCREEN ── */
-.login-screen{position:fixed;inset:0;inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:var(--black);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0;}
+.login-screen{position:fixed;inset:0;inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:var(--black);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0;min-height:100dvh;overflow-y:auto;}
 .login-bg{position:absolute;inset:0;background:linear-gradient(145deg,#0e0d0b 0%,#1c1a17 60%,#0e0d0b 100%);}
 .login-texture{position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,rgba(184,180,172,0.02) 0,rgba(184,180,172,0.02) 1px,transparent 0,transparent 8px);}
 .login-box{position:relative;width:100%;max-width:360px;padding:32px 28px;animation:scaleIn 0.3s ease;}
@@ -1184,6 +1268,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
     scrollbar-width: none;
   }
   .nav::-webkit-scrollbar { display: none; }
+  .nav { scrollbar-width: none; }
   .nav-label, .nav-divider, .nav-mini { display: none; }
   .capacity-widget { display: none; }
   .nav-item {
@@ -1309,7 +1394,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
   .spot-cta-box { flex-direction: column; gap: 12px; align-items: flex-start; }
 
   /* GENERAL */
-  .gen-btn { font-size: 16px; padding: 12px; }
+  .gen-btn { font-size: 16px; padding: 14px; min-height: 54px; }
   .spot-send-btn { font-size: 16px; padding: 12px; }
   .send-btn { font-size: 14px; padding: 11px; }
   .section-head { margin: 14px 0 8px; }
@@ -1613,7 +1698,12 @@ export default function App(){
     setAuthLoading(true); setAuthError("");
     const data = await auth.signIn(authForm.email, authForm.password);
     if(data.access_token) {
-      const session = { token: data.access_token, user: data.user };
+      const session = {
+        token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
+        user: data.user
+      };
       setAuthUser(session);
       try{ localStorage.setItem("pm_session", JSON.stringify(session)); }catch{}
       // Load profile
@@ -1647,7 +1737,12 @@ export default function App(){
       // Auto sign in after signup
       const loginData = await auth.signIn(authForm.email, authForm.password);
       if(loginData.access_token) {
-        const session = { token: loginData.access_token, user: loginData.user };
+        const session = {
+          token: loginData.access_token,
+          refresh_token: loginData.refresh_token,
+          expires_at: Math.floor(Date.now() / 1000) + (loginData.expires_in || 3600),
+          user: loginData.user
+        };
         setAuthUser(session);
         try{ localStorage.setItem("pm_session", JSON.stringify(session)); }catch{}
         setAuthScreen("profile-setup");
@@ -1850,6 +1945,7 @@ export default function App(){
   };
   const[showRadiusModal,setShowRadiusModal]=useState(false);
   const[showAIPhone,setShowAIPhone]=useState(false);
+  const[showUserMenu,setShowUserMenu]=useState(false);
   const[aiLeads,setAiLeads]=useState([]);
   const[testCallNumber,setTestCallNumber]=useState("");
   const[testCallLoading,setTestCallLoading]=useState(false);
@@ -2672,8 +2768,43 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             </div>
           <div className="topbar-right">
             {isAdmin&&<div className="lob-pill"><div className="lob-dot"/>Mail: Test Mode</div>}
-            <div className="co-pill">🏗️ JWood LLC</div>
-            <div className="avatar">JW</div>
+            <div className="user-menu-wrap">
+              <div
+                className="avatar"
+                onClick={()=>setShowUserMenu(m=>!m)}
+                title={contractor?.company_name||COMPANY.name}
+              >
+                {(contractor?.owner_name||COMPANY.ownerName||"J")[0].toUpperCase()}{(contractor?.company_name||COMPANY.name).split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase()}
+              </div>
+              {showUserMenu&&(
+                <>
+                  {/* Click outside to close */}
+                  <div onClick={()=>setShowUserMenu(false)} style={{position:"fixed",inset:0,zIndex:498}}/>
+                  <div className="user-menu">
+                    <div className="user-menu-header">
+                      <div className="user-menu-name">{contractor?.company_name||COMPANY.name}</div>
+                      <div className="user-menu-email">{authUser?.user?.email||COMPANY.email}</div>
+                      {isAdmin&&<div style={{marginTop:6,fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--orange2)"}}>⚙ Super Admin</div>}
+                    </div>
+                    <button className="user-menu-item" onClick={()=>{setShowUserMenu(false);switchTab("settings");}}>
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.2"/><path d="M7 1v1M7 12v1M1 7h1M12 7h1M2.5 2.5l.7.7M10.8 10.8l.7.7M2.5 11.5l.7-.7M10.8 3.2l.7-.7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                      Settings
+                    </button>
+                    {isAdmin&&(
+                      <button className="user-menu-item" onClick={()=>{setShowUserMenu(false);switchTab("admin");}}>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="7.5" y="1" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="1" y="7.5" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="7.5" y="7.5" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2"/></svg>
+                        Admin Dashboard
+                      </button>
+                    )}
+                    <div className="user-menu-divider"/>
+                    <button className="user-menu-item danger" onClick={()=>{setShowUserMenu(false);handleLogout();}}>
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2H2a1 1 0 00-1 1v8a1 1 0 001 1h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><path d="M9.5 10L13 7l-3.5-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><line x1="13" y1="7" x2="5" y2="7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                      Sign Out
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -3048,8 +3179,9 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <label>Street Address *</label>
                   <div style={{display:"flex",gap:8}}>
                     <input
-                      placeholder="e.g. 4821 Oak Ridge Dr"
+                      placeholder="e.g. 1234 Main St"
                       autoComplete="street-address"
+                      style={{fontSize:16}}
                       value={spotForm.address}
                       onChange={e=>{setSpot("address",e.target.value);setVerifyResult(null);setGpsAccuracy(null);}}
                       style={{flex:1}}
@@ -3755,7 +3887,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div style={{fontSize:11,color:"var(--stone)",marginBottom:12}}>Enter a phone number and the AI agent will call it right now. Use your own cell to test the experience.</div>
                 <div style={{display:"flex",gap:8}}>
                   <input
-                    placeholder="(918) 000-0000"
+                    placeholder="(918) 000-0000" type="tel" inputMode="tel"
                     value={testCallNumber}
                     onChange={e=>setTestCallNumber(e.target.value)}
                     style={{flex:1,background:"rgba(0,0,0,0.3)",border:"1px solid rgba(184,180,172,0.12)",borderRadius:7,padding:"10px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:13,outline:"none"}}
