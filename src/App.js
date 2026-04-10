@@ -885,7 +885,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .mode-tab{background:rgba(0,0,0,0.3);border:1px solid rgba(184,180,172,0.12);border-radius:7px;padding:10px 8px;text-align:center;cursor:pointer;transition:all 0.15s;font-family:'Syne',sans-serif;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 .mode-tab:hover{border-color:rgba(232,86,10,0.3);}
 .mode-tab.on{border-color:var(--orange);background:rgba(232,86,10,0.1);}
-.mode-tab .mt-icon{font-size:20px;margin-bottom:4px;}
+.mode-tab .mt-icon{font-size:20px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;color:currentColor;}
 .mode-tab .mt-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--stone);}
 .mode-tab.on .mt-label{color:var(--orange2);}
 .photo-drop{border:2px dashed rgba(184,180,172,0.2);border-radius:8px;padding:28px;text-align:center;cursor:pointer;transition:all 0.15s;background:rgba(0,0,0,0.2);margin-bottom:12px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
@@ -1065,7 +1065,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start;}
 .kanban-col{background:rgba(0,0,0,0.2);border:1px solid rgba(184,180,172,0.07);border-radius:10px;overflow:hidden;}
 .kanban-head{padding:12px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(184,180,172,0.07);}
-.kanban-head-icon{font-size:16px;}
+.kanban-head-icon{font-size:14px;opacity:0.7;letter-spacing:-0.5px;}
 .kanban-head-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
 .kanban-count{margin-left:auto;background:rgba(184,180,172,0.1);border-radius:10px;padding:2px 7px;font-size:10px;font-weight:700;color:var(--stone);}
 .kanban-cards{padding:10px;display:flex;flex-direction:column;gap:8px;min-height:80px;}
@@ -1353,9 +1353,9 @@ const MOCK_JOBS = [];
 
 const TRACK_STEPS = [
   {label:"Approved",  icon:"✓"},
-  {label:"Printing",  icon:"🖨"},
-  {label:"In Transit",icon:"📦"},
-  {label:"Delivered", icon:"📬"},
+  {label:"Printing",  icon:"▣"},
+  {label:"In Transit",icon:"→"},
+  {label:"Delivered", icon:"✦"},
 ];
 
 const PINS = [
@@ -1391,7 +1391,7 @@ function MailerPreview({mailer,form}){
           <div className="mp-sub">{p1?.subheadline}</div>
           <div className="mp-badge"><span className="sm">{p1?.badgeTop}</span><span className="big">{p1?.badgeMain}</span><span className="sm">{p1?.badgeBottom}</span></div>
           <div className="mp-foot">
-            <div className="mp-icon">🏗️</div>
+            <div className="mp-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect x="3" y="10" width="30" height="22" rx="3" stroke="currentColor" strokeWidth="1.5"/><path d="M3 17L18 25L33 17" stroke="currentColor" strokeWidth="1.5"/><path d="M13 10V6C13 4.3 15.2 3 18 3C20.8 3 23 4.3 23 6V10" stroke="currentColor" strokeWidth="1.5"/></svg></div>
             <div><div className="mp-co">{COMPANY.name}</div><div className="mp-ph">{COMPANY.phone}</div></div>
             <div className="mp-qr-wrap"><QRCode value={`tel:${COMPANY.phone.replace(/-/g,"")}`} size={72}/><div className="mp-qr-label">Scan to Call</div></div>
           </div>
@@ -1439,10 +1439,10 @@ function MailerPreview({mailer,form}){
 const CAPACITY_CONFIG = { crewSize:12, maxJobs:6, weeklyTarget:40000 };
 
 const CAPACITY_MODES = {
-    hungry:   { label:"Hungry",   color:"#b83232", bg:"rgba(184,50,50,0.12)",   icon:"🔥", desc:"Aggressive outbound — large radius, fast follow-up, low bid threshold" },
-    normal:   { label:"Normal",   color:"#c4a020", bg:"rgba(196,160,32,0.12)",  icon:"✅", desc:"Standard outbound — normal radius, normal pricing" },
-    selective:{ label:"Selective",color:"#1a6fa8", bg:"rgba(26,111,168,0.12)",  icon:"🎯", desc:"High-value leads only — bids +15%, radius reduced" },
-    paused:   { label:"Paused",   color:"#6a6662", bg:"rgba(106,102,98,0.12)",  icon:"⏸️", desc:"Fully booked — campaigns paused, AI agent books 3 weeks out" },
+    hungry:   { label:"Hungry",   color:"#b83232", bg:"rgba(184,50,50,0.12)",   icon:"▲", desc:"Aggressive outbound — large radius, fast follow-up, low bid threshold" },
+    normal:   { label:"Normal",   color:"#c4a020", bg:"rgba(196,160,32,0.12)",  icon:"◆", desc:"Standard outbound — normal radius, normal pricing" },
+    selective:{ label:"Selective",color:"#1a6fa8", bg:"rgba(26,111,168,0.12)",  icon:"◈", desc:"High-value leads only — bids +15%, radius reduced" },
+    paused:   { label:"Paused",   color:"#6a6662", bg:"rgba(106,102,98,0.12)",  icon:"■", desc:"Fully booked — campaigns paused, AI agent books 3 weeks out" },
   };
 
 function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
@@ -1880,10 +1880,10 @@ export default function App(){
   const[newLead,setNewLead]=useState({address:"",city:"Tulsa",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
 
   const STAGES = [
-    {id:"spotted", label:"Spotted",    icon:"🚗", color:"#7a7670", bg:"rgba(122,118,112,0.15)"},
-    {id:"sent",    label:"Mailer Sent",icon:"📬", color:"#1a6fa8", bg:"rgba(26,111,168,0.15)"},
-    {id:"called",  label:"Called Back", icon:"📞", color:"#d4a017", bg:"rgba(212,160,23,0.15)"},
-    {id:"won",     label:"Job Won",    icon:"🏆", color:"#2a7a52", bg:"rgba(42,122,82,0.15)"},
+    {id:"spotted", label:"Spotted",    icon:"◉", color:"#7a7670", bg:"rgba(122,118,112,0.15)"},
+    {id:"sent",    label:"Mailer Sent",icon:"◫", color:"#1a6fa8", bg:"rgba(26,111,168,0.15)"},
+    {id:"called",  label:"Called Back", icon:"◌", color:"#d4a017", bg:"rgba(212,160,23,0.15)"},
+    {id:"won",     label:"Job Won",    icon:"✦", color:"#2a7a52", bg:"rgba(42,122,82,0.15)"},
   ];
 
   const moveStage=(id,newStage)=>{
@@ -2851,7 +2851,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 )}
               </div>
               <div className="create-preview">
-                {!mailer&&!loading&&<div className="empty"><div className="icon">✉️</div><h3>Your Mailer Appears Here</h3><p>Enter a Tulsa neighborhood and hit Generate. JWood LLC info and QR code load automatically.</p></div>}
+                {!mailer&&!loading&&<div className="empty"><div className="icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="4" y="10" width="40" height="28" rx="4" stroke="currentColor" strokeWidth="1.5"/><path d="M4 16L24 28L44 16" stroke="currentColor" strokeWidth="1.5"/></svg></div><h3>Your Mailer Appears Here</h3><p>Enter a Tulsa neighborhood and hit Generate. JWood LLC info and QR code load automatically.</p></div>}
                 {loading&&<div className="mailer-stack">{[1,2,3,4].map(i=><div key={i}><div className="page-tag">Page {i}</div><div className="skel-page"><div className="skel" style={{height:16,width:"40%",marginBottom:14}}/><div className="skel" style={{height:36,width:"70%",marginBottom:10}}/><div className="skel" style={{height:13,width:"55%",marginBottom:7}}/><div className="skel" style={{height:13,width:"45%"}}/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:20}}><div className="skel" style={{height:72}}/><div className="skel" style={{height:72}}/></div></div></div>)}</div>}
                 {mailer&&!loading&&<>
                   <div className="preview-actions">
@@ -2936,9 +2936,13 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <p style={{fontSize:12,color:"var(--stone)",marginBottom:16,lineHeight:1.6}}>See a cracked concrete surface? Send that homeowner a personal bid mailer from your truck.</p>
                 <div className="section-head">Input Method</div>
                 <div className="mode-tabs">
-                  {[{id:"address",icon:"📍",label:"Type Address"},{id:"map",icon:"🗺️",label:"Pin on Map"},{id:"photo",icon:"📷",label:"Photo"}].map(m=>(
+                  {[{id:"address",icon:"addr",label:"Type Address"},{id:"map",icon:"map",label:"Pin on Map"},{id:"photo",icon:"cam",label:"Photo"}].map(m=>(
                     <div key={m.id} className={`mode-tab${spotMode===m.id?" on":""}`} onClick={()=>setSpotMode(m.id)}>
-                      <div className="mt-icon">{m.icon}</div>
+                      <div className="mt-icon">{
+                        m.icon==="addr" ? <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2C7.2 2 5 4.2 5 7C5 10.5 10 18 10 18C10 18 15 10.5 15 7C15 4.2 12.8 2 10 2Z" stroke="currentColor" strokeWidth="1.4"/><circle cx="10" cy="7" r="2" fill="currentColor"/></svg>
+                        : m.icon==="map" ? <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.4"/><circle cx="10" cy="10" r="4" stroke="currentColor" strokeWidth="1.4" opacity="0.5"/><line x1="10" y1="2" x2="10" y2="18" stroke="currentColor" strokeWidth="1.4" opacity="0.3"/><line x1="2" y1="10" x2="18" y2="10" stroke="currentColor" strokeWidth="1.4" opacity="0.3"/></svg>
+                        : <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.4"/><circle cx="10" cy="11" r="3.5" stroke="currentColor" strokeWidth="1.4"/><path d="M7 5V4C7 3 8 2 10 2C12 2 13 3 13 4V5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                      }</div>
                       <div className="mt-label">{m.label}</div>
                     </div>
                   ))}
@@ -2992,7 +2996,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                         </>
                       ) : (
                         <>
-                          <div className="pd-icon">📷</div>
+                          <div className="pd-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="2" y="8" width="28" height="20" rx="3" stroke="currentColor" strokeWidth="1.5"/><circle cx="16" cy="18" r="5" stroke="currentColor" strokeWidth="1.5"/><path d="M11 8l2-4h6l2 4" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><circle cx="24" cy="13" r="1.5" fill="currentColor"/></svg></div>
                           <div className="pd-label">Tap to take photo or upload<br/><span style={{fontSize:10,color:"var(--gravel)"}}>AI reads the damage automatically</span></div>
                         </>
                       )}
@@ -3161,7 +3165,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <div className="spot-jobs">
                       {spotJobs.length===0&&(
                         <div style={{padding:"20px",textAlign:"center",color:"var(--gravel)",fontSize:12}}>
-                          <div style={{fontSize:24,marginBottom:6}}>🎯</div>
+                          <div style={{marginBottom:6,opacity:0.3}}><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="12" stroke="currentColor" strokeWidth="1.5"/><circle cx="14" cy="14" r="7" stroke="currentColor" strokeWidth="1.5" opacity="0.6"/><circle cx="14" cy="14" r="3" fill="currentColor"/></svg></div>
                           No spot bids sent yet
                         </div>
                       )}
@@ -3202,7 +3206,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               <div className="spot-preview">
                 {!spotMailer&&!spotLoading&&(
                   <div className="empty">
-                    <div className="icon">🎯</div>
+                    <div className="icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="1.5"/><circle cx="24" cy="24" r="13" stroke="currentColor" strokeWidth="1.5" opacity="0.6"/><circle cx="24" cy="24" r="5" fill="currentColor" opacity="0.8"/></svg></div>
                     <h3>Spot Bid Preview</h3>
                     <p>Enter an address and damage details — AI writes a personal note that sounds like it came from Joel himself, not a corporation.</p>
                     <div style={{marginTop:16,background:"rgba(232,86,10,0.08)",border:"1px solid rgba(232,86,10,0.2)",borderRadius:8,padding:"14px 18px",textAlign:"left",maxWidth:320}}>
@@ -3373,7 +3377,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                           </div>
                           {/* Trust line */}
                           <div className="spot-guarantee">
-                            <div className="spot-guarantee-icon">🛡️</div>
+                            <div className="spot-guarantee-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L12 3V7C12 10 9.5 12.5 7 13C4.5 12.5 2 10 2 7V3L7 1Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/><path d="M5 7L6.5 8.5L9.5 5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
                             <div className="spot-guarantee-text">Licensed & insured · Tulsa, OK · JWood LLC · We stand behind every pour</div>
                           </div>
                         </div>
@@ -3435,7 +3439,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>SMART SUGGESTIONS</div>
               {capacity.mode==="hungry"&&(
                 <div className="smart-suggest">
-                  <div className="smart-suggest-icon">🔥</div>
+                  <div className="smart-suggest-icon" style={{color:"#b83232"}}>▲</div>
                   <div className="smart-suggest-text">
                     <strong>You have open capacity.</strong> Consider sending a radius mailer from your most recent Won job, or running a new neighborhood campaign in a high-income ZIP. Radius auto-set to <strong>1.0 miles</strong> in Hungry mode.
                     <div style={{marginTop:8}}>
@@ -3448,7 +3452,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               )}
               {capacity.mode==="paused"&&(
                 <div className="smart-suggest">
-                  <div className="smart-suggest-icon">⏸️</div>
+                  <div className="smart-suggest-icon" style={{color:"#6a6662"}}>■</div>
                   <div className="smart-suggest-text">
                     <strong>You are fully booked.</strong> Outbound campaigns are paused. The AI phone agent is telling callers you are booking 3 weeks out. When a job completes and is removed from Won, capacity will auto-resume.
                   </div>
@@ -3456,7 +3460,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               )}
               {capacity.mode==="selective"&&(
                 <div className="smart-suggest">
-                  <div className="smart-suggest-icon">🎯</div>
+                  <div className="smart-suggest-icon" style={{color:"#1a6fa8"}}>◈</div>
                   <div className="smart-suggest-text">
                     <strong>Nearly full — focus on high-value leads only.</strong> Pipeline leads with a score below 50 are deprioritized. Bids are automatically increased by 15% to maximize margin on remaining capacity.
                     {pipeline.filter(l=>scoreLead(l)<50&&l.stage!=="won").length>0&&(
@@ -3477,7 +3481,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   return(
                     <div key={lead.id} style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",padding:"11px 16px",borderBottom:"1px solid rgba(184,180,172,0.05)",alignItems:"center",cursor:"pointer"}} onClick={()=>setTab("pipeline")}>
                       <div style={{fontSize:12,fontWeight:600,color:"var(--cream)"}}>{lead.address}<div style={{fontSize:10,color:"var(--stone)"}}>{lead.city}</div></div>
-                      <div style={{fontSize:11,color:"var(--concrete)"}}>{STAGES.find(s=>s.id===lead.stage)?.icon} {STAGES.find(s=>s.id===lead.stage)?.label}</div>
+                      <div style={{fontSize:11,color:"var(--concrete)"}}>{STAGES.find(s=>s.id===lead.stage)?.id==="spotted"?"◉":STAGES.find(s=>s.id===lead.stage)?.id==="sent"?"◫":STAGES.find(s=>s.id===lead.stage)?.id==="called"?"◌":"✦"} {STAGES.find(s=>s.id===lead.stage)?.label}</div>
                       <div style={{fontFamily:"DM Mono,monospace",fontSize:12,color:"var(--orange2)"}}>{lead.value?`$${lead.value.toLocaleString()}`:"—"}</div>
                       <div>
                         <span className={`score-pill ${score>=70?"score-high":score>=40?"score-mid":"score-low"}`}>{score}</span>
@@ -3722,7 +3726,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>INBOUND LEADS FROM AI CALLS</div>
               {aiLeads.length===0&&(
                 <div style={{padding:"40px 0",textAlign:"center",color:"var(--gravel)"}}>
-                  <div style={{fontSize:32,marginBottom:10}}>📞</div>
+                  <div style={{marginBottom:10,opacity:0.3}}><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 6C6 6 8 4 11 4C13 4 14 6 15 8L16 11C16.4 12.2 16 13.6 15 14.4L13 16C14 18 16 20.6 18 22L20 20C21 19.2 22.4 19 23.6 19.4L27 21C29 22 30 23 30 25C30 28 27 31 27 31C22 36 6 19 6 6Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg></div>
                   <div style={{fontSize:14,fontWeight:600,color:"var(--concrete)",marginBottom:6}}>No calls yet</div>
                   <div style={{fontSize:12,color:"var(--stone)"}}>The AI agent is standing by — use the test call above to try it out</div>
                 </div>
@@ -3835,7 +3839,9 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     return(
                       <div className="kanban-col" key={stage.id}>
                         <div className="kanban-head" style={{borderTop:`3px solid ${stage.color}`}}>
-                          <span className="kanban-head-icon">{stage.icon}</span>
+                          <span className="kanban-head-icon" style={{fontSize:14}}>
+                          {stage.id==="spotted"?"◉":stage.id==="sent"?"◫":stage.id==="called"?"◌":"✦"}
+                        </span>
                           <span className="kanban-head-label" style={{color:stage.color}}>{stage.label}</span>
                           <span className="kanban-count">{leads.length}</span>
                         </div>
@@ -4112,7 +4118,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         {/* WON BANNER — radius mailer suggestion */}
       {wonBanner&&(
         <div className="won-banner">
-          <div className="won-banner-icon">🏆</div>
+          <div className="won-banner-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L14.4 8.8H22L16 13.2L18.4 20L12 15.6L5.6 20L8 13.2L2 8.8H9.6L12 2Z" fill="currentColor"/></svg></div>
           <div className="won-banner-text">
             <h4>Job Won — {wonBanner.address}!</h4>
             <p>Send a radius mailer to neighbors within half a mile?</p>
