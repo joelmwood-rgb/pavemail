@@ -2474,6 +2474,25 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     setVerifying(false);
   };
 
+  // Test call handler
+  async function handleTestCall() {
+    setTestCallLoading(true);
+    showToast("Initiating test call...","info");
+    const clean=testCallNumber.replace(/\D/g,"");
+    track('ai_call_made', {phone: testCallNumber});
+    const result=await createBlandAgent("+1"+clean,"Test call from PaveMail dashboard");
+    console.log("Test call result:", JSON.stringify(result));
+    if(result.call_id||result.id||result.status==="success"){
+      showToast("Test call initiated! You should receive a call within 10 seconds.","success");
+      setAiLeads(l=>[{id:"AL-"+Date.now(),caller:"Test Call",phone:testCallNumber,summary:"Test call initiated from PaveMail dashboard. Call ID: "+(result.call_id||result.id||"pending"),service:"Test",address:"",status:"pending",time:"Just now",transferred:false},...l]);
+    } else {
+      const errMsg = result.errors?.[0]?.message || result.message || result.error || JSON.stringify(result).slice(0,100);
+      showToast("Call failed: "+errMsg,"info");
+      console.error("Full bland error:", result);
+    }
+    setTestCallLoading(false);
+  }
+
   // Build dynamic COMPANY from contractor profile
   const ACTIVE_COMPANY = contractor ? {
     name:          contractor.company_name || COMPANY.name,
@@ -2568,12 +2587,13 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               />
               {authError&&<div style={{color:"#f08080",fontSize:12,marginBottom:8,textAlign:"center"}}>{authError}</div>}
               {authSuccess&&<div style={{color:"var(--green2)",fontSize:12,marginBottom:8,textAlign:"center"}}>{authSuccess}</div>}
-              <button className="gen-btn" disabled={authLoading} onClick={async()=>{
+              <button className="gen-btn" disabled={authLoading} onClick={()=>{
                 if(!authForm.email){setAuthError("Enter your email");return;}
                 setAuthLoading(true);
-                await auth.resetPassword(authForm.email);
-                setAuthSuccess("Reset link sent! Check your email.");
-                setAuthLoading(false);
+                auth.resetPassword(authForm.email).then(()=>{
+                  setAuthSuccess("Reset link sent! Check your email.");
+                  setAuthLoading(false);
+                });
               }} style={{marginBottom:10}}>
                 {authLoading?<span className="spin"/>:"Send Reset Link"}
               </button>
@@ -2632,12 +2652,17 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         {/* NAV */}
         <nav className="nav">
           <div className="nav-label">Campaigns</div>
-          {[{id:"map",icon:"🗺️",label:"Neighborhood Scan"},{id:"create",icon:"✏️",label:"Create Mailer"},{id:"tracker",icon:"📊",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length},{id:"spotbid",icon:"🎯",label:"Spot Bid"},{id:"pipeline",icon:"📍",label:"Pipeline"},{id:"capacity",icon:"⚡",label:"Capacity"},{id:"aiphone",icon:"📞",label:"AI Phone",badge:aiLeads.filter(l=>l.status==="pending").length||null},...(isAdmin?[{id:"admin",icon:"⚙️",label:"Admin"}]:[]) ].filter(item=>!item.adminOnly||isAdmin).map(item=>(
+          {[{id:"map",icon:"🗺️",label:"Neighborhood Scan"},{id:"create",icon:"✏️",label:"Create Mailer"},{id:"tracker",icon:"📊",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length},{id:"spotbid",icon:"🎯",label:"Spot Bid"},{id:"pipeline",icon:"📍",label:"Pipeline"},{id:"capacity",icon:"⚡",label:"Capacity"},{id:"aiphone",icon:"📞",label:"AI Phone",badge:aiLeads.filter(l=>l.status==="pending").length||null}].map(item=>(
             <button key={item.id} className={`nav-item${tab===item.id?" active":""}`} onClick={()=>switchTab(item.id)}>
               <span className="nav-icon">{item.icon}</span>{item.label}
               {item.badge?<span className="nav-badge">{item.badge}</span>:null}
             </button>
           ))}
+          {isAdmin&&(
+            <button className={`nav-item${tab==="admin"?" active":""}`} onClick={()=>switchTab("admin")}>
+              <span className="nav-icon">⚙️</span>Admin
+            </button>
+          )}
           <div className="nav-divider"/>
           <div className="nav-label">Account</div>
           <button className={`nav-item${tab==="settings"?" active":""}`} onClick={()=>setTab("settings")}><span className="nav-icon">⚙️</span>Settings</button>
@@ -3674,23 +3699,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <button
                     className="btn btn-primary"
                     disabled={testCallLoading||testCallNumber.length<10}
-                    onClick={async()=>{
-                      setTestCallLoading(true);
-                      showToast("Initiating test call...","info");
-                      const clean=testCallNumber.replace(/\D/g,"");
-                      track('ai_call_made', {phone: testCallNumber});
-      const result=await createBlandAgent("+1"+clean,"Test call from PaveMail dashboard");
-                      console.log("Test call result:", JSON.stringify(result));
-                      if(result.call_id||result.id||result.status==="success"){
-                        showToast("Test call initiated! You should receive a call within 10 seconds.","success");
-                        setAiLeads(l=>[{id:"AL-"+Date.now(),caller:"Test Call",phone:testCallNumber,summary:"Test call initiated from PaveMail dashboard. Call ID: "+(result.call_id||result.id||"pending"),service:"Test",address:"",status:"pending",time:"Just now",transferred:false},...l]);
-                      } else {
-                        const errMsg = result.errors?.[0]?.message || result.message || result.error || JSON.stringify(result).slice(0,100);
-                        showToast("Call failed: "+errMsg,"info");
-                        console.error("Full bland error:", result);
-                      }
-                      setTestCallLoading(false);
-                    }}
+                    onClick={handleTestCall}
                   >
                     {testCallLoading?<span className="spin"/>:"📞 Test Call"}
                   </button>
