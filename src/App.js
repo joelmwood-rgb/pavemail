@@ -674,7 +674,9 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .nav-item:hover{background:rgba(184,180,172,0.05);color:var(--concrete);}
 .nav-item.active{color:var(--cream);background:rgba(232,86,10,0.14);}
 .nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--orange);border-radius:0 2px 2px 0;}
-.nav-icon{font-size:16px;flex-shrink:0;}
+.nav-icon{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:0.7;transition:opacity 0.15s;}
+.nav-item:hover .nav-icon,.nav-item.active .nav-icon{opacity:1;}
+.nav-item.active .nav-icon svg{filter:drop-shadow(0 0 4px rgba(232,86,10,0.4));}
 .nav-badge{margin-left:auto;background:var(--orange);color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;}
 .nav-divider{height:1px;background:rgba(184,180,172,0.08);margin:10px 0;}
 .nav-mini{margin-top:auto;padding:14px 16px 6px;}
@@ -1208,7 +1210,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
     height: 3px;
     border-radius: 2px 2px 0 0;
   }
-  .nav-icon { font-size: 18px; }
+  .nav-icon { width: 22px; height: 22px; }
   .nav-badge { position: absolute; top: 4px; right: 8px; font-size: 9px; padding: 1px 4px; }
 
   .content {
@@ -2498,7 +2500,17 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         <div className="login-bg"/>
         <div className="login-texture"/>
         <div className="login-box">
-          <div className="login-logo">PAVE<span>MAIL</span></div>
+          <div className="login-logo" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
+            <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+              <rect width="52" height="52" rx="14" fill="rgba(232,86,10,0.1)"/>
+              <rect x="8" y="22" width="36" height="22" rx="3" fill="rgba(232,86,10,0.15)" stroke="rgba(232,86,10,0.5)" strokeWidth="1.5"/>
+              <rect x="13" y="27" width="26" height="3.5" rx="1.5" fill="#e8560a" opacity="0.9"/>
+              <rect x="13" y="33.5" width="16" height="3.5" rx="1.5" fill="#e8560a" opacity="0.5"/>
+              <path d="M18 22V16C18 12.7 21 10 26 10C31 10 34 12.7 34 16V22" stroke="rgba(232,86,10,0.6)" strokeWidth="1.5" strokeLinecap="round"/>
+              <circle cx="26" cy="16" r="2" fill="rgba(232,86,10,0.4)"/>
+            </svg>
+            PAVE<span>MAIL</span>
+          </div>
           <div className="login-tagline">The Postcard That Knows Their Project</div>
 
           {/* ── LOGIN ── */}
@@ -2615,7 +2627,15 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
         {/* TOPBAR */}
         <div className="topbar">
-          <div className="logo">PAVE<span>MAIL</span></div>
+          <div className="logo" style={{display:"flex",alignItems:"center",gap:8}}>
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" style={{flexShrink:0}}>
+                <rect x="1" y="8" width="20" height="13" rx="2" fill="rgba(232,86,10,0.15)" stroke="rgba(232,86,10,0.6)" strokeWidth="1.2"/>
+                <rect x="4" y="11" width="14" height="2" rx="1" fill="#e8560a" opacity="0.8"/>
+                <rect x="4" y="14.5" width="9" height="2" rx="1" fill="#e8560a" opacity="0.5"/>
+                <path d="M7 8V5C7 3.3 8.3 2 11 2C13.7 2 15 3.3 15 5V8" stroke="rgba(232,86,10,0.6)" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+              PAVE<span>MAIL</span>
+            </div>
           <div className="topbar-sep"/>
           <div className="topbar-meta">JWood LLC · Tulsa, OK</div>
           <div className="topbar-right">
@@ -2628,20 +2648,35 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         {/* NAV */}
         <nav className="nav">
           <div className="nav-label">Campaigns</div>
-          {[{id:"map",icon:"🗺️",label:"Neighborhood Scan"},{id:"create",icon:"✏️",label:"Create Mailer"},{id:"tracker",icon:"📊",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length},{id:"spotbid",icon:"🎯",label:"Spot Bid"},{id:"pipeline",icon:"📍",label:"Pipeline"},{id:"capacity",icon:"⚡",label:"Capacity"},{id:"aiphone",icon:"📞",label:"AI Phone",badge:aiLeads.filter(l=>l.status==="pending").length||null}].map(item=>(
+          { // SVG nav icons — sharp geometric style
+            const NavIcon = ({id}) => {
+              const icons = {
+                map: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C6.5 1.5 4.5 3.5 4.5 6C4.5 9.5 9 16.5 9 16.5C9 16.5 13.5 9.5 13.5 6C13.5 3.5 11.5 1.5 9 1.5Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/><circle cx="9" cy="6" r="1.75" fill="currentColor"/></svg>,
+                create: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.4"/><line x1="5.5" y1="6.5" x2="12.5" y2="6.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="5.5" y1="9" x2="12.5" y2="9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="5.5" y1="11.5" x2="9.5" y2="11.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+                tracker: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="9" width="3.5" height="7" rx="1" fill="currentColor" opacity="0.5"/><rect x="7.25" y="5.5" width="3.5" height="10.5" rx="1" fill="currentColor" opacity="0.75"/><rect x="12.5" y="2" width="3.5" height="14" rx="1" fill="currentColor"/></svg>,
+                spotbid: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.25" stroke="currentColor" strokeWidth="1.4"/><circle cx="9" cy="9" r="4.5" stroke="currentColor" strokeWidth="1.4" opacity="0.6"/><circle cx="9" cy="9" r="1.75" fill="currentColor"/></svg>,
+                pipeline: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="4" cy="4.5" r="2" stroke="currentColor" strokeWidth="1.4"/><circle cx="14" cy="4.5" r="2" stroke="currentColor" strokeWidth="1.4"/><circle cx="9" cy="13.5" r="2" stroke="currentColor" strokeWidth="1.4"/><line x1="5.8" y1="5.5" x2="12.2" y2="5.5" stroke="currentColor" strokeWidth="1.4"/><line x1="4" y1="6.5" x2="9" y2="11.5" stroke="currentColor" strokeWidth="1.4"/><line x1="14" y1="6.5" x2="9" y2="11.5" stroke="currentColor" strokeWidth="1.4"/></svg>,
+                capacity: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2L10.8 7H16L11.6 10.2L13.4 15.2L9 12L4.6 15.2L6.4 10.2L2 7H7.2L9 2Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>,
+                aiphone: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3.5 3.5C3.5 3.5 4.5 2 6 2C7 2 7.5 3 8 4L8.5 5.5C8.7 6.1 8.5 6.8 8 7.2L7 8C7.5 9 8.5 10.3 9.5 11L10.5 10C11 9.6 11.7 9.5 12.3 9.7L14 10.5C15 11 16 11.5 16 12.5C16 14 14.5 15.5 14.5 15.5C12 18 3 9.5 3.5 3.5Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/><path d="M12 2C13.1 2.3 14.5 3.2 15.5 4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><path d="M11.5 4.5C12.2 4.8 13 5.4 13.5 6.3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+                admin: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.4"/><path d="M9 1.5V3M9 15v1.5M1.5 9H3M15 9h1.5M3.2 3.2l1.1 1.1M13.7 13.7l1.1 1.1M3.2 14.8l1.1-1.1M13.7 4.3l1.1-1.1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+                settings: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.4"/><path d="M9 1.5V3M9 15v1.5M1.5 9H3M15 9h1.5M3.2 3.2l1.1 1.1M13.7 13.7l1.1 1.1M3.2 14.8l1.1-1.1M13.7 4.3l1.1-1.1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+              };
+              return <span className="nav-icon">{icons[id]||'●'}</span>;
+            };
+            return [{id:"map",label:"Neighborhood Scan",badge:null},{id:"create",label:"Create Mailer",badge:null},{id:"tracker",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length||null},{id:"spotbid",label:"Spot Bid",badge:null},{id:"pipeline",label:"Pipeline",badge:null},{id:"capacity",label:"Capacity",badge:null},{id:"aiphone",label:"AI Phone",badge:aiLeads.filter(l=>l.status==="pending").length||null}].map(item=>(
             <button key={item.id} className={`nav-item${tab===item.id?" active":""}`} onClick={()=>switchTab(item.id)}>
-              <span className="nav-icon">{item.icon}</span>{item.label}
+              <NavIcon id={item.id}/>{item.label}
               {item.badge?<span className="nav-badge">{item.badge}</span>:null}
             </button>
           ))}
           {isAdmin&&(
             <button className={`nav-item${tab==="admin"?" active":""}`} onClick={()=>switchTab("admin")}>
-              <span className="nav-icon">⚙️</span>Admin
+              <NavIcon id="admin"/>Admin
             </button>
           )}
           <div className="nav-divider"/>
           <div className="nav-label">Account</div>
-          <button className={`nav-item${tab==="settings"?" active":""}`} onClick={()=>setTab("settings")}><span className="nav-icon">⚙️</span>Settings</button>
+          <button className={`nav-item${tab==="settings"?" active":""}`} onClick={()=>setTab("settings")}><NavIcon id="settings"/>Settings</button>
           <div className="nav-mini">
             {/* CAPACITY WIDGET */}
             <div className="capacity-widget" style={{marginBottom:8}}>
