@@ -180,34 +180,6 @@ const COMPANY = {
 };
 
 
-// Admin DB helpers
-const adminDb = {
-  async getAllContractors(token) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/contractor_profiles?select=*&order=created_at.desc`, {
-      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-    });
-    return res.json();
-  },
-  async getAllPipeline(token) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/pipeline_leads?select=*&order=created_at.desc`, {
-      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-    });
-    return res.json();
-  },
-  async getAllSpotBids(token) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/spot_bids?select=*&order=created_at.desc`, {
-      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-    });
-    return res.json();
-  },
-  async getAllCampaigns(token) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/campaigns?select=*&order=created_at.desc`, {
-      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-    });
-    return res.json();
-  },
-};
-
 // DB helpers
 const db = {
   // Pipeline
@@ -357,7 +329,7 @@ const db = {
     return res.ok ? res.json() : [];
   },
   async getAllPipeline(token) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/pipeline_leads?select=*,contractor_profiles(company_name,owner_name)&order=created_at.desc&limit=500`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/pipeline_leads?select=*&order=created_at.desc&limit=500`, {
       headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
     });
     return res.ok ? res.json() : [];
@@ -2033,10 +2005,10 @@ export default function App(){
     if(authUser?.user?.email === ADMIN_EMAIL && authUser?.token) {
       setAdminData(d=>({...d,loading:true}));
       Promise.all([
-        adminDb.getAllContractors(authUser.token),
-        adminDb.getAllPipeline(authUser.token),
-        adminDb.getAllSpotBids(authUser.token),
-        adminDb.getAllCampaigns(authUser.token),
+        db.getAllContractors(authUser.token),
+        db.getAllPipeline(authUser.token),
+        db.getAllSpotBids(authUser.token),
+        db.getAllCampaigns(authUser.token),
       ]).then(([contractors,pipeline,spotBids,campaigns])=>{
         setAdminData({
           contractors: Array.isArray(contractors)?contractors:[],
