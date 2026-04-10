@@ -691,12 +691,10 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .lob-dot{width:6px;height:6px;border-radius:50%;background:var(--green2);animation:blink 1.4s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeInFast{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @keyframes slideInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes slideInLeft{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
 @keyframes slideInRight{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
 @keyframes scaleIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}
-@keyframes spin{to{transform:rotate(360deg)}}
 .avatar{width:30px;height:30px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;}
 .nav{background:var(--ink);border-right:1px solid rgba(184,180,172,0.08);display:flex;flex-direction:column;padding:14px 0;overflow-y:auto;}
 .nav-label{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gravel);padding:10px 18px 5px;}
@@ -736,7 +734,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .chip:hover{border-color:rgba(184,180,172,0.25);color:var(--concrete);}
 .chip.on{background:var(--orange);border-color:var(--orange);color:white;}
 .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,0.25);border-top-color:white;border-radius:50%;animation:spinning 0.55s linear infinite;flex-shrink:0;}
-.content>*{animation:fadeIn 0.18s ease;}
+/* content children animated via individual component classes */
 @keyframes spinning{to{transform:rotate(360deg);}}
 .skel{background:linear-gradient(90deg,rgba(184,180,172,0.05) 25%,rgba(184,180,172,0.1) 50%,rgba(184,180,172,0.05) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px;}
 @keyframes shimmer{to{background-position:-200% 0;}}
@@ -2819,7 +2817,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div className="field" style={{marginTop:10}}><label>Service Focus</label><div className="chips">{ANGLES.map(a=><button key={a} className={`chip${form.angle===a?" on":""}`} onClick={()=>set("angle",a)}>{a}</button>)}</div></div>
                 <div className="field" style={{marginTop:10}}><label>Special Offer</label><div className="chips">{OFFERS.map(o=><button key={o} className={`chip${form.offer===o?" on":""}`} onClick={()=>set("offer",o)}>{o}</button>)}</div></div>
                 <div className="section-head">AI Guidance</div>
-                <div className="field"><label>Extra Notes</label><textarea placeholder="e.g. Just finished a job on 71st St. Mention freeze-thaw damage." value={form.extraNotes} onChange={e=>set("extraNotes",e.target.value)}/></div>
+                <div className="field"><label>Extra Notes</label><textarea placeholder="e.g. Just finished a job on 71st St. Mention freeze-thaw damage." value={form.extraNotes} onChange={e=>set("extraNotes",e.target.value)}></textarea></div>
                 <div className="divider"/>
                 <div className="cost-bar"><div><div className="cb-label">Est. Print + Mail Cost</div><div className="cb-sub">{form.homes||0} homes × $0.62 (EDDM rate)</div></div><div className="cb-value">${estCost}</div></div>
                 <button className="gen-btn" onClick={generate} disabled={loading||!form.neighborhood}>
@@ -3128,7 +3126,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
                 <div className="field"><label>What's Included</label><input placeholder="e.g. Demo, haul away, pour, finish & seal" value={spotForm.includes||""} onChange={e=>setSpot("includes",e.target.value)}/></div>
 
-                <div className="field"><label>Extra Notes for AI</label><textarea placeholder="e.g. Large crack near garage door, looks like tree root damage" value={spotForm.notes} onChange={e=>setSpot("notes",e.target.value)}/></div>
+                <div className="field"><label>Extra Notes for AI</label><textarea placeholder="e.g. Large crack near garage door, looks like tree root damage" value={spotForm.notes} onChange={e=>setSpot("notes",e.target.value)}></textarea></div>
 
                 <div className="divider"/>
                 <div style={{fontSize:11,color:"var(--stone)",marginBottom:10,textAlign:"center"}}>One postcard · $1.25 · Delivers in 2–5 days</div>
@@ -4164,7 +4162,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     value={radiusForm.message}
                     onChange={e=>setRadiusForm(f=>({...f,message:e.target.value}))}
                     style={{height:60}}
-                  />
+                  ></textarea>
                 </div>
 
                 <button className="btn btn-success" onClick={generateRadiusMailer} disabled={radiusLoading} style={{width:"100%"}}>
@@ -4335,7 +4333,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               <div className="field"><label>Bid Low ($)</label><input type="number" placeholder="800" inputMode="numeric" value={newLead.bidLow} onChange={e=>setNewLead(f=>({...f,bidLow:e.target.value}))}/></div>
               <div className="field"><label>Bid High ($)</label><input type="number" placeholder="1400" inputMode="numeric" value={newLead.bidHigh} onChange={e=>setNewLead(f=>({...f,bidHigh:e.target.value}))}/></div>
             </div>
-            <div className="field"><label>Notes</label><textarea placeholder="e.g. Saw severe cracking from the road, large 2-car" value={newLead.notes} onChange={e=>setNewLead(f=>({...f,notes:e.target.value}))}/></div>
+            <div className="field"><label>Notes</label><textarea placeholder="e.g. Saw severe cracking from the road, large 2-car" value={newLead.notes} onChange={e=>setNewLead(f=>({...f,notes:e.target.value}))}></textarea></div>
             <div style={{display:"flex",gap:8,marginTop:4}}>
               <button className="btn btn-primary" style={{flex:1}} onClick={addLead} disabled={!newLead.address}>📍 Add to Pipeline</button>
               <button className="btn btn-ghost" onClick={()=>setShowAddLead(false)}>Cancel</button>
