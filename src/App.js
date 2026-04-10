@@ -327,7 +327,11 @@ const db = {
 
   // Jobs
   async getJobs() {
-    return sbFetch("jobs?contractor_id=eq.jwood&order=created_at.desc");
+    const token = getAuthToken();
+    if(!token) return [];
+    const user = (() => { try { return JSON.parse(localStorage.getItem("pm_session"))?.user; } catch { return null; } })();
+    if(!user?.id) return [];
+    return sbFetch(`jobs?user_id=eq.${user.id}&order=created_at.desc`);
   },
   async saveJob(job) {
     return sbFetch("jobs", {
@@ -686,12 +690,19 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .lob-pill{background:rgba(42,122,82,0.15);border:1px solid rgba(42,122,82,0.3);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--green2);font-weight:700;display:flex;align-items:center;gap:5px;}
 .lob-dot{width:6px;height:6px;border-radius:50%;background:var(--green2);animation:blink 1.4s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInFast{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 .avatar{width:30px;height:30px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;}
 .nav{background:var(--ink);border-right:1px solid rgba(184,180,172,0.08);display:flex;flex-direction:column;padding:14px 0;overflow-y:auto;}
 .nav-label{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gravel);padding:10px 18px 5px;}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;transition:all 0.15s;position:relative;font-size:13px;font-weight:500;color:var(--stone);border:none;background:none;text-align:left;width:100%;font-family:'Syne',sans-serif;touch-action:manipulation;}
 .nav-item:hover{background:rgba(184,180,172,0.05);color:var(--concrete);}
-.nav-item.active{color:var(--cream);background:rgba(232,86,10,0.12);}
+.nav-item.active{color:var(--cream);background:rgba(232,86,10,0.14);}
 .nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--orange);border-radius:0 2px 2px 0;}
 .nav-icon{font-size:16px;flex-shrink:0;}
 .nav-badge{margin-left:auto;background:var(--orange);color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;}
@@ -702,7 +713,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .mini-row{display:flex;justify-content:space-between;}
 .content{overflow-y:auto;background:var(--black);position:relative;}
 .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:7px;font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;}
-.btn-primary{background:var(--orange);color:white;}
+.btn-primary{background:var(--orange);color:white;box-shadow:0 2px 8px rgba(232,86,10,0.3);}
 .btn-primary:hover{background:var(--orange2);}
 .btn-primary:disabled{opacity:0.4;cursor:not-allowed;}
 .btn-ghost{background:rgba(184,180,172,0.07);border:1px solid rgba(184,180,172,0.13);color:var(--concrete);}
@@ -724,7 +735,8 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .chip{background:rgba(0,0,0,0.3);border:1px solid rgba(184,180,172,0.12);border-radius:20px;padding:4px 11px;font-size:11px;font-weight:600;color:var(--stone);cursor:pointer;transition:all 0.12s;font-family:'Syne',sans-serif;}
 .chip:hover{border-color:rgba(184,180,172,0.25);color:var(--concrete);}
 .chip.on{background:var(--orange);border-color:var(--orange);color:white;}
-.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spinning 0.65s linear infinite;flex-shrink:0;}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,0.25);border-top-color:white;border-radius:50%;animation:spinning 0.55s linear infinite;flex-shrink:0;}
+.content>*{animation:fadeIn 0.18s ease;}
 @keyframes spinning{to{transform:rotate(360deg);}}
 .skel{background:linear-gradient(90deg,rgba(184,180,172,0.05) 25%,rgba(184,180,172,0.1) 50%,rgba(184,180,172,0.05) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px;}
 @keyframes shimmer{to{background-position:-200% 0;}}
@@ -737,7 +749,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .section-head::after{content:'';flex:1;height:1px;background:rgba(184,180,172,0.08);}
 .divider{height:1px;background:rgba(184,180,172,0.07);margin:16px 0;}
 .map-layout{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 52px);overflow:hidden;}
-.map-sidebar{background:var(--ink);border-right:1px solid rgba(184,180,172,0.08);overflow-y:auto;}
+.map-sidebar{background:var(--ink);border-right:1px solid rgba(184,180,172,0.07);overflow-y:auto;}
 .map-sidebar-inner{padding:20px;}
 .map-panel{position:relative;background:#1a1a16;overflow:hidden;}
 .map-canvas{position:absolute;inset:0;background:linear-gradient(rgba(184,180,172,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(184,180,172,0.04) 1px,transparent 1px);background-size:40px 40px;background-color:#1a1a16;}
@@ -773,7 +785,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .cb-value{font-family:'DM Mono',monospace;font-size:20px;color:var(--orange2);}
 .cb-sub{font-size:10px;color:var(--gravel);margin-top:1px;}
 .gen-btn{width:100%;background:var(--orange);color:white;border:none;border-radius:8px;padding:13px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;}
-.gen-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
+.gen-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-2px);box-shadow:0 6px 20px rgba(232,86,10,0.4);}
 .gen-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
 .send-btn{width:100%;background:var(--green);color:white;border:none;border-radius:8px;padding:13px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;}
 .send-btn:hover:not(:disabled){background:var(--green2);}
@@ -841,7 +853,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .empty .icon{font-size:52px;opacity:0.3;}
 .empty h3{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--stone);}
 .empty p{font-size:12px;color:var(--gravel);max-width:280px;line-height:1.65;}
-.tracker-layout{padding:24px 28px;}
+.tracker-layout{padding:24px 28px;animation:fadeIn 0.2s ease;}
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
 .stat-card{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:10px;padding:18px 20px;}
 .sc-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);margin-bottom:8px;}
@@ -894,7 +906,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .toast.error{background:var(--red);}
 .toast.info{background:var(--blue);}
 /* ── SPOT BID ── */
-.spot-layout{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 52px);overflow:hidden;}
+.spot-layout{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 52px);overflow:hidden;animation:fadeIn 0.2s ease;}
 .spot-form{background:var(--ink);border-right:1px solid rgba(184,180,172,0.08);overflow-y:auto;padding:20px;}
 .spot-preview{overflow-y:auto;padding:24px 28px;background:#111009;}
 .mode-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:18px;}
@@ -954,8 +966,8 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .spot-guarantee-icon{font-size:12px;}
 .spot-guarantee-text{font-size:9px;color:rgba(184,180,172,0.3);line-height:1.5;}
 .spot-jobs{margin-top:20px;}
-.spot-job-row{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:8px;padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:background 0.12s;}
-.spot-job-row:hover{background:rgba(184,180,172,0.03);}
+.spot-job-row{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:10px;padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.15s;}
+.spot-job-row:hover{background:rgba(184,180,172,0.05);border-color:rgba(184,180,172,0.15);transform:translateY(-1px);}
 .spot-job-addr{font-size:13px;font-weight:600;color:var(--cream);}
 .spot-job-sub{font-size:11px;color:var(--stone);margin-top:2px;}
 .spot-job-bid{font-family:'DM Mono',monospace;font-size:14px;color:var(--orange2);font-weight:500;margin-left:auto;flex-shrink:0;}
@@ -986,12 +998,12 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .smart-suggest-text strong{color:var(--cream);}
 
 /* ── ADMIN ── */
-.admin-layout{padding:24px 28px;}
+.admin-layout{padding:28px 32px;animation:fadeIn 0.2s ease;}
 .admin-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
 .admin-stat{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:10px;padding:16px;text-align:center;}
 .admin-stat-val{font-family:"Bebas Neue",sans-serif;font-size:36px;line-height:1;margin-bottom:4px;}
 .admin-stat-label{font-size:10px;color:var(--stone);letter-spacing:1px;text-transform:uppercase;}
-.contractor-card{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:10px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;}
+.contractor-card{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:12px;padding:18px 20px;margin-bottom:10px;display:flex;align-items:center;gap:16px;transition:border-color 0.15s,transform 0.15s;animation:slideInUp 0.2s ease;}
 .contractor-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0;}
 .contractor-name{font-size:14px;font-weight:700;color:var(--cream);}
 .contractor-meta{font-size:11px;color:var(--stone);margin-top:2px;}
@@ -1101,7 +1113,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .pl-list-head{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1fr 1fr 120px 80px;gap:10px;padding:10px 16px;background:rgba(0,0,0,0.2);border-bottom:1px solid rgba(184,180,172,0.07);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);}
 .pl-list-row{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1fr 1fr 120px 80px;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(184,180,172,0.05);align-items:center;transition:background 0.12s;cursor:pointer;}
 .pl-list-row:last-child{border-bottom:none;}
-.pl-list-row:hover{background:rgba(184,180,172,0.03);}
+.pl-list-row:hover{background:rgba(184,180,172,0.04);}
 .pl-addr{font-size:12px;font-weight:600;color:var(--cream);}
 .pl-sub{font-size:10px;color:var(--stone);margin-top:1px;}
 .pl-cell{font-size:11px;color:var(--concrete);}
@@ -1120,7 +1132,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 
 /* ADD LEAD MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
-.modal-box{background:var(--ink);border:1px solid rgba(184,180,172,0.12);border-radius:12px;padding:24px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;}
+.modal-box{background:var(--ink);border:1px solid rgba(184,180,172,0.15);border-radius:16px;padding:28px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;}
 .modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--cream);margin-bottom:4px;}
 .modal-sub{font-size:12px;color:var(--stone);margin-bottom:18px;}
 
@@ -1141,10 +1153,10 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .login-screen{position:fixed;inset:0;background:var(--black);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0;}
 .login-bg{position:absolute;inset:0;background:linear-gradient(145deg,#0e0d0b 0%,#1c1a17 60%,#0e0d0b 100%);}
 .login-texture{position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,rgba(184,180,172,0.02) 0,rgba(184,180,172,0.02) 1px,transparent 0,transparent 8px);}
-.login-box{position:relative;width:100%;max-width:340px;padding:20px;}
-.login-logo{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:4px;color:var(--cream);text-align:center;margin-bottom:4px;}
+.login-box{position:relative;width:100%;max-width:360px;padding:32px 28px;animation:scaleIn 0.3s ease;}
+.login-logo{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:6px;color:var(--cream);text-align:center;margin-bottom:6px;}
 .login-logo span{color:var(--orange);}
-.login-tagline{font-size:11px;color:var(--stone);text-align:center;letter-spacing:2px;text-transform:uppercase;margin-bottom:36px;}
+.login-tagline{font-size:10px;color:var(--stone);text-align:center;letter-spacing:3px;text-transform:uppercase;margin-bottom:32px;opacity:0.7;}
 .login-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--stone);text-align:center;margin-bottom:14px;}
 .pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:24px;}
 .pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid rgba(184,180,172,0.2);background:transparent;transition:all 0.15s;}
@@ -1357,10 +1369,10 @@ const ROUTES = [
 const MOCK_JOBS = [];
 
 const TRACK_STEPS = [
-  {label:"Approved",  icon:"✓", date:"Apr 05"},
-  {label:"Printing",  icon:"🖨", date:"Apr 06"},
-  {label:"In Transit",icon:"📦",date:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"})},
-  {label:"Delivered", icon:"📬",date:"—"},
+  {label:"Approved",  icon:"✓"},
+  {label:"Printing",  icon:"🖨"},
+  {label:"In Transit",icon:"📦"},
+  {label:"Delivered", icon:"📬"},
 ];
 
 const PINS = [
@@ -3654,7 +3666,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div style={{fontSize:11,color:"var(--stone)",marginBottom:12}}>Enter a phone number and Bland.ai will call it right now with the AI agent. Use your own cell to test the experience.</div>
                 <div style={{display:"flex",gap:8}}>
                   <input
-                    placeholder="(918) 555-0000"
+                    placeholder="(918) 000-0000"
                     value={testCallNumber}
                     onChange={e=>setTestCallNumber(e.target.value)}
                     style={{flex:1,background:"rgba(0,0,0,0.3)",border:"1px solid rgba(184,180,172,0.12)",borderRadius:7,padding:"10px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:13,outline:"none"}}
@@ -3987,128 +3999,6 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           )}
 
           {/* ADMIN */}
-          {tab==="admin"&&isAdmin&&(
-            <div style={{padding:"24px 28px"}}>
-              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
-                <div style={{fontSize:28}}>👑</div>
-                <div>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)",lineHeight:1}}>ADMIN DASHBOARD</div>
-                  <div style={{fontSize:12,color:"var(--stone)",marginTop:2}}>Full visibility across all contractors · joelmwood@gmail.com</div>
-                </div>
-              </div>
-
-              {adminData.loading&&<div style={{textAlign:"center",padding:"40px",color:"var(--stone)"}}>Loading all contractor data...</div>}
-
-              {/* Platform stats */}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:24}}>
-                {[
-                  {label:"Contractors",value:adminData.contractors.length,icon:"👷",color:"var(--orange2)"},
-                  {label:"Total Leads",value:adminData.pipeline.length,icon:"📍",color:"var(--blue2)"},
-                  {label:"Spot Bids",value:adminData.spotBids.length,icon:"🎯",color:"var(--green2)"},
-                  {label:"Campaigns",value:adminData.campaigns.length,icon:"📬",color:"var(--gold2)"},
-                ].map((s,i)=>(
-                  <div key={i} style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,padding:"16px",textAlign:"center"}}>
-                    <div style={{fontSize:24,marginBottom:6}}>{s.icon}</div>
-                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:32,color:s.color,lineHeight:1}}>{s.value}</div>
-                    <div style={{fontSize:10,color:"var(--stone)",letterSpacing:1,textTransform:"uppercase",marginTop:4}}>{s.label}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Contractors table */}
-              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>ALL CONTRACTORS</div>
-              <div style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,overflow:"hidden",marginBottom:24}}>
-                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr",padding:"10px 16px",background:"rgba(0,0,0,0.3)",fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",borderBottom:"1px solid rgba(184,180,172,0.07)"}}>
-                  <div>Company</div><div>Owner</div><div>City</div><div>Plan</div><div>Joined</div>
-                </div>
-                {adminData.contractors.length===0&&!adminData.loading&&(
-                  <div style={{padding:"24px",textAlign:"center",color:"var(--gravel)",fontSize:12}}>No contractors yet</div>
-                )}
-                {adminData.contractors.map((c,i)=>{
-                  const leads = adminData.pipeline.filter(l=>l.user_id===c.id).length;
-                  const bids = adminData.spotBids.filter(b=>b.user_id===c.id).length;
-                  return(
-                    <div key={c.id} style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr",padding:"12px 16px",borderBottom:"1px solid rgba(184,180,172,0.05)",alignItems:"center"}}>
-                      <div>
-                        <div style={{fontSize:13,fontWeight:600,color:"var(--cream)"}}>{c.company_name}</div>
-                        <div style={{fontSize:10,color:"var(--stone)",marginTop:2}}>{c.email} · {c.phone}</div>
-                        <div style={{display:"flex",gap:8,marginTop:4}}>
-                          <span style={{fontSize:9,background:"rgba(26,111,168,0.15)",color:"var(--blue2)",padding:"2px 6px",borderRadius:4}}>{leads} leads</span>
-                          <span style={{fontSize:9,background:"rgba(232,86,10,0.15)",color:"var(--orange2)",padding:"2px 6px",borderRadius:4}}>{bids} bids</span>
-                        </div>
-                      </div>
-                      <div style={{fontSize:12,color:"var(--concrete)"}}>{c.owner_name}</div>
-                      <div style={{fontSize:12,color:"var(--concrete)"}}>{c.city}, {c.state}</div>
-                      <div>
-                        <span style={{fontSize:9,fontWeight:700,background:"rgba(42,122,82,0.15)",color:"var(--green2)",padding:"3px 8px",borderRadius:10,textTransform:"uppercase"}}>{c.plan||"starter"}</span>
-                      </div>
-                      <div style={{fontSize:11,color:"var(--stone)",fontFamily:"monospace"}}>{c.created_at?new Date(c.created_at).toLocaleDateString():"-"}</div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Recent activity across all contractors */}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-                {/* Recent spot bids */}
-                <div>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1,color:"var(--concrete)",marginBottom:10}}>RECENT SPOT BIDS</div>
-                  <div style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,overflow:"hidden"}}>
-                    {adminData.spotBids.slice(0,8).map((b,i)=>{
-                      const contractor = adminData.contractors.find(c=>c.id===b.user_id);
-                      return(
-                        <div key={b.id} style={{padding:"10px 14px",borderBottom:"1px solid rgba(184,180,172,0.05)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                          <div>
-                            <div style={{fontSize:12,fontWeight:600,color:"var(--cream)"}}>{b.address}</div>
-                            <div style={{fontSize:10,color:"var(--stone)",marginTop:1}}>{contractor?.company_name||"Unknown"} · {b.city}</div>
-                          </div>
-                          <div style={{fontFamily:"monospace",fontSize:12,color:"var(--orange2)",fontWeight:600}}>{b.bid||"-"}</div>
-                        </div>
-                      );
-                    })}
-                    {adminData.spotBids.length===0&&<div style={{padding:"20px",textAlign:"center",color:"var(--gravel)",fontSize:12}}>No spot bids yet</div>}
-                  </div>
-                </div>
-
-                {/* Recent pipeline leads */}
-                <div>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1,color:"var(--concrete)",marginBottom:10}}>RECENT PIPELINE</div>
-                  <div style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,overflow:"hidden"}}>
-                    {adminData.pipeline.slice(0,8).map((l,i)=>{
-                      const contractor = adminData.contractors.find(c=>c.id===l.user_id);
-                      const stage = ["spotted","sent","called","won"].find(s=>s===l.stage)||l.stage;
-                      const stageColors = {spotted:"var(--stone)",sent:"var(--blue2)",called:"var(--gold2)",won:"var(--green2)"};
-                      return(
-                        <div key={l.id} style={{padding:"10px 14px",borderBottom:"1px solid rgba(184,180,172,0.05)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                          <div>
-                            <div style={{fontSize:12,fontWeight:600,color:"var(--cream)"}}>{l.address}</div>
-                            <div style={{fontSize:10,color:"var(--stone)",marginTop:1}}>{contractor?.company_name||"Unknown"} · {l.city}</div>
-                          </div>
-                          <span style={{fontSize:9,fontWeight:700,color:stageColors[stage]||"var(--stone)",background:"rgba(184,180,172,0.08)",padding:"3px 8px",borderRadius:10,textTransform:"uppercase"}}>{stage}</span>
-                        </div>
-                      );
-                    })}
-                    {adminData.pipeline.length===0&&<div style={{padding:"20px",textAlign:"center",color:"var(--gravel)",fontSize:12}}>No pipeline leads yet</div>}
-                  </div>
-                </div>
-              </div>
-
-              {/* Refresh button */}
-              <div style={{textAlign:"center",marginTop:20}}>
-                <button className="btn btn-ghost" onClick={()=>{
-                  setAdminData(d=>({...d,loading:true}));
-                  Promise.all([
-                    adminDb.getAllContractors(authUser.token),
-                    adminDb.getAllPipeline(authUser.token),
-                    adminDb.getAllSpotBids(authUser.token),
-                    adminDb.getAllCampaigns(authUser.token),
-                  ]).then(([contractors,pipeline,spotBids,campaigns])=>{
-                    setAdminData({contractors:Array.isArray(contractors)?contractors:[],pipeline:Array.isArray(pipeline)?pipeline:[],spotBids:Array.isArray(spotBids)?spotBids:[],campaigns:Array.isArray(campaigns)?campaigns:[],loading:false});
-                  }).catch(()=>setAdminData(d=>({...d,loading:false})));
-                }}>↺ Refresh Data</button>
-              </div>
-            </div>
-          )}
 
           {/* SETTINGS */}
           {tab==="settings"&&(
@@ -4446,6 +4336,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       )}
 
       {toast&&<div className={`toast ${toast.type}`}>{toast.msg}</div>}
+    </div>
     </>
   );
 }
