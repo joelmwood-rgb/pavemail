@@ -2474,6 +2474,24 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     setVerifying(false);
   };
 
+  // Build dynamic COMPANY from contractor profile
+  const ACTIVE_COMPANY = contractor ? {
+    name:          contractor.company_name || COMPANY.name,
+    ownerName:     contractor.owner_name || COMPANY.ownerName,
+    phone:         contractor.phone || COMPANY.phone,
+    phoneRaw:      (contractor.phone||COMPANY.phone).replace(/\D/g,""),
+    email:         contractor.email || COMPANY.email,
+    city:          contractor.city || COMPANY.city,
+    state:         contractor.state || COMPANY.state,
+    lobFromId:     contractor.lob_from_id || COMPANY.lobFromId,
+    transferPhone: contractor.bland_transfer || COMPANY.transferPhone,
+    contractorId:  authUser?.user?.id || COMPANY.contractorId,
+    crewSize:      contractor.crew_size || COMPANY.crewSize,
+    maxJobsWeek:   contractor.max_jobs_week || COMPANY.maxJobsWeek,
+    weeklyTarget:  contractor.weekly_target || COMPANY.weeklyTarget,
+    accentColor:   contractor.accent_color || COMPANY.accentColor,
+  } : COMPANY;
+
   // Show auth screen if not logged in
   if(!authUser) return(
     <>
@@ -2593,24 +2611,6 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       </div>
     </>
   );
-
-  // Build dynamic COMPANY from contractor profile
-  const ACTIVE_COMPANY = contractor ? {
-    name:          contractor.company_name || COMPANY.name,
-    ownerName:     contractor.owner_name || COMPANY.ownerName,
-    phone:         contractor.phone || COMPANY.phone,
-    phoneRaw:      (contractor.phone||COMPANY.phone).replace(/\D/g,""),
-    email:         contractor.email || COMPANY.email,
-    city:          contractor.city || COMPANY.city,
-    state:         contractor.state || COMPANY.state,
-    lobFromId:     contractor.lob_from_id || COMPANY.lobFromId,
-    transferPhone: contractor.bland_transfer || COMPANY.transferPhone,
-    contractorId:  authUser?.user?.id || COMPANY.contractorId,
-    crewSize:      contractor.crew_size || COMPANY.crewSize,
-    maxJobsWeek:   contractor.max_jobs_week || COMPANY.maxJobsWeek,
-    weeklyTarget:  contractor.weekly_target || COMPANY.weeklyTarget,
-    accentColor:   contractor.accent_color || COMPANY.accentColor,
-  } : COMPANY;
 
   return(
     <>
