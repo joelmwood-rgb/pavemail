@@ -1,6 +1,51 @@
 import React, { useState } from "react";
 
 // ─────────────────────────────────────────────
+// POSTHOG ANALYTICS
+// ─────────────────────────────────────────────
+(function(){
+  try {
+    if(window.posthog) return;
+    !function(t,e){e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}var d=t;void 0!==a?d=t[a]=[]:a="posthog",g(e,a+"capture"),g(e,a+"identify"),g(e,a+"alias"),g(e,a+"reset"),g(e,a+"register"),g(e,a+"register_once"),g(e,a+"unregister"),g(e,a+"opt_out_capturing"),g(e,a+"has_opted_out_capturing"),g(e,a+"opt_in_capturing"),g(e,a+"get_distinct_id"),g(e,a+"getFeatureFlag"),g(e,a+"isFeatureEnabled"),g(e,a+"onFeatureFlags"),e.init=function(t,e){e.__loaded||((e.config=e||{},e.__loaded=!0,e._i.push([t,e])))},e.__SV=1;var p=t.createElement("script");p.type="text/javascript";p.async=!0;p.src="https://us.i.posthog.com/static/array.js";var r=t.getElementsByTagName("script")[0];r.parentNode.insertBefore(p,r)}(document,window.posthog||[]);
+    window.posthog.init('phc_kqPn9wagFCAw9QaUF4XJxKMNEnHRooEX7uBvt4wdv29z',{
+      api_host:'https://us.i.posthog.com',
+      person_profiles:'identified_only',
+      autocapture: true,
+      capture_pageview: true,
+    });
+    window.posthog.identify('jwood',{name:'Joel Wood',company:'JWood LLC',role:'contractor'});
+  } catch(e){ console.warn('PostHog init failed:',e); }
+})();
+
+// ─────────────────────────────────────────────
+// SENTRY ERROR MONITORING
+// ─────────────────────────────────────────────
+(function(){
+  try {
+    var s=document.createElement('script');
+    s.src='https://browser.sentry-cdn.com/7.99.0/bundle.min.js';
+    s.crossOrigin='anonymous';
+    s.onload=function(){
+      try {
+        Sentry.init({
+          dsn:'https://7dbac4cf1178f77cd4f219c54e11225f@o4511197222797312.ingest.us.sentry.io/4511197260021760',
+          release:'pavemail@1.0.0',
+          environment:'production',
+          tracesSampleRate:0.1,
+        });
+        console.log('Sentry initialized');
+      } catch(e){ console.warn('Sentry init failed:',e); }
+    };
+    document.head.appendChild(s);
+  } catch(e){ console.warn('Sentry load failed:',e); }
+})();
+
+// Analytics helper — safe wrapper
+function track(event, props) {
+  try { if(window.posthog) window.posthog.capture(event, props||{}); } catch(e){}
+}
+
+// ─────────────────────────────────────────────
 // LOB API INTEGRATION
 // ─────────────────────────────────────────────
 const PROXY_BASE      = "https://joelmwood--b166b8c432db11f19dff42b51c65c3df.web.val.run";
@@ -476,7 +521,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .avatar{width:30px;height:30px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;}
 .nav{background:var(--ink);border-right:1px solid rgba(184,180,172,0.08);display:flex;flex-direction:column;padding:14px 0;overflow-y:auto;}
 .nav-label{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gravel);padding:10px 18px 5px;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;transition:all 0.15s;position:relative;font-size:13px;font-weight:500;color:var(--stone);border:none;background:none;text-align:left;width:100%;font-family:'Syne',sans-serif;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;transition:all 0.15s;position:relative;font-size:13px;font-weight:500;color:var(--stone);border:none;background:none;text-align:left;width:100%;font-family:'Syne',sans-serif;touch-action:manipulation;}
 .nav-item:hover{background:rgba(184,180,172,0.05);color:var(--concrete);}
 .nav-item.active{color:var(--cream);background:rgba(232,86,10,0.12);}
 .nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--orange);border-radius:0 2px 2px 0;}
@@ -685,13 +730,13 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .spot-form{background:var(--ink);border-right:1px solid rgba(184,180,172,0.08);overflow-y:auto;padding:20px;}
 .spot-preview{overflow-y:auto;padding:24px 28px;background:#111009;}
 .mode-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:18px;}
-.mode-tab{background:rgba(0,0,0,0.3);border:1px solid rgba(184,180,172,0.12);border-radius:7px;padding:10px 8px;text-align:center;cursor:pointer;transition:all 0.15s;font-family:'Syne',sans-serif;}
+.mode-tab{background:rgba(0,0,0,0.3);border:1px solid rgba(184,180,172,0.12);border-radius:7px;padding:10px 8px;text-align:center;cursor:pointer;transition:all 0.15s;font-family:'Syne',sans-serif;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 .mode-tab:hover{border-color:rgba(232,86,10,0.3);}
 .mode-tab.on{border-color:var(--orange);background:rgba(232,86,10,0.1);}
 .mode-tab .mt-icon{font-size:20px;margin-bottom:4px;}
 .mode-tab .mt-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--stone);}
 .mode-tab.on .mt-label{color:var(--orange2);}
-.photo-drop{border:2px dashed rgba(184,180,172,0.2);border-radius:8px;padding:28px;text-align:center;cursor:pointer;transition:all 0.15s;background:rgba(0,0,0,0.2);margin-bottom:12px;}
+.photo-drop{border:2px dashed rgba(184,180,172,0.2);border-radius:8px;padding:28px;text-align:center;cursor:pointer;transition:all 0.15s;background:rgba(0,0,0,0.2);margin-bottom:12px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 .photo-drop:hover{border-color:var(--orange);background:rgba(232,86,10,0.05);}
 .photo-drop .pd-icon{font-size:32px;margin-bottom:8px;}
 .photo-drop .pd-label{font-size:12px;color:var(--stone);}
@@ -703,7 +748,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .spot-send-btn{width:100%;background:var(--orange);color:white;border:none;border-radius:8px;padding:13px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;}
 .spot-send-btn:hover:not(:disabled){background:var(--orange2);transform:translateY(-1px);}
 .spot-send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
-.spot-mailer{background:#faf7f2;border-radius:8px;overflow:hidden;box-shadow:0 6px 30px rgba(0,0,0,0.6);font-family:'Syne',sans-serif;}
+.spot-mailer{background:#faf7f2;border-radius:8px;overflow:hidden;box-shadow:0 6px 30px rgba(0,0,0,0.6);font-family:'Syne',sans-serif;max-width:100%;}
 .spot-front{padding:0;position:relative;border-radius:inherit;background:#111009;}
 .spot-photo-wrap{position:relative;border-radius:inherit;background:#111009;}
 .spot-photo-bg{width:100%;height:320px;object-fit:cover;object-position:center;display:block;border:none;margin:0;padding:0;}
@@ -725,7 +770,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .spot-back-header{background:rgba(0,0,0,0.3);border-bottom:1px solid rgba(232,86,10,0.2);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
 .spot-back-header-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:#f5f0e6;}
 .spot-back-header-sub{font-size:9px;color:rgba(184,180,172,0.45);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
-.spot-back-body{padding:16px 20px;position:relative;z-index:1;}
+.spot-back-body{padding:14px 16px;position:relative;z-index:1;}
 .spot-damage-list{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
 .spot-damage-item{display:flex;align-items:flex-start;gap:8px;font-size:11px;color:rgba(184,180,172,0.75);line-height:1.5;}
 .spot-damage-dot{width:5px;height:5px;border-radius:50%;background:rgba(232,86,10,0.6);flex-shrink:0;margin-top:5px;}
@@ -916,7 +961,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .pin-dot.filled{background:var(--orange);border-color:var(--orange);box-shadow:0 0 10px rgba(232,86,10,0.4);}
 .pin-dot.error{background:var(--red);border-color:var(--red);}
 .keypad{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
-.key-btn{background:rgba(184,180,172,0.07);border:1px solid rgba(184,180,172,0.1);border-radius:10px;padding:16px;font-family:'Syne',sans-serif;font-size:20px;font-weight:600;color:var(--cream);cursor:pointer;transition:all 0.12s;text-align:center;}
+.key-btn{background:rgba(184,180,172,0.07);border:1px solid rgba(184,180,172,0.1);border-radius:10px;padding:16px;font-family:'Syne',sans-serif;font-size:20px;font-weight:600;color:var(--cream);cursor:pointer;transition:all 0.12s;text-align:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 .key-btn:hover{background:rgba(184,180,172,0.14);border-color:rgba(184,180,172,0.2);}
 .key-btn:active{background:rgba(232,86,10,0.2);border-color:var(--orange);transform:scale(0.95);}
 .key-btn.del{color:var(--stone);font-size:16px;}
@@ -928,7 +973,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 .shake{animation:shake 0.4s ease;}
 @media (max-width: 768px) {
-  body { overflow: auto; }
+  body { overflow: auto; overscroll-behavior: none; }
 
   .shell {
     display: flex;
@@ -966,6 +1011,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
   }
   .nav::-webkit-scrollbar { display: none; }
   .nav-label, .nav-divider, .nav-mini { display: none; }
+  .capacity-widget { display: none; }
   .nav-item {
     flex-direction: column;
     gap: 2px;
@@ -978,6 +1024,8 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
     justify-content: center;
     align-items: center;
     height: 52px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   .nav-item.active::before {
     top: unset;
@@ -1083,7 +1131,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
   .spot-address { font-size: 20px; }
   .spot-headline { font-size: 26px !important; }
   .spot-front { padding: 22px; }
-  .spot-back { padding: 22px; }
+  .spot-back { padding: 0; }
   .spot-cta-box { flex-direction: column; gap: 12px; align-items: flex-start; }
 
   /* GENERAL */
@@ -1116,17 +1164,12 @@ const ROUTES = [
   {id:6,name:"Sand Springs",         zip:"74063",homes:154,color:"#2a6a6a"},
 ];
 
-const MOCK_JOBS = [
-  {id:"JW-001",lobId:"self_6e2f3a",name:"South Tulsa / Midtown",homes:312,sent:"Mar 12",status:"delivered",cost:"193.44",calls:11},
-  {id:"JW-002",lobId:"self_7b4c1d",name:"Broken Arrow",         homes:428,sent:"Mar 20",status:"delivered",cost:"265.36",calls:18},
-  {id:"JW-003",lobId:"self_8d5e2f",name:"Jenks / Riverview",    homes:198,sent:"Apr 01",status:"sent",     cost:"122.76",calls:4},
-  {id:"JW-004",lobId:"self_9f6a3e",name:"Owasso",               homes:267,sent:"Apr 05",status:"sent",     cost:"165.54",calls:2},
-];
+const MOCK_JOBS = [];
 
 const TRACK_STEPS = [
   {label:"Approved",  icon:"✓", date:"Apr 05"},
   {label:"Printing",  icon:"🖨", date:"Apr 06"},
-  {label:"In Transit",icon:"📦",date:"Apr 07"},
+  {label:"In Transit",icon:"📦",date:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"})},
   {label:"Delivered", icon:"📬",date:"—"},
 ];
 
@@ -1378,6 +1421,7 @@ export default function App(){
   const delKey=()=>setPin(p=>p.slice(0,-1));
 
   const[tab,setTab]=useState("map");
+  const switchTab=(t)=>{ track('tab_viewed',{tab:t}); setTab(t); };
   const[toast,setToast]=useState(null);
   const[selectedRoutes,setSelectedRoutes]=useState([]);
   const[liveRoutes,setLiveRoutes]=useState([]);
@@ -1395,7 +1439,7 @@ export default function App(){
   const[mailer,setMailer]=useState(null);
   const[lobResult,setLobResult]=useState(null);
   const[jobs,setJobs]=useState(MOCK_JOBS);
-  const[selectedJob,setSelectedJob]=useState(MOCK_JOBS[2]);
+  const[selectedJob,setSelectedJob]=useState(null);
   const[settings,setSettings]=useState({autoSend:false,weeklyReport:true,trackOpens:true,smsAlerts:false});
   const[spotMode,setSpotMode]=useState("address");
   const[spotForm,setSpotForm]=useState({
@@ -1412,10 +1456,7 @@ export default function App(){
   const[spotMailer,setSpotMailer]=useState(null);
   const[spotLoading,setSpotLoading]=useState(false);
   const[spotSending,setSpotSending]=useState(false);
-  const[spotJobs,setSpotJobs]=useState([
-    {id:"SB-001",address:"4821 Oak Ridge Dr",city:"Broken Arrow",bid:"$1,200–$1,800",damage:["Freeze-thaw cracking","Spalling near garage"],sent:"Apr 03",status:"delivered"},
-    {id:"SB-002",address:"7234 S Memorial Dr",city:"Tulsa",bid:"$800–$1,100",damage:["Surface cracks","Drainage issue"],sent:"Apr 06",status:"sent"},
-  ]);
+  const[spotJobs,setSpotJobs]=useState([]);
 
   const[pipelineView,setPipelineView]=useState("kanban");
 
@@ -1432,14 +1473,7 @@ export default function App(){
   const toggleRoute=(id)=>setSelectedRoutes(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
 
 
-  const[pipeline,setPipeline]=useState([
-    {id:"PL-001",address:"4821 Oak Ridge Dr",city:"Broken Arrow",neighborhood:"Broken Arrow",stage:"won",bidLo:"$1,200",bidHi:"$1,800",spotted:"Mar 28",mailerSent:"Apr 03",calledBack:"Apr 08",jobWon:"Apr 10",notes:"Full driveway replacement",value:1600},
-    {id:"PL-002",address:"7234 S Memorial Dr",city:"Tulsa",neighborhood:"South Tulsa",stage:"called",bidLo:"$800",bidHi:"$1,100",spotted:"Apr 01",mailerSent:"Apr 06",calledBack:"Apr 09",jobWon:null,notes:"Interested, getting HOA approval",value:950},
-    {id:"PL-003",address:"1892 E 91st St",city:"Tulsa",neighborhood:"South Tulsa",stage:"sent",bidLo:"$2,400",bidHi:"$3,200",spotted:"Apr 03",mailerSent:"Apr 07",calledBack:null,jobWon:null,notes:"Large 3-car garage",value:2800},
-    {id:"PL-004",address:"3341 S Peoria Ave",city:"Tulsa",neighborhood:"Midtown",stage:"sent",bidLo:"$600",bidHi:"$900",spotted:"Apr 04",mailerSent:"Apr 07",calledBack:null,jobWon:null,notes:"Crack repair only",value:750},
-    {id:"PL-005",address:"9102 N 129th E Ave",city:"Owasso",neighborhood:"Owasso",stage:"spotted",bidLo:"$1,800",bidHi:"$2,600",spotted:"Apr 06",mailerSent:null,calledBack:null,jobWon:null,notes:"Saw severe cracking from road",value:2200},
-    {id:"PL-006",address:"2847 E 51st St",city:"Tulsa",neighborhood:"Midtown",stage:"spotted",bidLo:"$400",bidHi:"$700",spotted:"Apr 07",mailerSent:null,calledBack:null,jobWon:null,notes:"Minor sealing job",value:550},
-  ]);
+  const[pipeline,setPipeline]=useState([]);
 
   // Recalculate capacity whenever pipeline changes
   React.useEffect(()=>{
@@ -1499,10 +1533,7 @@ export default function App(){
   };
   const[showRadiusModal,setShowRadiusModal]=useState(false);
   const[showAIPhone,setShowAIPhone]=useState(false);
-  const[aiLeads,setAiLeads]=useState([
-    {id:"AL-001",caller:"Sarah Mitchell",phone:"918-555-0142",summary:"Wants full driveway replacement, double car garage. Timeline: next month. Address: 3421 S Peoria Ave.",service:"New Driveway",address:"3421 S Peoria Ave",status:"qualified",time:"2 hrs ago",transferred:true},
-    {id:"AL-002",caller:"Unknown",phone:"918-555-0287",summary:"Called about crack repair. Left callback number. Not sure of size.",service:"Crack Repair",address:"",status:"pending",time:"Yesterday",transferred:false},
-  ]);
+  const[aiLeads,setAiLeads]=useState([]);
   const[testCallNumber,setTestCallNumber]=useState("");
   const[testCallLoading,setTestCallLoading]=useState(false);
   const[radiusLead,setRadiusLead]=useState(null);
@@ -1539,12 +1570,13 @@ export default function App(){
   ];
 
   const moveStage=(id,newStage)=>{
+    track('stage_moved', {from:pipeline.find(l=>l.id===id)?.stage, to:newStage});
     // Save to Supabase
     db.updateLeadStage(id, newStage).catch(e=>console.error("Stage update failed:", e));
     setPipeline(p=>p.map(l=>l.id===id?{...l,stage:newStage,
-      mailerSent:newStage==="sent"&&!l.mailerSent?"Apr 07":l.mailerSent,
-      calledBack:newStage==="called"&&!l.calledBack?"Apr 08":l.calledBack,
-      jobWon:newStage==="won"&&!l.jobWon?"Apr 09":l.jobWon,
+      mailerSent:newStage==="sent"&&!l.mailerSent?new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}):l.mailerSent,
+      calledBack:newStage==="called"&&!l.calledBack?new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}):l.calledBack,
+      jobWon:newStage==="won"&&!l.jobWon?new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}):l.jobWon,
     }:l));
     // Auto-suggest radius mailer when job is won
     if(newStage==="won"){
@@ -1642,6 +1674,7 @@ export default function App(){
       });
       const lobData=await lobRes.json();
       if(lobData.id){
+        track('radius_sent', {center: radiusMailer.address, radius_miles: radiusMiles, est_homes: Math.round(radiusMiles*5280/66)});
         showToast(`Radius mailer sent to neighbors within ${radiusMiles}mi!`,"success");
         setRadiusStep(3);
         // Add to job tracker
@@ -1658,8 +1691,9 @@ export default function App(){
     const lo=newLead.bidLow?`$${parseInt(newLead.bidLow).toLocaleString()}`:"";
     const hi=newLead.bidHigh?`$${parseInt(newLead.bidHigh).toLocaleString()}`:"";
     const value=newLead.bidLow?parseInt(newLead.bidLow):0;
-    const newLeadObj={id,address:newLead.address,city:newLead.city,neighborhood:newLead.neighborhood||newLead.city,stage:"spotted",bidLo:lo,bidHi:hi,spotted:"Apr 07",mailerSent:null,calledBack:null,jobWon:null,notes:newLead.notes,value};
+    const newLeadObj={id,address:newLead.address,city:newLead.city,neighborhood:newLead.neighborhood||newLead.city,stage:"spotted",bidLo:lo,bidHi:hi,spotted:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}),mailerSent:null,calledBack:null,jobWon:null,notes:newLead.notes,value};
     setPipeline(p=>[newLeadObj,...p]);
+    track('lead_added', {address:newLeadObj.address, city:newLeadObj.city});
     db.upsertLead(newLeadObj).catch(e=>console.error("Save lead failed:", e));
     setNewLead({address:"",city:"Tulsa",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
     setShowAddLead(false);
@@ -1669,6 +1703,7 @@ export default function App(){
 
   // ── LOAD ALL DATA FROM SUPABASE ON MOUNT ──
   React.useEffect(()=>{
+    track('app_open', {tab: 'map', device: /iPhone|Android/i.test(navigator.userAgent)?'mobile':'desktop'});
     const loadAll = async () => {
       try {
         const [leads, savedBids, savedCalls] = await Promise.all([
@@ -1765,7 +1800,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         lobId:result.id||"lob_"+Math.random().toString(36).slice(2,8),
         name:form.neighborhood||"New Campaign",
         homes:parseInt(form.homes)||0,
-        sent:"Apr 07",
+        sent:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}),
         status:"queued",
         cost:((parseInt(form.homes)||0)*0.62).toFixed(2),
         calls:0,
@@ -1782,7 +1817,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         lobId:"demo_"+Math.random().toString(36).slice(2,8),
         name:form.neighborhood||"New Campaign",
         homes:parseInt(form.homes)||0,
-        sent:"Apr 07",
+        sent:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}),
         status:"queued",
         cost:((parseInt(form.homes)||0)*0.62).toFixed(2),
         calls:0,
@@ -1873,6 +1908,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       if(parsed){
         console.log("Setting mailer with photo:", capturedPhoto ? "YES" : "NO");
         console.log("Setting mailer photoUrl:", capturedPhotoUrl||"NONE");
+        track('spot_generated', {address:spotForm.address, hasPhoto:!!capturedPhoto, damage:detectedDamage?.length||0});
         const mailerObj={...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,damage:detectedDamage,photoUsed:!!capturedPhoto,photoData:capturedPhoto||null,photoUrl:capturedPhotoUrl||null};
         setSpotMailer(mailerObj);
         // Draw canvas preview
@@ -1987,15 +2023,16 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 </body></html>`,
         use_type:"marketing"
       });
-      const newSpotJob={id:`SB-00${spotJobs.length+1}`,address:spotMailer.address,city:spotMailer.city,bid:spotMailer.bid,damage:spotMailer.damage,sent:"Apr 07",status:"queued"};
+      const newSpotJob={id:`SB-00${spotJobs.length+1}`,address:spotMailer.address,city:spotMailer.city,bid:spotMailer.bid,damage:spotMailer.damage,sent:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}),status:"queued"};
       setSpotJobs(p=>[newSpotJob,...p]);
       // Save spot bid to Supabase
       db.saveSpotBid({address:spotMailer.address,city:spotMailer.city,bid:spotMailer.bid,damage:spotMailer.damage,photoUrl:capturedPhotoUrl||"",lobId:lobData?.id||"",mailerContent:spotMailer}).catch(e=>console.error("Save spot bid failed:",e));
       // Auto-add to pipeline as "sent"
       const plId=`PL-${Date.now()}`;
-      const newPipelineLead={id:plId,address:spotMailer.address,city:spotMailer.city,neighborhood:spotForm.neighborhood||spotMailer.city,stage:"sent",bidLo:spotMailer.bidLo||spotMailer.bid,bidHi:spotMailer.bidHi||"",spotted:"Apr 07",mailerSent:"Apr 07",calledBack:null,jobWon:null,notes:spotMailer.damage?.join(", ")||"",value:parseInt(spotForm.bidLow)||0};
+      const newPipelineLead={id:plId,address:spotMailer.address,city:spotMailer.city,neighborhood:spotForm.neighborhood||spotMailer.city,stage:"sent",bidLo:spotMailer.bidLo||spotMailer.bid,bidHi:spotMailer.bidHi||"",spotted:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}),mailerSent:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}),calledBack:null,jobWon:null,notes:spotMailer.damage?.join(", ")||"",value:parseInt(spotForm.bidLow)||0};
       setPipeline(p=>[newPipelineLead,...p]);
       db.upsertLead(newPipelineLead).catch(e=>console.error("Save pipeline lead failed:",e));
+      track('spot_sent', {address:spotMailer.address, bid:spotMailer.bidLo, hasPhoto:!!capturedPhotoUrl});
       showToast("✅ Spot bid sent + saved to database!","success");
       setSpotMailer(null);
       setSpotForm({address:"",city:"Tulsa",state:"OK",zip:"",sqft:400,customSqft:"",service:"Crack Repair",damageLevel:"Moderate",bidLow:"",bidHigh:"",overridePrice:false,includes:"",damage:[],notes:""});
@@ -2003,7 +2040,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       setSpotPhotoUrl(null);
     }catch(e){
       showToast("Spot bid queued (demo mode)","info");
-      const newSpotJob={id:`SB-00${spotJobs.length+1}`,address:spotMailer.address,city:spotMailer.city,bid:spotMailer.bid,damage:spotMailer.damage||[],sent:"Apr 07",status:"queued"};
+      const newSpotJob={id:`SB-00${spotJobs.length+1}`,address:spotMailer.address,city:spotMailer.city,bid:spotMailer.bid,damage:spotMailer.damage||[],sent:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}),status:"queued"};
       setSpotJobs(p=>[newSpotJob,...p]);
     }finally{setSpotSending(false);}
   };
@@ -2063,6 +2100,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             zip: result.zip || "",
           }));
           setVerifyResult(null);
+          track('gps_used', {accuracy: Math.round(accuracy), address: result.address});
           showToast(
             accuracy < 20
               ? "📍 Address locked — " + result.address
@@ -2178,7 +2216,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         <nav className="nav">
           <div className="nav-label">Campaigns</div>
           {[{id:"map",icon:"🗺️",label:"Neighborhood Scan"},{id:"create",icon:"✏️",label:"Create Mailer"},{id:"tracker",icon:"📊",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length},{id:"spotbid",icon:"🎯",label:"Spot Bid"},{id:"pipeline",icon:"📍",label:"Pipeline"},{id:"capacity",icon:"⚡",label:"Capacity"},{id:"aiphone",icon:"📞",label:"AI Phone",badge:aiLeads.filter(l=>l.status==="pending").length||null}].map(item=>(
-            <button key={item.id} className={`nav-item${tab===item.id?" active":""}`} onClick={()=>setTab(item.id)}>
+            <button key={item.id} className={`nav-item${tab===item.id?" active":""}`} onClick={()=>switchTab(item.id)}>
               <span className="nav-icon">{item.icon}</span>{item.label}
               {item.badge?<span className="nav-badge">{item.badge}</span>:null}
             </button>
@@ -2415,6 +2453,12 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               )}
               <div className="jobs-table">
                 <div className="jobs-thead"><div>Campaign</div><div>Neighborhood</div><div>Homes</div><div>Sent</div><div>Spend</div><div>Calls</div><div>Status</div></div>
+                {jobs.length===0&&(
+                  <div style={{padding:"32px",textAlign:"center",color:"var(--gravel)",fontSize:13}}>
+                    <div style={{fontSize:28,marginBottom:8}}>📬</div>
+                    No campaigns yet — send your first neighborhood mailer to see results here
+                  </div>
+                )}
                 {jobs.map(j=>(
                   <div key={j.id} className={`job-row${selectedJob?.id===j.id?" selected":""}`} onClick={()=>setSelectedJob(j)}>
                     <div><div className="job-name">{j.id}</div><div className="lob-id">{j.lobId}</div></div>
@@ -2473,7 +2517,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                               const hostedUrl=data.data.url;
                               setSpotPhotoUrl(hostedUrl);
                               spotPhotoUrlRef.current=hostedUrl;
-                              showToast("📷 Photo ready","success");
+                              track('photo_uploaded', {url: hostedUrl?.slice(0,30)});
+        showToast("📷 Photo ready","success");
                             }
                           } catch(err){ console.error("imgbb upload failed:",err); }
                         };
@@ -2520,6 +2565,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <div style={{display:"flex",gap:8}}>
                     <input
                       placeholder="e.g. 4821 Oak Ridge Dr"
+                      autoComplete="street-address"
                       value={spotForm.address}
                       onChange={e=>{setSpot("address",e.target.value);setVerifyResult(null);setGpsAccuracy(null);}}
                       style={{flex:1}}
@@ -2659,6 +2705,12 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <>
                     <div className="section-head" style={{marginTop:20}}>Recent Spot Bids</div>
                     <div className="spot-jobs">
+                      {spotJobs.length===0&&(
+                        <div style={{padding:"20px",textAlign:"center",color:"var(--gravel)",fontSize:12}}>
+                          <div style={{fontSize:24,marginBottom:6}}>🎯</div>
+                          No spot bids sent yet
+                        </div>
+                      )}
                       {spotJobs.slice(0,4).map(j=>(
                         <div key={j.id} className="spot-job-row">
                           <div>
@@ -3034,7 +3086,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       setTestCallLoading(true);
                       showToast("Initiating test call...","info");
                       const clean=testCallNumber.replace(/\D/g,"");
-                      const result=await createBlandAgent("+1"+clean,"Test call from PaveMail dashboard");
+                      track('ai_call_made', {phone: testCallNumber});
+      const result=await createBlandAgent("+1"+clean,"Test call from PaveMail dashboard");
                       console.log("Test call result:", JSON.stringify(result));
                       if(result.call_id||result.id||result.status==="success"){
                         showToast("Test call initiated! You should receive a call within 10 seconds.","success");
@@ -3055,7 +3108,11 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               {/* Lead list */}
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>INBOUND LEADS FROM AI CALLS</div>
               {aiLeads.length===0&&(
-                <div style={{fontSize:13,color:"var(--gravel)",textAlign:"center",padding:"32px 0"}}>No calls yet — the AI agent is standing by</div>
+                <div style={{padding:"40px 0",textAlign:"center",color:"var(--gravel)"}}>
+                  <div style={{fontSize:32,marginBottom:10}}>📞</div>
+                  <div style={{fontSize:14,fontWeight:600,color:"var(--concrete)",marginBottom:6}}>No calls yet</div>
+                  <div style={{fontSize:12,color:"var(--stone)"}}>The AI agent is standing by — use the test call above to try it out</div>
+                </div>
               )}
               {aiLeads.map(lead=>(
                 <div className="ai-lead-card" key={lead.id}>
@@ -3149,6 +3206,14 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               {/* KANBAN VIEW */}
               {pipelineView==="kanban"&&(
                 <div className="kanban">
+                  {pipeline.length===0&&(
+                    <div style={{gridColumn:"1/-1",padding:"48px 24px",textAlign:"center",color:"var(--gravel)"}}>
+                      <div style={{fontSize:36,marginBottom:12}}>📍</div>
+                      <div style={{fontSize:14,fontWeight:600,color:"var(--concrete)",marginBottom:6}}>No leads yet</div>
+                      <div style={{fontSize:12,color:"var(--stone)",marginBottom:16}}>Add an address from Spot Bid or tap + Log Address</div>
+                      <button className="btn btn-primary" onClick={()=>setShowAddLead(true)}>+ Log First Address</button>
+                    </div>
+                  )}
                   {STAGES.map(stage=>{
                     const leads=pipeline.filter(l=>l.stage===stage.id);
                     const stageIdx=STAGES.findIndex(s=>s.id===stage.id);
@@ -3572,8 +3637,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               <div className="field"><label>Neighborhood</label><input placeholder="South Tulsa" value={newLead.neighborhood} onChange={e=>setNewLead(f=>({...f,neighborhood:e.target.value}))}/></div>
             </div>
             <div className="row2">
-              <div className="field"><label>Bid Low ($)</label><input type="number" placeholder="800" value={newLead.bidLow} onChange={e=>setNewLead(f=>({...f,bidLow:e.target.value}))}/></div>
-              <div className="field"><label>Bid High ($)</label><input type="number" placeholder="1400" value={newLead.bidHigh} onChange={e=>setNewLead(f=>({...f,bidHigh:e.target.value}))}/></div>
+              <div className="field"><label>Bid Low ($)</label><input type="number" placeholder="800" inputMode="numeric" value={newLead.bidLow} onChange={e=>setNewLead(f=>({...f,bidLow:e.target.value}))}/></div>
+              <div className="field"><label>Bid High ($)</label><input type="number" placeholder="1400" inputMode="numeric" value={newLead.bidHigh} onChange={e=>setNewLead(f=>({...f,bidHigh:e.target.value}))}/></div>
             </div>
             <div className="field"><label>Notes</label><textarea placeholder="e.g. Saw severe cracking from the road, large 2-car" value={newLead.notes} onChange={e=>setNewLead(f=>({...f,notes:e.target.value}))}/></div>
             <div style={{display:"flex",gap:8,marginTop:4}}>
