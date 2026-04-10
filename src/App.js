@@ -4079,8 +4079,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           )}
 
         </div>
-      </div>
-      {/* WON BANNER — radius mailer suggestion */}
+
+        {/* WON BANNER — radius mailer suggestion */}
       {wonBanner&&(
         <div className="won-banner">
           <div className="won-banner-icon">🏆</div>
