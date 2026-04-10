@@ -140,6 +140,36 @@ const auth = {
   },
 };
 
+// ─────────────────────────────────────────────
+// CONTRACTOR CONFIG
+// To set up a new contractor — change ONLY these values.
+// Everything else in the app pulls from here automatically.
+// ─────────────────────────────────────────────
+const COMPANY = {
+  // Identity
+  name:        "JWood LLC",
+  ownerName:   "Joel",
+  phone:       "918-896-6737",
+  phoneRaw:    COMPANY.phoneRaw,          // digits only, for QR codes + Bland transfer
+  email:       "joelmwood@gmail.com",
+  city:        "Tulsa",
+  state:       "OK",
+  promo:       "JWOOD",
+  // Lob.com — address ID for return address on postcards
+  lobFromId:   COMPANY.lobFromId,
+  // Bland.ai — phone number to transfer qualified leads to
+  transferPhone: "+19188966737",
+  // Supabase — contractor identifier for data isolation
+  contractorId: "jwood",
+  // Capacity defaults
+  crewSize:    12,
+  maxJobsWeek: 6,
+  weeklyTarget: 40000,
+  // Branding
+  accentColor: "#e8560a",            // orange — change for each contractor
+  tagline:     "Tulsa's Concrete Specialists",
+};
+
 // DB helpers
 const db = {
   // Pipeline
@@ -494,35 +524,6 @@ function QRCode({ value, size = 120 }) {
 // ─────────────────────────────────────────────
 // COMPANY INFO
 // ─────────────────────────────────────────────
-// ─────────────────────────────────────────────
-// CONTRACTOR CONFIG
-// To set up a new contractor — change ONLY these values.
-// Everything else in the app pulls from here automatically.
-// ─────────────────────────────────────────────
-const COMPANY = {
-  // Identity
-  name:        "JWood LLC",
-  ownerName:   "Joel",
-  phone:       "918-896-6737",
-  phoneRaw:    COMPANY.phoneRaw,          // digits only, for QR codes + Bland transfer
-  email:       "joelmwood@gmail.com",
-  city:        "Tulsa",
-  state:       "OK",
-  promo:       "JWOOD",
-  // Lob.com — address ID for return address on postcards
-  lobFromId:   COMPANY.lobFromId,
-  // Bland.ai — phone number to transfer qualified leads to
-  transferPhone: "+19188966737",
-  // Supabase — contractor identifier for data isolation
-  contractorId: "jwood",
-  // Capacity defaults
-  crewSize:    12,
-  maxJobsWeek: 6,
-  weeklyTarget: 40000,
-  // Branding
-  accentColor: "#e8560a",            // orange — change for each contractor
-  tagline:     "Tulsa's Concrete Specialists",
-};
 
 
 // ─────────────────────────────────────────────
