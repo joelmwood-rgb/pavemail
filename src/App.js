@@ -618,7 +618,7 @@ function calcPrice(sqft, service, damage) {
 // ─────────────────────────────────────────────
 const DEMO_MAILERS = {
   "Spring-Crack Repair-Free Estimate": {
-    page1: { eyebrow:"Your Neighbors Are Already Upgrading", headline:"TULSA WINTERS ARE TOUGH ON DRIVEWAYS", subheadline:"Freeze-thaw cycles across Tulsa have left driveways cracked and crumbling this spring. Don't let small damage turn into a full replacement — JWood LLC is already working in your neighborhood.", badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"No Obligation" },
+    page1: { eyebrow:"Your Neighbors Are Already Upgrading", headline:"TULSA WINTERS ARE TOUGH ON CONCRETE", subheadline:"Freeze-thaw cycles across Tulsa have left concrete cracked and crumbling this spring. Don't let small damage turn into a full replacement — JWood LLC is already working in your neighborhood.", badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"No Obligation" },
     page2: { headline:"WHY YOUR CONCRETE CAN'T WAIT", intro:"Oklahoma's temperature swings — from icy winters to 100°F summers — are brutal on concrete. Cracks ignored now become costly replacements by fall.", benefits:[{icon:"🌡️",title:"Oklahoma Weather Damage",desc:"Tulsa's freeze-thaw cycles crack concrete fast. Spring is the best time to repair before summer heat sets in."},{icon:"💧",title:"Stop Water Intrusion",desc:"Cracks let water in. Water expands when frozen. That destroys your base and doubles repair costs."},{icon:"🏡",title:"Boost Curb Appeal",desc:"A repaired surface instantly upgrades your home's appearance and protects its value."},{icon:"⏱️",title:"One-Day Turnaround",desc:"Most crack repairs completed same day. Driveable within 24 hours."}], whyTitle:"Why JWood LLC?", whyText:"We're local Tulsans — we know Oklahoma soil, Oklahoma weather, and Oklahoma homeowners. Every job is done with commercial-grade materials and backed by our written warranty." },
     page3: { headline:"OUR SIMPLE 4-STEP PROCESS", intro:"From your first call to pulling your car back in — we make it effortless.", steps:[{title:"Free On-Site Estimate",desc:"We visit, assess the damage, and give you a written quote. No pressure, no surprises."},{title:"Schedule at Your Convenience",desc:"We work around your schedule, including Saturdays."},{title:"Expert Repair",desc:"Our crew arrives on time, protects your lawn, and gets to work with commercial-grade materials."},{title:"Done & Guaranteed",desc:"We clean up completely and hand you a written warranty before we leave."}], offerHeadline:"FREE ESTIMATE — CALL TODAY", offerSub:"Spring slots filling fast — mention code JWOOD when you call" },
     page4: { eyebrow:"Ready to Get Started?", headline:"CALL JWOOD LLC TODAY", sub:"Serving Tulsa and surrounding areas. Spring is our busiest season — call now to lock in your free estimate before your neighbors do.", guarantee:"We guarantee our work for 2 full years. If anything fails due to workmanship, we come back and fix it — no questions asked." }
@@ -1933,7 +1933,7 @@ export default function App(){
   const sendRadiusMailer=async()=>{
     if(!radiusMailer||radiusSending)return;
     setRadiusSending(true);
-    showToast("Sending radius mailer via Lob.com...","info");
+    showToast("Sending radius mailer...","info");
     try{
       // Lob radius mail — uses center address + distance
       const radiusMiles=radiusForm.radius;
@@ -1997,7 +1997,7 @@ export default function App(){
         // Add to job tracker
         setJobs(j=>[{id:`RM-${Date.now()}`,name:`Radius — ${radiusMailer.address}`,area:`${radiusMiles}mi radius`,homes:"~"+(Math.round(radiusMiles*5280/66)).toString(),sent:new Date().toLocaleDateString(),status:"queued",cost:(Math.round(radiusMiles*5280/66)*0.62).toFixed(2),calls:0,lob:lobData.id},...j]);
       } else {
-        showToast("Lob error — check dashboard","info");
+        showToast("Send failed — try again","info");
       }
     }catch(e){ showToast("Send failed: "+e.message,"info"); }
     setRadiusSending(false);
@@ -2124,7 +2124,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     if(!mailer||sending)return;
     setSending(true);
     setLobResult(null);
-    showToast("📤 Connecting to Lob.com...","info");
+    showToast("📤 Sending mailer...","info");
 
     try{
       // Send one test piece to JWood LLC's own address as proof of concept
@@ -2147,7 +2147,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       setJobs(p=>[newJob,...p]);
       setSelectedJob(newJob);
       setLobResult(result);
-      showToast(`✅ Lob.com confirmed! Job ID: ${result.id}`,"success");
+      showToast(`✅ Mailer confirmed! Printing now.`,"success");
       setTimeout(()=>setTab("tracker"),1200);
     }catch(e){
       // Graceful fallback — still add to tracker as queued
@@ -2231,7 +2231,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       }
 
       // STEP 2: Generate the personal note using detected damage
-      const damageList=detectedDamage.length>0?detectedDamage.join(", "):"general driveway wear";
+      const damageList=detectedDamage.length>0?detectedDamage.join(", "):"general concrete wear";
       const photoContext=capturedPhoto?" We photographed the damage for reference.":"";
       const sqftDesc=`${spotForm.customSqft||spotForm.sqft} sq ft ${spotForm.service} job`;
       const prompt=`Write a personal note for a direct mail postcard from JWood LLC (concrete contractor, Tulsa OK, 918-896-6737) to a homeowner at ${spotForm.address}, ${spotForm.city} OK. The contractor noticed: ${damageList}.${photoContext} This is a ${sqftDesc} with ${spotForm.damageLevel} damage. Bid range: ${bidRange}. Notes: ${spotForm.notes||"none"}. Write a warm, personal 2-3 sentence note that mentions we drove past their home, noticed the specific damage, and want to help. Sound like a neighbor, not a corporation. Do NOT be salesy. Return ONLY JSON: {"personalNote":"string","headline":"string","urgencyLine":"string"}`;
@@ -2259,14 +2259,12 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
     // Demo fallback
     await new Promise(r=>setTimeout(r,1600));
-    const damageList=spotForm.damage.length>0?spotForm.damage.join(", "):"general driveway wear";
-    const detectedDemo=capturedPhoto
-      ? [...spotForm.damage,"Surface spalling near edges","Hairline fractures across slab"]
-      : spotForm.damage;
+    const damageList=spotForm.damage.length>0?spotForm.damage.join(", "):"general concrete wear";
+    const detectedDemo=spotForm.damage;
     console.log("Demo fallback, capturedPhoto:", capturedPhoto ? "YES ("+capturedPhoto.length+" chars)" : "NO");
     const demoMailer={
       headline:"WE NOTICED YOUR PROJECT",
-      personalNote:`We were working in your neighborhood recently and noticed your driveway at ${spotForm.address} has ${damageList}. As local Tulsa concrete specialists, we would love to help you get ahead of this before it gets worse — and we can usually start within a week.`,
+      personalNote:`We were working in your neighborhood recently and noticed your concrete at ${spotForm.address} has ${damageList}. As local Tulsa concrete specialists, we would love to help you get ahead of this before it gets worse — and we can usually start within a week.`,
       urgencyLine:"Oklahoma winters do not wait — neither should your concrete.",
       address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,
       damage:detectedDemo,
@@ -2292,7 +2290,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       if(hostedPhotoUrl) setSpotPhotoUrl(hostedPhotoUrl);
     }
 
-    showToast("📤 Sending spot bid to Lob.com...","info");
+    showToast("📤 Sending spot bid...","info");
     try{
       await lobRequest("/postcards",{
         description:`JWood LLC Spot Bid - ${spotMailer.address}`,
@@ -2334,7 +2332,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     <div style="display:flex;gap:10px;margin-bottom:12px;">
       <div style="flex:1;">
         <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#e8560a;margin-bottom:4px;">What We Noticed</div>
-        ${spotMailer.damage?.map(d=>`<div style="background:#f0ebe0;border-left:3px solid #e8560a;padding:5px 9px;border-radius:3px;margin-bottom:4px;font-size:9px;color:#3a3835;">${d}</div>`).join("")||`<div style="font-size:10px;color:#6a6864;">General driveway wear</div>`}
+        ${spotMailer.damage?.map(d=>`<div style="background:#f0ebe0;border-left:3px solid #e8560a;padding:5px 9px;border-radius:3px;margin-bottom:4px;font-size:9px;color:#3a3835;">${d}</div>`).join("")||`<div style="font-size:10px;color:#6a6864;">General surface wear</div>`}
       </div>
       <div style="width:120px;flex-shrink:0;">
         <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2a7a52;margin-bottom:4px;">After JWood LLC</div>
@@ -2657,7 +2655,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           <div className="topbar-sep"/>
           <div className="topbar-meta">JWood LLC · Tulsa, OK</div>
           <div className="topbar-right">
-            <div className="lob-pill"><div className="lob-dot"/>Lob.com Test Mode</div>
+            {isAdmin&&<div className="lob-pill"><div className="lob-dot"/>Mail: Test Mode</div>}
             <div className="co-pill">🏗️ JWood LLC</div>
             <div className="avatar">JW</div>
           </div>
@@ -2821,7 +2819,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             <div className="create-layout">
               <div className="create-form">
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>BUILD MAILER</div>
-                <p style={{fontSize:12,color:"var(--stone)",marginBottom:16,lineHeight:1.6}}>AI writes your mailer. Hit Send to queue it with Lob.com for real printing.</p>
+                <p style={{fontSize:12,color:"var(--stone)",marginBottom:16,lineHeight:1.6}}>AI writes your mailer. Hit Send to print and mail it to real addresses.</p>
                 <div className="section-head">Target Area</div>
                 <div className="field"><label>Neighborhood *</label><input placeholder="e.g. South Tulsa, Broken Arrow, Jenks..." value={form.neighborhood} onChange={e=>set("neighborhood",e.target.value)}/></div>
                 <div className="row2">
@@ -2846,7 +2844,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 )}
                 {lobResult&&(
                   <div className="lob-success-box">
-                    ✅ <strong>Lob.com confirmed!</strong><br/>
+                    ✅ <strong>Mailer confirmed!</strong><br/>
                     Job ID: <span className="lob-id-pill">{lobResult.id}</span><br/>
                     Status: <strong>{lobResult.expected_delivery_date ? `Delivers ${lobResult.expected_delivery_date}` : "Queued for printing"}</strong>
                   </div>
@@ -2858,7 +2856,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 {mailer&&!loading&&<>
                   <div className="preview-actions">
                     <button className="btn btn-ghost btn-sm" onClick={generate}>↺ Regenerate</button>
-                    <button className="btn btn-primary btn-sm" onClick={sendToPress} disabled={sending}>{sending?"Sending...":"📬 Send to Lob"}</button>
+                    <button className="btn btn-primary btn-sm" onClick={sendToPress} disabled={sending}>{sending?"Sending...":"📬 Print & Mail"}</button>
                     <div className="preview-meta"><span>📍 <strong>{form.neighborhood}</strong></span><span>🏠 <strong>{form.homes}</strong> homes</span></div>
                   </div>
                   <MailerPreview mailer={mailer} form={form}/>
@@ -2871,7 +2869,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {tab==="tracker"&&(
             <div className="tracker-layout">
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>JOB TRACKER</div>
-              <p style={{fontSize:13,color:"var(--stone)",marginBottom:20}}>Every JWood LLC campaign — from Lob.com queue to Tulsa doorstep.</p>
+              <p style={{fontSize:13,color:"var(--stone)",marginBottom:20}}>Every JWood LLC campaign — from print queue to Tulsa doorstep.</p>
               <div className="stats-row">
                 {[
                   {label:"Total Campaigns",value:jobs.length,color:"var(--cream)",trend:"↑ growing",up:true},
@@ -3320,20 +3318,20 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                 const dmgList = spotMailer.damage||[];
                                 const allDmg = dmgList.join(' ').toLowerCase();
                                 const hasPhoto = spotMailer.photoUsed;
-                                if(allDmg.includes('full')||allDmg.includes('replace')) return "Your Driveway Needs Full Replacement";
-                                if(allDmg.includes('sink')||allDmg.includes('sunken')) return "Your Driveway Is Sinking — Act Now";
-                                if(allDmg.includes('root')) return "Tree Roots Are Destroying Your Driveway";
-                                if(allDmg.includes('drain')) return "Poor Drainage Is Damaging Your Driveway";
-                                if(allDmg.includes('spall')) return "Your Driveway Surface Is Breaking Apart";
-                                if(allDmg.includes('oil')) return "Oil Is Eating Through Your Concrete";
-                                if(allDmg.includes('edge')) return "Your Driveway Edges Are Crumbling";
-                                if(allDmg.includes('seal')) return "Your Driveway Needs Sealing Now";
-                                if(allDmg.includes('crack')&&dmgList.length>1) return `${dmgList.length} Issues Found on Your Driveway`;
-                                if(allDmg.includes('crack')) return "We Spotted Cracks in Your Driveway";
-                                if(dmgList.length>2) return `${dmgList.length} Problems Found — Free Estimate Inside`;
-                                if(dmgList.length>0) return "We Noticed Issues With Your Driveway";
-                                if(hasPhoto) return "We Assessed Your Driveway — Free Estimate Inside";
-                                return "Your Property Qualifies for a Free Estimate";
+                                if(allDmg.includes('full')||allDmg.includes('replace')) return "Full Replacement Recommended";
+                                if(allDmg.includes('sink')||allDmg.includes('sunken')) return "Sinking Slab — Act Now";
+                                if(allDmg.includes('root')) return "Tree Root Damage Detected";
+                                if(allDmg.includes('drain')) return "Drainage Issue Detected";
+                                if(allDmg.includes('spall')) return "Surface Deterioration Detected";
+                                if(allDmg.includes('oil')) return "Oil Damage — Treatment Needed";
+                                if(allDmg.includes('edge')) return "Edge Deterioration Detected";
+                                if(allDmg.includes('seal')) return "Professional Sealing Required";
+                                if(allDmg.includes('crack')&&dmgList.length>1) return `${dmgList.length} Issues Found on Your Property`;
+                                if(allDmg.includes('crack')) return "Cracks Spotted — Free Estimate Inside";
+                                if(dmgList.length>2) return `${dmgList.length} Issues Found — Free Estimate Inside`;
+                                if(dmgList.length>0) return "Concrete Issues Spotted on Your Property";
+                                if(hasPhoto) return "Your Property Was Assessed — Free Estimate Inside";
+                                return "You Qualify for a Free Estimate";
                               })()}
                             </div>
                             <div className="spot-back-header-sub">{spotMailer.address} · {spotMailer.city}, OK</div>
@@ -3693,7 +3691,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   </div>
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:6,fontSize:11,color:"var(--stone)"}}>
-                  <div>📞 <strong style={{color:"var(--cream)"}}>Bland.ai</strong> · AI voice agent</div>
+                  <div>📞 <strong style={{color:"var(--cream)"}}>AI Voice Agent</strong> · Standing by</div>
                   <div>🔄 <strong style={{color:"var(--cream)"}}>Live transfer</strong> · After qualification</div>
                   <div>📋 <strong style={{color:"var(--cream)"}}>Auto-logged</strong> · Every call</div>
                 </div>
@@ -3702,7 +3700,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               {/* Test call section */}
               <div style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,padding:"16px 18px",marginBottom:20}}>
                 <div style={{fontSize:12,fontWeight:700,color:"var(--cream)",marginBottom:8}}>🧪 Test the AI Agent</div>
-                <div style={{fontSize:11,color:"var(--stone)",marginBottom:12}}>Enter a phone number and Bland.ai will call it right now with the AI agent. Use your own cell to test the experience.</div>
+                <div style={{fontSize:11,color:"var(--stone)",marginBottom:12}}>Enter a phone number and the AI agent will call it right now. Use your own cell to test the experience.</div>
                 <div style={{display:"flex",gap:8}}>
                   <input
                     placeholder="(918) 000-0000"
@@ -4030,42 +4028,51 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"var(--cream)"}}>SETTINGS</div>
                 <button className="btn btn-ghost btn-sm" onClick={handleLogout}>🔒 Sign Out</button>
               </div>
-              <p style={{fontSize:13,color:"var(--stone)",marginBottom:26}}>JWood LLC · Tulsa, OK · {COMPANY.phone}</p>
+              <p style={{fontSize:13,color:"var(--stone)",marginBottom:26}}>{COMPANY.name} · {COMPANY.city}, {COMPANY.state} · {COMPANY.phone}</p>
+
+              {/* ── ADMIN ONLY: Production Checklist ── */}
+              {isAdmin&&(
+                <div className="settings-section">
+                  <h3>Production Checklist</h3>
+                  <div style={{fontSize:12,color:"var(--stone)",lineHeight:2.4}}>
+                    <div>✅ <strong style={{color:"var(--cream)"}}>AI Mailer Generation</strong> — Live</div>
+                    <div>✅ <strong style={{color:"var(--cream)"}}>QR Code Auto-Dial</strong> — On every mailer</div>
+                    <div>✅ <strong style={{color:"var(--cream)"}}>Print & Mail API</strong> — Test mode connected</div>
+                    <div>✅ <strong style={{color:"var(--cream)"}}>USPS Route Data</strong> — Live address counts</div>
+                    <div>✅ <strong style={{color:"var(--cream)"}}>AI Phone Agent</strong> — Standing by</div>
+                    <div>✅ <strong style={{color:"var(--cream)"}}>Error Monitoring</strong> — Active</div>
+                    <div>✅ <strong style={{color:"var(--cream)"}}>Analytics</strong> — Tracking 11 events</div>
+                    <div>🔧 <strong style={{color:"var(--orange2)"}}>Print & Mail Live Mode</strong> — Flip to live key when ready</div>
+                    <div>🔧 <strong style={{color:"var(--orange2)"}}>Inbound Phone Number</strong> — Purchase ~$2/mo to activate</div>
+                    <div>🔧 <strong style={{color:"var(--orange2)"}}>Billing</strong> — Per-contractor subscription pending</div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── ALL CONTRACTORS: Company Info ── */}
               <div className="settings-section">
-                <h3>Company Info</h3>
+                <h3>Your Business</h3>
                 <div style={{background:"rgba(232,86,10,0.07)",border:"1px solid rgba(232,86,10,0.18)",borderRadius:9,padding:"16px 18px",fontSize:13,lineHeight:2,color:"var(--concrete)"}}>
-                  <div>🏗️ <strong style={{color:"var(--cream)"}}>JWood LLC</strong></div>
-                  <div>📞 <strong style={{color:"var(--cream)",fontFamily:"DM Mono"}}>918-896-6737</strong></div>
-                  <div>✉️ <strong style={{color:"var(--cream)"}}>joelmwood@gmail.com</strong></div>
-                  <div>📍 <strong style={{color:"var(--cream)"}}>Tulsa, Oklahoma</strong></div>
-                  <div>🏷️ Promo: <strong style={{color:"var(--orange2)",fontFamily:"DM Mono"}}>JWOOD</strong></div>
-                  <div style={{marginTop:10,display:"flex",alignItems:"center",gap:12}}>
-                    <QRCode value={`tel:${COMPANY.phone.replace(/-/g,"")}`} size={80}/>
-                    <div style={{fontSize:11,color:"var(--stone)"}}>QR on every mailer<br/>auto-dials 918-896-6737<br/>when scanned on mobile</div>
+                  <div>🏗️ <strong style={{color:"var(--cream)"}}>{COMPANY.name}</strong></div>
+                  <div>📞 <strong style={{color:"var(--cream)",fontFamily:"'DM Mono',monospace"}}>{COMPANY.phone}</strong></div>
+                  <div>✉️ <strong style={{color:"var(--cream)"}}>{COMPANY.email}</strong></div>
+                  <div>📍 <strong style={{color:"var(--cream)"}}>{COMPANY.city}, {COMPANY.state}</strong></div>
+                  {COMPANY.promo&&<div>🏷️ Promo Code: <strong style={{color:"var(--orange2)",fontFamily:"'DM Mono',monospace"}}>{COMPANY.promo}</strong></div>}
+                  <div style={{marginTop:12,display:"flex",alignItems:"center",gap:12}}>
+                    <QRCode value={`tel:${COMPANY.phoneRaw}`} size={72}/>
+                    <div style={{fontSize:11,color:"var(--stone)",lineHeight:1.8}}>Your QR code appears on every mailer<br/>Homeowners scan to call you instantly<br/>Works on all smartphones</div>
                   </div>
                 </div>
               </div>
+
+              {/* ── ALL CONTRACTORS: Notifications ── */}
               <div className="settings-section">
-                <h3>API Integrations</h3>
+                <h3>Notifications & Automation</h3>
                 {[
-                  {label:"Anthropic Claude API",desc:"AI mailer copy generation",status:"live"},
-                  {label:"Lob.com Print & Mail",desc:"Test mode active — real printing ready",status:"live"},
-                  {label:"USPS EDDM Route Data",desc:"Live Tulsa address data by route",status:"demo"},
-                  {label:"USPS Delivery Webhooks",desc:"Real-time delivery tracking",status:"demo"},
-                ].map((a,i)=>(
-                  <div className="setting-row" key={i}>
-                    <div className="setting-info"><h4>{a.label}</h4><p>{a.desc}</p></div>
-                    <span className={`api-pill ${a.status==="live"?"api-live":"api-demo"}`}>{a.status==="live"?"● Connected":"◐ Demo Mode"}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="settings-section">
-                <h3>Automation</h3>
-                {[
-                  {key:"autoSend",label:"Auto-Send After Job Completion",desc:"Mail Tulsa neighbors automatically when JWood LLC finishes a project"},
-                  {key:"weeklyReport",label:"Weekly Report to joelmwood@gmail.com",desc:"Opens, calls, and spend summary every Monday"},
-                  {key:"trackOpens",label:"QR Code Scan Tracking",desc:"Track who scans your QR codes and calls"},
-                  {key:"smsAlerts",label:"SMS Alerts to 918-896-6737",desc:"Text when campaigns hit Tulsa mailboxes"},
+                  {key:"autoSend",label:"Auto-Send After Job Completion",desc:"Automatically mail neighbors when you finish a project in the area"},
+                  {key:"weeklyReport",label:"Weekly Performance Report",desc:"Campaigns, calls, and ROI summary every Monday morning"},
+                  {key:"trackOpens",label:"QR Code Scan Tracking",desc:"Know when homeowners scan your mailers and call"},
+                  {key:"smsAlerts",label:"SMS Alerts",desc:"Get a text when your mail hits the neighborhood"},
                 ].map(s=>(
                   <div className="setting-row" key={s.key}>
                     <div className="setting-info"><h4>{s.label}</h4><p>{s.desc}</p></div>
@@ -4073,16 +4080,28 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   </div>
                 ))}
               </div>
+
+              {/* ── ALL CONTRACTORS: USPS Info ── */}
               <div className="settings-section">
-                <h3>Production Checklist</h3>
-                <div style={{fontSize:12,color:"var(--stone)",lineHeight:2.2}}>
-                  <div>✅ <strong style={{color:"var(--cream)"}}>AI Mailer Generation</strong> — Live</div>
-                  <div>✅ <strong style={{color:"var(--cream)"}}>QR Code Auto-Dial</strong> — On every mailer</div>
-                  <div>✅ <strong style={{color:"var(--cream)"}}>Lob.com Print & Mail</strong> — Test mode connected</div>
-                  <div>🔧 <strong style={{color:"var(--concrete)"}}>Lob.com Live Mode</strong> — Flip to live key when ready to send real mail</div>
-                  <div>🔧 <strong style={{color:"var(--concrete)"}}>USPS EDDM Live Data</strong> — Real Tulsa address counts</div>
-                  <div>🔧 <strong style={{color:"var(--concrete)"}}>Backend Proxy</strong> — Hide API keys for production</div>
-                  <div>🔧 <strong style={{color:"var(--concrete)"}}>Stripe Billing</strong> — Charge per campaign</div>
+                <h3>Mail Delivery</h3>
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {[
+                    {label:"USPS Every Door Direct Mail",desc:"Neighborhood route data — real delivery counts for every ZIP",status:"live"},
+                    {label:"Postcard Print & Mail",desc:"Physical 6"×9" postcards printed and mailed to real addresses",status:"live"},
+                    {label:"USPS Delivery Tracking",desc:"Know when your mail reaches the neighborhood",status:"soon"},
+                  ].map((a,i)=>(
+                    <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:8,padding:"12px 14px"}}>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:600,color:"var(--cream)",marginBottom:2}}>{a.label}</div>
+                        <div style={{fontSize:11,color:"var(--stone)"}}>{a.desc}</div>
+                      </div>
+                      <span style={{fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:12,flexShrink:0,marginLeft:12,
+                        background:a.status==="live"?"rgba(42,122,82,0.15)":a.status==="soon"?"rgba(184,180,172,0.08)":"rgba(232,86,10,0.1)",
+                        color:a.status==="live"?"var(--green2)":a.status==="soon"?"var(--stone)":"var(--orange2)"}}>
+                        {a.status==="live"?"● Active":a.status==="soon"?"◌ Coming Soon":"◐ Demo"}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
