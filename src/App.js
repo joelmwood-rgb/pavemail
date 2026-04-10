@@ -1,48 +1,53 @@
 import React, { useState } from "react";
 
 // ─────────────────────────────────────────────
-// POSTHOG ANALYTICS
+// ANALYTICS + ERROR MONITORING
+// Initialized via useEffect in App component
 // ─────────────────────────────────────────────
-(function(){
-  try {
-    if(window.posthog) return;
-    !function(t,e){e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}var d=t;void 0!==a?d=t[a]=[]:a="posthog",g(e,a+"capture"),g(e,a+"identify"),g(e,a+"alias"),g(e,a+"reset"),g(e,a+"register"),g(e,a+"register_once"),g(e,a+"unregister"),g(e,a+"opt_out_capturing"),g(e,a+"has_opted_out_capturing"),g(e,a+"opt_in_capturing"),g(e,a+"get_distinct_id"),g(e,a+"getFeatureFlag"),g(e,a+"isFeatureEnabled"),g(e,a+"onFeatureFlags"),e.init=function(t,e){e.__loaded||((e.config=e||{},e.__loaded=!0,e._i.push([t,e])))},e.__SV=1;var p=t.createElement("script");p.type="text/javascript";p.async=!0;p.src="https://us.i.posthog.com/static/array.js";var r=t.getElementsByTagName("script")[0];r.parentNode.insertBefore(p,r)}(document,window.posthog||[]);
-    window.posthog.init('phc_kqPn9wagFCAw9QaUF4XJxKMNEnHRooEX7uBvt4wdv29z',{
-      api_host:'https://us.i.posthog.com',
-      person_profiles:'identified_only',
-      autocapture: true,
-      capture_pageview: true,
-    });
-    window.posthog.identify('jwood',{name:'Joel Wood',company:'JWood LLC',role:'contractor'});
-  } catch(e){ console.warn('PostHog init failed:',e); }
-})();
+const POSTHOG_KEY = "phc_kqPn9wagFCAw9QaUF4XJxKMNEnHRooEX7uBvt4wdv29z";
+const SENTRY_DSN  = "https://7dbac4cf1178f77cd4f219c54e11225f@o4511197222797312.ingest.us.sentry.io/4511197260021760";
 
-// ─────────────────────────────────────────────
-// SENTRY ERROR MONITORING
-// ─────────────────────────────────────────────
-(function(){
-  try {
-    var s=document.createElement('script');
-    s.src='https://browser.sentry-cdn.com/7.99.0/bundle.min.js';
-    s.crossOrigin='anonymous';
-    s.onload=function(){
-      try {
-        Sentry.init({
-          dsn:'https://7dbac4cf1178f77cd4f219c54e11225f@o4511197222797312.ingest.us.sentry.io/4511197260021760',
-          release:'pavemail@1.0.0',
-          environment:'production',
-          tracesSampleRate:0.1,
-        });
-        console.log('Sentry initialized');
-      } catch(e){ console.warn('Sentry init failed:',e); }
-    };
-    document.head.appendChild(s);
-  } catch(e){ console.warn('Sentry load failed:',e); }
-})();
-
-// Analytics helper — safe wrapper
 function track(event, props) {
   try { if(window.posthog) window.posthog.capture(event, props||{}); } catch(e){}
+}
+
+function initAnalytics() {
+  try {
+    // PostHog
+    if(!window.posthog) {
+      var ph = window.posthog = window.posthog || [];
+      ph._i = []; ph.init = function(k,c){ ph._i.push([k,c]); };
+      ph.__SV = 1;
+      var s = document.createElement('script');
+      s.type = 'text/javascript'; s.async = true;
+      s.src = 'https://us.i.posthog.com/static/array.js';
+      document.head.appendChild(s);
+      s.onload = function() {
+        try {
+          window.posthog.init(POSTHOG_KEY, {
+            api_host: 'https://us.i.posthog.com',
+            autocapture: true,
+          });
+        } catch(e){}
+      };
+    }
+  } catch(e){ console.warn('PostHog failed:', e); }
+  try {
+    // Sentry
+    var sen = document.createElement('script');
+    sen.src = 'https://browser.sentry-cdn.com/7.99.0/bundle.min.js';
+    sen.crossOrigin = 'anonymous';
+    sen.onload = function() {
+      try {
+        window.Sentry && window.Sentry.init({
+          dsn: SENTRY_DSN,
+          tracesSampleRate: 0.1,
+          environment: 'production',
+        });
+      } catch(e){}
+    };
+    document.head.appendChild(sen);
+  } catch(e){ console.warn('Sentry failed:', e); }
 }
 
 // ─────────────────────────────────────────────
@@ -1883,6 +1888,7 @@ export default function App(){
 
   // ── LOAD ALL DATA FROM SUPABASE ON MOUNT ──
   React.useEffect(()=>{
+    initAnalytics();
     track('app_open', {tab: 'map', device: /iPhone|Android/i.test(navigator.userAgent)?'mobile':'desktop'});
     const loadAll = async () => {
       try {
