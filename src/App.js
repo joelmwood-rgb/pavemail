@@ -150,7 +150,7 @@ const auth = {
 };
 
 // ─────────────────────────────────────────────
-// CONTRACTOR CONFIG
+// PAVEMAIL v1.0.0 — CONTRACTOR CONFIG
 // To set up a new contractor — change ONLY these values.
 // Everything else in the app pulls from here automatically.
 // ─────────────────────────────────────────────
@@ -388,7 +388,7 @@ async function createBlandAgent(phoneNumber, leadContext) {
       })
     });
     const data = await res.json();
-    console.log("Bland API response:", JSON.stringify(data));
+
     return data;
   } catch(e) {
     console.error("Bland API error:", e);
@@ -1122,7 +1122,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 }
 
 /* ── LOGIN SCREEN ── */
-.login-screen{position:fixed;inset:0;background:var(--black);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0;}
+.login-screen{position:fixed;inset:0;inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:var(--black);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0;}
 .login-bg{position:absolute;inset:0;background:linear-gradient(145deg,#0e0d0b 0%,#1c1a17 60%,#0e0d0b 100%);}
 .login-texture{position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,rgba(184,180,172,0.02) 0,rgba(184,180,172,0.02) 1px,transparent 0,transparent 8px);}
 .login-box{position:relative;width:100%;max-width:360px;padding:32px 28px;animation:scaleIn 0.3s ease;}
@@ -1533,7 +1533,7 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
       setDataUrl(canvas.toDataURL('image/jpeg',0.92));
     } catch(e) {
       // Canvas tainted by cross-origin image — show raw photo instead
-      console.log('Canvas tainted, using raw photo');
+
       setDataUrl(null);
     }
   }
@@ -2073,7 +2073,7 @@ export default function App(){
             time:new Date(c.created_at).toLocaleDateString(),
           })));
         }
-        console.log("Supabase loaded:", leads?.length, "leads,", savedBids?.length, "bids,", savedCalls?.length, "calls");
+
       } catch(e){ console.error("Supabase load error:", e); }
     };
     loadAll();
@@ -2181,7 +2181,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     // Capture both photo and URL synchronously before any async calls
     const capturedPhoto = spotPhoto;
     const capturedPhotoUrl = spotPhotoUrlRef.current || spotPhotoUrl;
-    console.log("generateSpot called, photo:", capturedPhoto ? "YES" : "NO", "url:", capturedPhotoUrl || "NONE");
+
     setSpotLoading(true);setSpotMailer(null);
 
     const lo = spotForm.bidLow ? `$${parseInt(spotForm.bidLow).toLocaleString()}` : null;
@@ -2200,7 +2200,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       // STEP 1: If photo uploaded, use vision to analyze damage first
       if(capturedPhoto && capturedPhotoUrl){
         showToast("📷 Analyzing photo...","info");
-        console.log("Sending vision request with URL:", capturedPhotoUrl);
+
         const visionRes=await fetch(ANTHROPIC_PROXY,{
           method:"POST",
           headers:{"Content-Type":"application/json"},
@@ -2217,7 +2217,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           })
         });
         const visionData=await visionRes.json();
-        console.log("Vision response:", JSON.stringify(visionData).slice(0,200));
+
         const visionRaw=visionData.content?.map(b=>b.text||"").join("");
         const visionParsed=parseJSON(visionRaw);
         if(visionParsed?.damage){
@@ -2226,7 +2226,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           setSpotForm(f=>({...f,damage:detectedDamage,damageLevel:newLevel,overridePrice:false}));
           showToast("AI detected: "+visionParsed.summary,"info");
         } else {
-          console.log("Vision parse failed, raw:", visionRaw?.slice(0,200));
+
         }
       }
 
@@ -2245,8 +2245,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       const raw=data.content?.map(b=>b.text||"").join("");
       const parsed=parseJSON(raw);
       if(parsed){
-        console.log("Setting mailer with photo:", capturedPhoto ? "YES" : "NO");
-        console.log("Setting mailer photoUrl:", capturedPhotoUrl||"NONE");
+
+
         track('spot_generated', {address:spotForm.address, hasPhoto:!!capturedPhoto, damage:detectedDamage?.length||0});
         const mailerObj={...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,damage:detectedDamage,photoUsed:!!capturedPhoto,photoData:capturedPhoto||null,photoUrl:capturedPhotoUrl||null};
         setSpotMailer(mailerObj);
@@ -2261,7 +2261,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     await new Promise(r=>setTimeout(r,1600));
     const damageList=spotForm.damage.length>0?spotForm.damage.join(", "):"general concrete wear";
     const detectedDemo=spotForm.damage;
-    console.log("Demo fallback, capturedPhoto:", capturedPhoto ? "YES ("+capturedPhoto.length+" chars)" : "NO");
+
     const demoMailer={
       headline:"WE NOTICED YOUR PROJECT",
       personalNote:`We were working in your neighborhood recently and noticed your concrete at ${spotForm.address} has ${damageList}. As local Tulsa concrete specialists, we would love to help you get ahead of this before it gets worse — and we can usually start within a week.`,
@@ -2426,7 +2426,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       async (pos) => {
         const { latitude, longitude, accuracy } = pos.coords;
         setGpsAccuracy(Math.round(accuracy));
-        console.log("GPS:", latitude, longitude, "accuracy:", accuracy, "m");
+
         const result = await reverseGeocode(latitude, longitude);
         if (result && result.address) {
           setSpotForm(f => ({
@@ -2480,7 +2480,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     const clean=testCallNumber.replace(/\D/g,"");
     track('ai_call_made', {phone: testCallNumber});
     const result=await createBlandAgent("+1"+clean,"Test call from PaveMail dashboard");
-    console.log("Test call result:", JSON.stringify(result));
+
     if(result.call_id||result.id||result.status==="success"){
       showToast("Test call initiated! You should receive a call within 10 seconds.","success");
       setAiLeads(l=>[{id:"AL-"+Date.now(),caller:"Test Call",phone:testCallNumber,summary:"Test call initiated from PaveMail dashboard. Call ID: "+(result.call_id||result.id||"pending"),service:"Test",address:"",status:"pending",time:"Just now",transferred:false},...l]);
@@ -2611,8 +2611,10 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {/* ── PROFILE SETUP ── */}
           {authScreen==="profile-setup"&&(
             <>
-              <div className="login-label" style={{marginTop:24}}>Set Up Your Profile</div>
-              <div style={{fontSize:12,color:"var(--stone)",marginBottom:12,textAlign:"center"}}>Tell us about your business so we can personalize your mailers</div>
+              <div style={{textAlign:"center",marginTop:16,marginBottom:8}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2,color:"var(--cream)"}}>WELCOME TO PAVEMAIL</div>
+                <div style={{fontSize:12,color:"var(--stone)",marginTop:4,lineHeight:1.7}}>Tell us about your business so every<br/>postcard sounds like it came from you</div>
+              </div>
               <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
                 {[
                   {ph:"Your First Name",key:"ownerName",type:"text"},
@@ -2653,7 +2655,21 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               PAVE<span>MAIL</span>
             </div>
           <div className="topbar-sep"/>
-          <div className="topbar-meta">JWood LLC · Tulsa, OK</div>
+          <div className="topbar-meta" style={{display:"flex",alignItems:"center",gap:16}}>
+              <span style={{color:"var(--stone)",fontSize:12}}>{contractor?.company_name||COMPANY.name}</span>
+              {pipeline.filter(l=>l.stage==="won").length>0&&(
+                <span style={{display:"flex",alignItems:"center",gap:4,fontSize:11,color:"var(--green2)",fontFamily:"'DM Mono',monospace"}}>
+                  <span style={{opacity:0.6}}>Won</span>
+                  <strong>${pipeline.filter(l=>l.stage==="won").reduce((s,l)=>s+(l.value||0),0).toLocaleString()}</strong>
+                </span>
+              )}
+              {pipeline.filter(l=>l.stage!=="won").length>0&&(
+                <span style={{display:"flex",alignItems:"center",gap:4,fontSize:11,color:"var(--orange2)",fontFamily:"'DM Mono',monospace"}}>
+                  <span style={{opacity:0.6}}>Active</span>
+                  <strong>{pipeline.filter(l=>l.stage!=="won").length}</strong>
+                </span>
+              )}
+            </div>
           <div className="topbar-right">
             {isAdmin&&<div className="lob-pill"><div className="lob-dot"/>Mail: Test Mode</div>}
             <div className="co-pill">🏗️ JWood LLC</div>
@@ -2727,7 +2743,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <p style={{fontSize:12,color:"var(--stone)",lineHeight:1.6,marginBottom:14}}>Enter any ZIP to load live USPS carrier routes and real home counts.</p>
                 <div style={{display:"flex",gap:8,marginBottom:10}}>
                   <div className="field" style={{margin:0,flex:1}}>
-                    <input placeholder="Enter ZIP (e.g. 74105)" value={zipSearch} onChange={e=>setZipSearch(e.target.value.replace(/[^0-9]/g,"").slice(0,5))} onKeyDown={e=>e.key==="Enter"&&searchZip(zipSearch)} maxLength={5} style={{fontFamily:"DM Mono,monospace",fontSize:15,letterSpacing:2}}/>
+                    <input placeholder="Enter ZIP (e.g. 74105)" value={zipSearch} onChange={e=>setZipSearch(e.target.value.replace(/[^0-9]/g,"").slice(0,5))} onKeyDown={e=>e.key==="Enter"&&searchZip(zipSearch)} maxLength={5} style={{fontFamily:"'DM Mono',monospace",fontSize:15,letterSpacing:2}}/>
                   </div>
                   <button className="btn btn-primary btn-sm" onClick={()=>searchZip(zipSearch)} disabled={routesLoading} style={{flexShrink:0,padding:"0 14px"}}>
                     {routesLoading?<span className="spin"/>:"Search"}
@@ -2747,7 +2763,17 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   {liveRoutes.length>0&&<button onClick={clearRoutes} style={{marginLeft:"auto",fontSize:10,color:"var(--stone)",background:"none",border:"none",cursor:"pointer",textDecoration:"underline",fontFamily:"'Syne',sans-serif"}}>Clear all</button>}
                 </div>
                 {liveRoutes.length===0&&!routesLoading&&(
-                  <div style={{fontSize:11,color:"var(--gravel)",textAlign:"center",padding:"20px 0",lineHeight:1.6}}>Enter a ZIP code to load live USPS carrier routes</div>
+                  <div style={{padding:"12px 0 4px"}}>
+                    <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--stone)",marginBottom:8}}>Quick Select</div>
+                    <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                      {[{zip:"74105",name:"South Tulsa"},{zip:"74011",name:"Broken Arrow"},{zip:"74037",name:"Jenks"},{zip:"74055",name:"Owasso"},{zip:"74008",name:"Bixby"},{zip:"74063",name:"Sand Springs"}].map(r=>(
+                        <button key={r.zip} onClick={()=>{setZipSearch(r.zip); setTimeout(()=>searchZip(r.zip),50);}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(232,86,10,0.05)",border:"1px solid rgba(232,86,10,0.12)",borderRadius:7,padding:"8px 12px",cursor:"pointer",transition:"all 0.12s",width:"100%",textAlign:"left"}}>
+                          <span style={{fontSize:12,color:"var(--concrete)",fontWeight:500}}>{r.name}</span>
+                          <span style={{fontSize:11,color:"var(--orange2)",fontFamily:"'DM Mono',monospace"}}>{r.zip}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
                 {routesLoading&&(
                   <div style={{display:"flex",alignItems:"center",gap:8,padding:"16px 0",color:"var(--stone)",fontSize:12}}>
@@ -2766,7 +2792,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                           {r.medIncome>0&&` - Med income $${r.medIncome.toLocaleString()}`}
                         </div>
                       </div>
-                      <div className="route-check">checkmark</div>
+                      <div className="route-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
                     </div>
                   ))}
                 </div>
@@ -2775,7 +2801,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <h4>Campaign Summary</h4>
                     <div className="sum-row"><span>Routes selected</span><strong>{selectedRoutes.length}</strong></div>
                     <div className="sum-row"><span>Residential homes</span><strong>{totalHomes.toLocaleString()}</strong></div>
-                    <div className="sum-row"><span>Est. cost (EDDM)</span><strong style={{fontFamily:"DM Mono,monospace",color:"var(--orange2)"}}>${(totalHomes*0.62).toFixed(2)}</strong></div>
+                    <div className="sum-row"><span>Est. cost (EDDM)</span><strong style={{fontFamily:"'DM Mono',monospace",color:"var(--orange2)"}}>${(totalHomes*0.62).toFixed(2)}</strong></div>
                     <div className="sum-row"><span>Est. revenue</span><strong style={{color:"var(--green2)"}}>${(totalHomes*1.25).toFixed(2)}</strong></div>
                     <div className="sum-row"><span>USPS delivery</span><strong>2-5 days</strong></div>
                     {liveRoutes.filter(r=>selectedRoutes.includes(r.id)&&r.medIncome>0).length>0&&(
@@ -2799,7 +2825,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   const pos=[{left:"18%",top:"10%",width:"28%",height:"32%"},{left:"50%",top:"8%",width:"30%",height:"28%"},{left:"15%",top:"48%",width:"26%",height:"32%"},{left:"48%",top:"44%",width:"28%",height:"30%"},{left:"10%",top:"78%",width:"25%",height:"18%"},{left:"68%",top:"68%",width:"24%",height:"20%"},{left:"35%",top:"25%",width:"22%",height:"25%"},{left:"60%",top:"55%",width:"20%",height:"22%"}][i%8];
                   return <div key={r.id} className="map-zone" style={{...pos,borderColor:r.color,background:r.color+"14"}}><div className="map-zone-label" style={{background:r.color}}>{r.name} ({r.homes.toLocaleString()})</div></div>;
                 })}
-                {liveRoutes.length===0&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:10,color:"var(--gravel)",textAlign:"center",padding:40}}><div style={{fontSize:36,opacity:0.3}}>map</div><div style={{fontSize:13,color:"var(--stone)"}}>Enter a ZIP code to load live USPS carrier routes</div></div>}
+                {liveRoutes.length===0&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:10,color:"var(--gravel)",textAlign:"center",padding:40}}><div style={{opacity:0.2}}><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M20 4C14.5 4 10 8.5 10 14C10 21.5 20 36 20 36C20 36 30 21.5 30 14C30 8.5 25.5 4 20 4Z" stroke="currentColor" strokeWidth="1.5"/><circle cx="20" cy="14" r="4" fill="currentColor" opacity="0.6"/></svg></div><div style={{fontSize:13,color:"var(--stone)"}}>Enter a ZIP code to load live USPS carrier routes</div></div>}
                 {PINS.map((p,i)=><div key={i} className={`map-pin ${p.t}`} style={{left:`${p.x}%`,top:`${p.y}%`}}/>)}
                 <div style={{position:"absolute",top:12,left:12,background:"rgba(14,13,11,0.82)",border:"1px solid rgba(184,180,172,0.12)",borderRadius:7,padding:"10px 14px",fontSize:10,color:"var(--concrete)",display:"flex",flexDirection:"column",gap:6}}>
                   <div style={{display:"flex",alignItems:"center",gap:7}}><div style={{width:10,height:10,borderRadius:"50%",background:"var(--orange2)"}}/> Home Address</div>
@@ -2898,10 +2924,10 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   </div>
                   <div className="track-meta">
                     <span>📦 <strong>{selectedJob.homes}</strong> pieces</span>
-                    <span>💵 <strong style={{fontFamily:"DM Mono,monospace",color:"var(--orange2)"}}>${selectedJob.cost}</strong></span>
+                    <span>💵 <strong style={{fontFamily:"'DM Mono',monospace",color:"var(--orange2)"}}>${selectedJob.cost}</strong></span>
                     <span>📞 <strong style={{color:"var(--green2)"}}>{selectedJob.calls}</strong> calls</span>
                     <span>📅 <strong>{selectedJob.sent}</strong></span>
-                    {selectedJob.lobId&&<span>🆔 <span style={{fontFamily:"DM Mono,monospace",fontSize:11,color:"var(--stone)"}}>{selectedJob.lobId}</span></span>}
+                    {selectedJob.lobId&&<span>🆔 <span style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:"var(--stone)"}}>{selectedJob.lobId}</span></span>}
                   </div>
                 </div>
               )}
@@ -3060,7 +3086,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       <>
                         <div><strong>USPS Verified - Deliverable</strong></div>
                         <div style={{color:"var(--concrete)"}}>{verifyResult.address}, {verifyResult.city}, {verifyResult.state} {verifyResult.zip}{verifyResult.zipPlus4&&`-${verifyResult.zipPlus4}`}</div>
-                        {verifyResult.carrierRoute&&<div style={{color:"var(--stone)",fontFamily:"DM Mono,monospace",fontSize:10}}>Carrier Route: {verifyResult.zip}{verifyResult.carrierRoute}</div>}
+                        {verifyResult.carrierRoute&&<div style={{color:"var(--stone)",fontFamily:"'DM Mono',monospace",fontSize:10}}>Carrier Route: {verifyResult.zip}{verifyResult.carrierRoute}</div>}
                         {verifyResult.corrected&&<div style={{color:"var(--yellow)",fontSize:10}}>Address was auto-corrected by USPS</div>}
                       </>
                     ):(
@@ -3126,14 +3152,14 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       <div style={{fontSize:11,color:"var(--stone)",marginBottom:4}}>Starting at</div>
                       <input type="number" value={spotForm.bidLow}
                         onChange={e=>setSpotForm(f=>({...f,bidLow:e.target.value,overridePrice:true}))}
-                        style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:6,padding:"8px 10px",color:"var(--orange2)",fontFamily:"DM Mono,monospace",fontSize:18,fontWeight:600,outline:"none"}}/>
+                        style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:6,padding:"8px 10px",color:"var(--orange2)",fontFamily:"'DM Mono',monospace",fontSize:18,fontWeight:600,outline:"none"}}/>
                     </div>
                     <div style={{color:"var(--stone)",fontSize:13,paddingTop:20}}>to</div>
                     <div style={{flex:1}}>
                       <div style={{fontSize:11,color:"var(--stone)",marginBottom:4}}>Up to</div>
                       <input type="number" value={spotForm.bidHigh}
                         onChange={e=>setSpotForm(f=>({...f,bidHigh:e.target.value,overridePrice:true}))}
-                        style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:6,padding:"8px 10px",color:"var(--orange2)",fontFamily:"DM Mono,monospace",fontSize:18,fontWeight:600,outline:"none"}}/>
+                        style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:6,padding:"8px 10px",color:"var(--orange2)",fontFamily:"'DM Mono',monospace",fontSize:18,fontWeight:600,outline:"none"}}/>
                     </div>
                   </div>
                   <div style={{fontSize:10,color:"var(--gravel)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -3273,7 +3299,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                   </div>
                                   <div style={{background:"#e8560a",borderRadius:5,padding:"6px 10px",textAlign:"center"}}>
                                     <div style={{fontSize:8,fontWeight:700,color:"white"}}>CALL NOW</div>
-                                    <div style={{fontSize:11,fontFamily:"monospace",color:"white"}}>918-896-6737</div>
+                                    <div style={{fontSize:11,fontFamily:"'DM Mono',monospace",color:"white"}}>918-896-6737</div>
                                   </div>
                                 </div>
                               </div>
@@ -3299,7 +3325,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                       </div>
                                       {spotMailer.bidHi&&<div style={{fontSize:12,color:"rgba(184,180,172,0.6)",marginTop:2}}>Up to {spotMailer.bidHi}</div>}
                                     </div>
-                                    <div style={{flexShrink:0,background:"var(--orange)",color:"white",padding:"8px 14px",borderRadius:6,fontSize:11,fontWeight:700,textAlign:"center"}}>CALL NOW<br/><span style={{fontSize:13,fontFamily:"DM Mono,monospace"}}>918-896-6737</span></div>
+                                    <div style={{flexShrink:0,background:"var(--orange)",color:"white",padding:"8px 14px",borderRadius:6,fontSize:11,fontWeight:700,textAlign:"center"}}>CALL NOW<br/><span style={{fontSize:13,fontFamily:"'DM Mono',monospace"}}>918-896-6737</span></div>
                                   </div>
                                   <div style={{marginTop:10,fontSize:10,color:"rgba(184,180,172,0.5)"}}>{spotMailer.urgencyLine}</div>
                                 </div>
@@ -3398,7 +3424,22 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
               {/* Current mode banner */}
               <div style={{background:CAPACITY_MODES[capacity.mode].bg,border:`1px solid ${CAPACITY_MODES[capacity.mode].color}40`,borderRadius:12,padding:"20px 24px",marginBottom:20,display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
-                <div style={{fontSize:40}}>{CAPACITY_MODES[capacity.mode].icon}</div>
+                <div style={{position:"relative",width:80,height:80,margin:"0 auto 8px"}}>
+                  <svg width="80" height="80" viewBox="0 0 80 80" style={{transform:"rotate(-90deg)"}}>
+                    <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(184,180,172,0.1)" strokeWidth="8"/>
+                    <circle cx="40" cy="40" r="32" fill="none"
+                      stroke={CAPACITY_MODES[capacity.mode].color}
+                      strokeWidth="8"
+                      strokeDasharray={`${2*Math.PI*32}`}
+                      strokeDashoffset={`${2*Math.PI*32*(1-(capacity.mode==="hungry"?0.95:capacity.mode==="normal"?0.65:capacity.mode==="selective"?0.4:0.1))}`}
+                      strokeLinecap="round"
+                      style={{transition:"stroke-dashoffset 0.6s ease,stroke 0.3s ease"}}
+                    />
+                  </svg>
+                  <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:CAPACITY_MODES[capacity.mode].color}}>
+                    {capacity.mode==="hungry"?"95%":capacity.mode==="normal"?"65%":capacity.mode==="selective"?"40%":"10%"}
+                  </div>
+                </div>
                 <div style={{flex:1}}>
                   <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2,color:CAPACITY_MODES[capacity.mode].color}}>{CAPACITY_MODES[capacity.mode].label.toUpperCase()} MODE</div>
                   <div style={{fontSize:12,color:"var(--concrete)",marginTop:4}}>{CAPACITY_MODES[capacity.mode].desc}</div>
@@ -3482,7 +3523,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <div key={lead.id} style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",padding:"11px 16px",borderBottom:"1px solid rgba(184,180,172,0.05)",alignItems:"center",cursor:"pointer"}} onClick={()=>setTab("pipeline")}>
                       <div style={{fontSize:12,fontWeight:600,color:"var(--cream)"}}>{lead.address}<div style={{fontSize:10,color:"var(--stone)"}}>{lead.city}</div></div>
                       <div style={{fontSize:11,color:"var(--concrete)"}}>{STAGES.find(s=>s.id===lead.stage)?.id==="spotted"?"◉":STAGES.find(s=>s.id===lead.stage)?.id==="sent"?"◫":STAGES.find(s=>s.id===lead.stage)?.id==="called"?"◌":"✦"} {STAGES.find(s=>s.id===lead.stage)?.label}</div>
-                      <div style={{fontFamily:"DM Mono,monospace",fontSize:12,color:"var(--orange2)"}}>{lead.value?`$${lead.value.toLocaleString()}`:"—"}</div>
+                      <div style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"var(--orange2)"}}>{lead.value?`$${lead.value.toLocaleString()}`:"—"}</div>
                       <div>
                         <span className={`score-pill ${score>=70?"score-high":score>=40?"score-mid":"score-low"}`}>{score}</span>
                       </div>
@@ -3573,7 +3614,14 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       </div>
                     );
                   })}
-                  {adminData.contractors.length===0&&<div style={{color:"var(--gravel)",fontSize:13,textAlign:"center",padding:"20px 0"}}>No contractors signed up yet</div>}
+                  {adminData.contractors.length===0&&(
+                    <div style={{textAlign:"center",padding:"32px 20px"}}>
+                      <div style={{fontSize:32,marginBottom:12,opacity:0.3}}>◈</div>
+                      <div style={{fontSize:13,fontWeight:600,color:"var(--concrete)",marginBottom:6}}>No contractors yet</div>
+                      <div style={{fontSize:11,color:"var(--stone)",marginBottom:16}}>Share invite code <strong style={{color:"var(--orange2)",fontFamily:"'DM Mono',monospace"}}>PAVE2026</strong> to onboard your first contractor</div>
+                      <div style={{background:"rgba(232,86,10,0.08)",border:"1px solid rgba(232,86,10,0.2)",borderRadius:8,padding:"10px 16px",fontSize:12,color:"var(--orange2)",fontFamily:"'DM Mono',monospace",letterSpacing:2}}>PAVE2026</div>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -3588,7 +3636,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     {adminData.contractors.map(c=>(
                       <div key={c.id} className="admin-row" style={{gridTemplateColumns:"2fr 1.5fr 1fr 1fr 1fr"}}>
                         <div><div style={{fontWeight:600,color:"var(--cream)"}}>{c.company_name}</div><div style={{fontSize:10,color:"var(--stone)"}}>{c.owner_name}</div></div>
-                        <div style={{fontSize:11,fontFamily:"monospace",color:"var(--stone)"}}>{c.email}</div>
+                        <div style={{fontSize:11,fontFamily:"'DM Mono',monospace",color:"var(--stone)"}}>{c.email}</div>
                         <div>{c.city}, {c.state}</div>
                         <div><span style={{background:"rgba(232,86,10,0.15)",color:"var(--orange2)",padding:"2px 8px",borderRadius:4,fontSize:10,fontWeight:700}}>{(c.plan||"starter").toUpperCase()}</span></div>
                         <div style={{fontSize:11}}>{new Date(c.created_at).toLocaleDateString()}</div>
@@ -3615,7 +3663,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                           <div><div style={{fontWeight:600,color:"var(--cream)"}}>{l.address}</div><div style={{fontSize:10,color:"var(--stone)"}}>{l.city}</div></div>
                           <div style={{fontSize:11,color:"var(--stone)"}}>{contractor?.company_name||"Unknown"}</div>
                           <div><span style={{background:stage?.bg,color:stage?.color,padding:"2px 6px",borderRadius:4,fontSize:10,fontWeight:700}}>{stage?.icon} {stage?.label}</span></div>
-                          <div style={{fontFamily:"monospace",color:"var(--orange2)"}}>{l.bid_lo||"—"}</div>
+                          <div style={{fontFamily:"'DM Mono',monospace",color:"var(--orange2)"}}>{l.bid_lo||"—"}</div>
                           <div style={{fontSize:11}}>{l.spotted||new Date(l.created_at).toLocaleDateString()}</div>
                         </div>
                       );
@@ -3639,7 +3687,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                         <div key={b.id} className="admin-row" style={{gridTemplateColumns:"2fr 1.5fr 1fr 1fr"}}>
                           <div><div style={{fontWeight:600,color:"var(--cream)"}}>{b.address}</div><div style={{fontSize:10,color:"var(--stone)"}}>{b.city}</div></div>
                           <div style={{fontSize:11,color:"var(--stone)"}}>{contractor?.company_name||"Unknown"}</div>
-                          <div style={{fontFamily:"monospace",color:"var(--orange2)"}}>{b.bid||"—"}</div>
+                          <div style={{fontFamily:"'DM Mono',monospace",color:"var(--orange2)"}}>{b.bid||"—"}</div>
                           <div style={{fontSize:11}}>{b.sent_date||new Date(b.created_at).toLocaleDateString()}</div>
                         </div>
                       );
@@ -3725,10 +3773,13 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               {/* Lead list */}
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>INBOUND LEADS FROM AI CALLS</div>
               {aiLeads.length===0&&(
-                <div style={{padding:"40px 0",textAlign:"center",color:"var(--gravel)"}}>
-                  <div style={{marginBottom:10,opacity:0.3}}><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 6C6 6 8 4 11 4C13 4 14 6 15 8L16 11C16.4 12.2 16 13.6 15 14.4L13 16C14 18 16 20.6 18 22L20 20C21 19.2 22.4 19 23.6 19.4L27 21C29 22 30 23 30 25C30 28 27 31 27 31C22 36 6 19 6 6Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg></div>
+                <div style={{padding:"32px 0",textAlign:"center",color:"var(--gravel)"}}>
+                  <div style={{marginBottom:12,opacity:0.3}}><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 6C6 6 8 4 11 4C13 4 14 6 15 8L16 11C16.4 12.2 16 13.6 15 14.4L13 16C14 18 16 20.6 18 22L20 20C21 19.2 22.4 19 23.6 19.4L27 21C29 22 30 23 30 25C30 28 27 31 27 31C22 36 6 19 6 6Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg></div>
                   <div style={{fontSize:14,fontWeight:600,color:"var(--concrete)",marginBottom:6}}>No calls yet</div>
-                  <div style={{fontSize:12,color:"var(--stone)"}}>The AI agent is standing by — use the test call above to try it out</div>
+                  <div style={{fontSize:12,color:"var(--stone)",marginBottom:16}}>The AI agent answers calls 24/7 — test it with your own number above</div>
+                  <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(42,122,82,0.1)",border:"1px solid rgba(42,122,82,0.25)",borderRadius:8,padding:"8px 14px",fontSize:11,color:"var(--green2)"}}>
+                    <span>●</span> Agent standing by — waiting for first call
+                  </div>
                 </div>
               )}
               {aiLeads.map(lead=>(
@@ -3738,7 +3789,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div className="ai-lead-name">{lead.caller}</div>
-                    <div style={{fontSize:11,fontFamily:"DM Mono,monospace",color:"var(--stone)",marginBottom:6}}>{lead.phone} · {lead.time}</div>
+                    <div style={{fontSize:11,fontFamily:"'DM Mono',monospace",color:"var(--stone)",marginBottom:6}}>{lead.phone} · {lead.time}</div>
                     <div className="ai-lead-summary">{lead.summary}</div>
                     <div className="ai-lead-meta">
                       <span className={`ai-badge badge-${lead.status==="qualified"?"qualified":lead.status==="pending"?"pending":"not-qualified"}`}>
@@ -3771,6 +3822,20 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {/* PIPELINE */}
           {tab==="pipeline"&&(
             <div className="pipeline-layout">
+              {/* PIPELINE STATS */}
+              <div className="pipeline-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,padding:"16px 20px 0"}}>
+                {(()=>{
+                  const won=pipeline.filter(l=>l.stage==="won").length;
+                  const total=pipeline.length;
+                  const winRate=total>0?Math.round((won/total)*100):0;
+                  return [{label:"In Play",value:pipeline.filter(l=>l.stage!=="won").length,color:"var(--cream)"},{label:"Win Rate",value:winRate+"%",color:won>0?"var(--green2)":"var(--stone)"},{label:"Jobs Won",value:won,color:"var(--green2)"},{label:"Pipeline Value",value:"$"+pipeline.reduce((s,l)=>s+(l.value||0),0).toLocaleString(),color:"var(--orange2)"}];
+                })().map((s,i)=>(
+                  <div key={i} style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,padding:"12px 14px"}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,color:s.color,lineHeight:1}}>{s.value}</div>
+                    <div style={{fontSize:10,color:"var(--stone)",letterSpacing:1,textTransform:"uppercase",marginTop:3}}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
               {/* Header */}
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10}}>
                 <div>
@@ -3816,7 +3881,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 ))}
                 <div style={{marginLeft:"auto",fontSize:11,color:"var(--stone)",display:"flex",alignItems:"center",gap:6}}>
                   <span>Pipeline value:</span>
-                  <strong style={{color:"var(--orange2)",fontFamily:"DM Mono,monospace"}}>${pipeline.reduce((s,l)=>s+l.value,0).toLocaleString()}</strong>
+                  <strong style={{color:"var(--orange2)",fontFamily:"'DM Mono',monospace"}}>${pipeline.reduce((s,l)=>s+l.value,0).toLocaleString()}</strong>
                 </div>
               </div>
 
@@ -3995,8 +4060,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     {/* Roads */}
                     {[15,30,50,65,80].map(y=><div key={y} style={{position:"absolute",left:0,right:0,top:`${y}%`,height:y===30||y===65?5:2,background:"rgba(184,180,172,0.08)"}}/>)}
                     {[20,40,60,80].map(x=><div key={x} style={{position:"absolute",top:0,bottom:0,left:`${x}%`,width:x===40||x===60?5:2,background:"rgba(184,180,172,0.08)"}}/>)}
-                    <div style={{position:"absolute",top:"27%",left:"22%",fontSize:9,color:"rgba(184,180,172,0.3)",fontFamily:"DM Mono,monospace",letterSpacing:1,textTransform:"uppercase"}}>PEORIA AVE</div>
-                    <div style={{position:"absolute",top:"62%",left:"42%",fontSize:9,color:"rgba(184,180,172,0.3)",fontFamily:"DM Mono,monospace",letterSpacing:1,textTransform:"uppercase"}}>MEMORIAL DR</div>
+                    <div style={{position:"absolute",top:"27%",left:"22%",fontSize:9,color:"rgba(184,180,172,0.3)",fontFamily:"'DM Mono',monospace",letterSpacing:1,textTransform:"uppercase"}}>PEORIA AVE</div>
+                    <div style={{position:"absolute",top:"62%",left:"42%",fontSize:9,color:"rgba(184,180,172,0.3)",fontFamily:"'DM Mono',monospace",letterSpacing:1,textTransform:"uppercase"}}>MEMORIAL DR</div>
                     {/* Pipeline pins - each lead gets a pin */}
                     {pipeline.map((lead,i)=>{
                       const stage=STAGES.find(s=>s.id===lead.stage);
@@ -4034,7 +4099,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"var(--cream)"}}>SETTINGS</div>
                 <button className="btn btn-ghost btn-sm" onClick={handleLogout}>🔒 Sign Out</button>
               </div>
-              <p style={{fontSize:13,color:"var(--stone)",marginBottom:26}}>{COMPANY.name} · {COMPANY.city}, {COMPANY.state} · {COMPANY.phone}</p>
+              <p style={{fontSize:13,color:"var(--stone)",marginBottom:26}}>{contractor?.company_name||COMPANY.name} · {contractor?.city||COMPANY.city}, {contractor?.state||COMPANY.state} · {contractor?.phone||COMPANY.phone}</p>
 
               {/* ── ADMIN ONLY: Production Checklist ── */}
               {isAdmin&&(
@@ -4157,7 +4222,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div>
                   <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
                     <label style={{fontSize:12,fontWeight:700,color:"var(--concrete)"}}>Target Radius</label>
-                    <span style={{fontFamily:"DM Mono,monospace",fontSize:13,color:"var(--green2)",fontWeight:600}}>
+                    <span style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"var(--green2)",fontWeight:600}}>
                       {radiusForm.radius} miles · ~{Math.round(radiusForm.radius*5280/66)} homes
                     </span>
                   </div>
@@ -4187,7 +4252,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     </div>
                     <div style={{display:"flex",justifyContent:"space-between",fontSize:12}}>
                       <span style={{color:"var(--stone)"}}>Est. mail cost</span>
-                      <span style={{fontFamily:"DM Mono,monospace",color:"var(--orange2)",fontWeight:600}}>${(Math.round(radiusForm.radius*5280/66)*1.25).toFixed(2)}</span>
+                      <span style={{fontFamily:"'DM Mono',monospace",color:"var(--orange2)",fontWeight:600}}>${(Math.round(radiusForm.radius*5280/66)*1.25).toFixed(2)}</span>
                     </div>
                     <div style={{display:"flex",justifyContent:"space-between",fontSize:12}}>
                       <span style={{color:"var(--stone)"}}>Mail angle</span>
@@ -4230,14 +4295,14 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     </div>
                     <div style={{background:"var(--orange)",color:"white",padding:"10px 14px",borderRadius:6,textAlign:"center"}}>
                       <div style={{fontSize:9,fontWeight:700,letterSpacing:1}}>CALL JOEL DIRECTLY</div>
-                      <div style={{fontSize:16,fontWeight:700,fontFamily:"monospace"}}>918-896-6737</div>
+                      <div style={{fontSize:16,fontWeight:700,fontFamily:"'DM Mono',monospace"}}>918-896-6737</div>
                     </div>
                     <p style={{marginTop:8,fontSize:10,color:"var(--gravel)"}}>{radiusMailer.urgencyLine}</p>
                   </div>
                 </div>
 
                 <div style={{background:"rgba(0,0,0,0.2)",borderRadius:8,padding:"12px 14px",marginBottom:14,fontSize:12,color:"var(--stone)"}}>
-                  Sending to <strong style={{color:"var(--cream)"}}>~{Math.round(radiusForm.radius*5280/66)} homes</strong> within <strong style={{color:"var(--green2)"}}>{radiusForm.radius} miles</strong> of {radiusMailer.address} · Est. cost <strong style={{color:"var(--orange2)",fontFamily:"DM Mono,monospace"}}>${(Math.round(radiusForm.radius*5280/66)*1.25).toFixed(2)}</strong>
+                  Sending to <strong style={{color:"var(--cream)"}}>~{Math.round(radiusForm.radius*5280/66)} homes</strong> within <strong style={{color:"var(--green2)"}}>{radiusForm.radius} miles</strong> of {radiusMailer.address} · Est. cost <strong style={{color:"var(--orange2)",fontFamily:"'DM Mono',monospace"}}>${(Math.round(radiusForm.radius*5280/66)*1.25).toFixed(2)}</strong>
                 </div>
 
                 <div style={{display:"flex",gap:8}}>
@@ -4296,7 +4361,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                         <div style={{fontSize:9,color:"rgba(232,86,10,0.8)",fontWeight:700,letterSpacing:1}}>YOUR ESTIMATE<br/><span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:"#f5f0e6"}}>{previewJob.bid}</span></div>
                         <div style={{background:"#e8560a",padding:"6px 10px",borderRadius:5,textAlign:"center"}}>
                           <div style={{fontSize:8,fontWeight:700,color:"white"}}>CALL NOW</div>
-                          <div style={{fontSize:11,fontFamily:"monospace",color:"white"}}>{COMPANY.phone}</div>
+                          <div style={{fontSize:11,fontFamily:"'DM Mono',monospace",color:"white"}}>{COMPANY.phone}</div>
                         </div>
                       </div>
                     </div>
@@ -4342,7 +4407,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <div style={{background:"rgba(232,86,10,0.1)",border:"1px solid rgba(232,86,10,0.2)",borderLeft:"3px solid rgba(232,86,10,0.6)",borderRadius:6,padding:"10px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                     <div>
                       <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,letterSpacing:1,color:"#f5f0e6"}}>CALL OR TEXT {COMPANY.ownerName.toUpperCase()}</div>
-                      <div style={{fontSize:10,color:"rgba(184,180,172,0.5)",fontFamily:"monospace"}}>{COMPANY.phone} · Free estimate · No obligation</div>
+                      <div style={{fontSize:10,color:"rgba(184,180,172,0.5)",fontFamily:"'DM Mono',monospace"}}>{COMPANY.phone} · Free estimate · No obligation</div>
                     </div>
                   </div>
                 </div>
@@ -4352,7 +4417,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             {/* Lob ID if available */}
             {previewJob.lob&&(
               <div style={{padding:"0 20px 16px"}}>
-                <div style={{fontSize:10,color:"var(--gravel)",fontFamily:"monospace"}}>Lob ID: {previewJob.lob} · <a href={`https://dashboard.lob.com`} target="_blank" rel="noreferrer" style={{color:"var(--blue2)"}}>View in Lob Dashboard ↗</a></div>
+                <div style={{fontSize:10,color:"var(--gravel)",fontFamily:"'DM Mono',monospace"}}>Lob ID: {previewJob.lob} · <a href={`https://dashboard.lob.com`} target="_blank" rel="noreferrer" style={{color:"var(--blue2)"}}>View in Lob Dashboard ↗</a></div>
               </div>
             )}
           </div>
