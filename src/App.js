@@ -2513,7 +2513,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
   // Show auth screen if not logged in
   if(!authUser) return(
-    <>
+    <React.Fragment>
       <style>{STYLES}</style>
       <div className="login-screen">
         <div className="login-bg"/>
@@ -2629,11 +2629,11 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           <div className="login-footer" style={{marginTop:20}}>🔒 Secured · PaveMail</div>
         </div>
       </div>
-    </>
+    </React.Fragment>
   );
 
   return(
-    <>
+    <React.Fragment>
       <style>{STYLES}</style>
       <div className="shell">
 
@@ -4346,6 +4346,6 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
       {toast&&<div className={`toast ${toast.type}`}>{toast.msg}</div>}
     </div>
-    </>
+    </React.Fragment>
   );
 }
