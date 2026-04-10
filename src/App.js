@@ -171,7 +171,6 @@ const COMPANY = {
   tagline:     "Tulsa's Concrete Specialists",
 };
 
-const ADMIN_EMAIL = "joelmwood@gmail.com";
 
 // Admin DB helpers
 const adminDb = {
@@ -1724,7 +1723,6 @@ export default function App(){
   const[pipelineView,setPipelineView]=useState("kanban");
 
   // ── ADMIN STATE ──
-  const isAdmin = authUser?.user?.email === ADMIN_EMAIL;
   const[adminView,setAdminView]=useState("overview"); // overview | contractors | pipeline | bids
   const[adminData,setAdminData]=useState({contractors:[],pipeline:[],bids:[],campaigns:[],loaded:false});
   const[adminLoading,setAdminLoading]=useState(false);
