@@ -75,6 +75,66 @@ async function sbFetch(path, options={} ) {
   return res.json();
 }
 
+// ─────────────────────────────────────────────
+// SUPABASE AUTH
+// ─────────────────────────────────────────────
+const auth = {
+  async signUp(email, password, meta) {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+      method: "POST",
+      headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, data: meta }),
+    });
+    return res.json();
+  },
+  async signIn(email, password) {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: "POST",
+      headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    return res.json();
+  },
+  async signOut(token) {
+    await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+      method: "POST",
+      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}` },
+    });
+  },
+  async resetPassword(email) {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+      method: "POST",
+      headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    return res.json();
+  },
+  async getProfile(token) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/contractor_profiles?select=*&limit=1`, {
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await res.json();
+    return data[0] || null;
+  },
+  async updateProfile(token, profile) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/contractor_profiles`, {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates,return=representation",
+      },
+      body: JSON.stringify(profile),
+    });
+    return res.json();
+  },
+};
+
 // DB helpers
 const db = {
   // Pipeline
@@ -88,7 +148,7 @@ const db = {
       headers: { "Prefer": "resolution=merge-duplicates,return=representation" },
       body: JSON.stringify({
         id: lead.id,
-        contractor_id: "jwood",
+        contractor_id: COMPANY.contractorId,
         address: lead.address,
         city: lead.city,
         neighborhood: lead.neighborhood||"",
@@ -121,7 +181,7 @@ const db = {
     return sbFetch("campaigns", {
       method: "POST",
       body: JSON.stringify({
-        contractor_id: "jwood",
+        contractor_id: COMPANY.contractorId,
         name: campaign.name,
         area: campaign.area,
         homes: parseInt(campaign.homes)||0,
@@ -141,7 +201,7 @@ const db = {
     return sbFetch("spot_bids", {
       method: "POST",
       body: JSON.stringify({
-        contractor_id: "jwood",
+        contractor_id: COMPANY.contractorId,
         address: bid.address,
         city: bid.city||"Tulsa",
         bid: bid.bid||"",
@@ -162,7 +222,7 @@ const db = {
     return sbFetch("ai_calls", {
       method: "POST",
       body: JSON.stringify({
-        contractor_id: "jwood",
+        contractor_id: COMPANY.contractorId,
         caller: call.caller||"Unknown",
         phone: call.phone||"",
         summary: call.summary||"",
@@ -183,7 +243,7 @@ const db = {
     return sbFetch("jobs", {
       method: "POST",
       body: JSON.stringify({
-        contractor_id: "jwood",
+        contractor_id: COMPANY.contractorId,
         name: job.name,
         area: job.area||"",
         homes: String(job.homes||0),
@@ -201,15 +261,15 @@ const BLAND_STATUS    = PROXY_BASE + "/?target=bland-status";
 // ─────────────────────────────────────────────
 // BLAND.AI AGENT CONFIG
 // ─────────────────────────────────────────────
-const BLAND_AGENT_SCRIPT = `You are a friendly assistant answering calls for JWood LLC, a concrete driveway contractor in Tulsa, Oklahoma. Your name is Alex.
+const BLAND_AGENT_SCRIPT = `You are a friendly assistant answering calls for JWood LLC, a concrete contractor in Tulsa, Oklahoma. Your name is Alex.
 
 When someone calls:
-1. Greet them warmly: "Thanks for calling JWood LLC! This is Alex. Are you calling about a driveway project?"
+1. Greet them warmly: "Thanks for calling JWood LLC! This is Alex. Are you calling about a concrete project?"
 2. Get their name and callback number
-3. Ask what service they need: crack repair, new driveway, resurfacing, or sealing
+3. Ask what service they need: crack repair, new concrete, resurfacing, or sealing
 4. Ask for the property address
 5. Ask their timeline: "Are you looking to get this done in the next few weeks?"
-6. Ask roughly how big the driveway is (single car, double car, or larger)
+6. Ask roughly the approximate size of the project (single car, double car, or larger)
 7. Tell them: "Great! Joel will be giving you a personal call back within the hour to discuss your project and give you a free estimate."
 8. Transfer to Joel at 918-896-6737
 
@@ -227,10 +287,10 @@ async function createBlandAgent(phoneNumber, leadContext) {
         voice: "maya",
         max_duration: 10,
         wait_for_greeting: true,
-        transfer_phone_number: "+19188966737",
+        transfer_phone_number: COMPANY.transferPhone,
         webhook: PROXY_BASE + "/?target=bland",
         metadata: { source: "pavemail", lead: leadContext },
-        first_sentence: "Thanks for calling JWood LLC, this is Alex! Are you calling about a driveway project?",
+        first_sentence: "Thanks for calling JWood LLC, this is Alex! Are you calling about a concrete project?",
         record: true,
         reduce_latency: false,
       })
@@ -375,7 +435,7 @@ async function lobRequest(endpoint, body) {
 }
 
 // Lob verified address IDs
-const LOB_FROM_ID = "adr_910e8abc86e78815"; // JWood LLC
+const LOB_FROM_ID = COMPANY.lobFromId; // JWood LLC
 const LOB_TO_ID   = "adr_cef32a4b4157e9df"; // Tulsa Test Homeowner
 
 async function sendMailer({ neighborhood, headline, sub }) {
@@ -384,8 +444,8 @@ async function sendMailer({ neighborhood, headline, sub }) {
     to:   LOB_TO_ID,
     from: LOB_FROM_ID,
     size: "6x9",
-    front: `<html><body style="margin:0;padding:30px;background:#1c1a17;color:#f5f0e6;font-family:Arial,sans-serif;"><div style="color:#e8560a;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">JWood LLC · Tulsa, OK</div><h1 style="font-size:32px;color:#f5f0e6;margin:0;line-height:1.1;">${headline || "UPGRADE YOUR DRIVEWAY THIS SEASON"}</h1><p style="font-size:12px;color:#b8b4ac;margin-top:10px;line-height:1.6;">${sub || "Tulsa concrete specialists. Free estimates, written warranty, local crew."}</p><div style="margin-top:18px;background:#e8560a;color:white;padding:10px 16px;border-radius:6px;display:inline-block;"><strong style="font-size:13px;">FREE ESTIMATE — CALL 918-896-6737</strong></div><p style="margin-top:10px;font-size:10px;color:#7a7670;">Mention code JWOOD25 · joelmwood@gmail.com</p></body></html>`,
-    back: `<html><body style="margin:0;padding:30px;background:#f5f0e6;color:#1c1a17;font-family:Arial,sans-serif;"><h2 style="font-size:20px;color:#1c1a17;margin-bottom:12px;">Why Tulsa Homeowners Choose JWood LLC</h2><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Oklahoma Weather Experts</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">We know Tulsa freeze-thaw cycles and use the right materials.</p></div><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Commercial-Grade Materials</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">Reinforced concrete built to last 30+ years in Oklahoma soil.</p></div><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Written Warranty on Every Job</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">2-year workmanship guarantee. If something fails, we fix it free.</p></div></div><div style="background:#1c1a17;color:white;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:15px;font-weight:700;">918-896-6737</div><div style="font-size:10px;color:#b8b4ac;margin-top:2px;">joelmwood@gmail.com</div><div style="margin-top:5px;font-size:10px;background:#e8560a;display:inline-block;padding:3px 8px;border-radius:4px;">Code: JWOOD25 — FREE estimate</div></div></body></html>`,
+    front: `<html><body style="margin:0;padding:30px;background:#1c1a17;color:#f5f0e6;font-family:Arial,sans-serif;"><div style="color:#e8560a;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">JWood LLC · Tulsa, OK</div><h1 style="font-size:32px;color:#f5f0e6;margin:0;line-height:1.1;">${headline || "UPGRADE YOUR CONCRETE THIS SEASON"}</h1><p style="font-size:12px;color:#b8b4ac;margin-top:10px;line-height:1.6;">${sub || "Tulsa concrete specialists. Free estimates, written warranty, local crew."}</p><div style="margin-top:18px;background:#e8560a;color:white;padding:10px 16px;border-radius:6px;display:inline-block;"><strong style="font-size:13px;">FREE ESTIMATE — CALL 918-896-6737</strong></div><p style="margin-top:10px;font-size:10px;color:#7a7670;">Mention code JWOOD · joelmwood@gmail.com</p></body></html>`,
+    back: `<html><body style="margin:0;padding:30px;background:#f5f0e6;color:#1c1a17;font-family:Arial,sans-serif;"><h2 style="font-size:20px;color:#1c1a17;margin-bottom:12px;">Why Tulsa Homeowners Choose JWood LLC</h2><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Oklahoma Weather Experts</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">We know Tulsa freeze-thaw cycles and use the right materials.</p></div><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Commercial-Grade Materials</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">Reinforced concrete built to last 30+ years in Oklahoma soil.</p></div><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Written Warranty on Every Job</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">2-year workmanship guarantee. If something fails, we fix it free.</p></div></div><div style="background:#1c1a17;color:white;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:15px;font-weight:700;">918-896-6737</div><div style="font-size:10px;color:#b8b4ac;margin-top:2px;">joelmwood@gmail.com</div><div style="margin-top:5px;font-size:10px;background:#e8560a;display:inline-block;padding:3px 8px;border-radius:4px;">Code: JWOOD — FREE estimate</div></div></body></html>`,
     use_type: "marketing",
   });
 }
@@ -429,20 +489,41 @@ function QRCode({ value, size = 120 }) {
 // ─────────────────────────────────────────────
 // COMPANY INFO
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// CONTRACTOR CONFIG
+// To set up a new contractor — change ONLY these values.
+// Everything else in the app pulls from here automatically.
+// ─────────────────────────────────────────────
 const COMPANY = {
-  name:    "JWood LLC",
-  phone:   "918-896-6737",
-  email:   "joelmwood@gmail.com",
-  city:    "Tulsa",
-  state:   "OK",
-  promo:   "JWOOD25",
+  // Identity
+  name:        "JWood LLC",
+  ownerName:   "Joel",
+  phone:       "918-896-6737",
+  phoneRaw:    COMPANY.phoneRaw,          // digits only, for QR codes + Bland transfer
+  email:       "joelmwood@gmail.com",
+  city:        "Tulsa",
+  state:       "OK",
+  promo:       "JWOOD",
+  // Lob.com — address ID for return address on postcards
+  lobFromId:   COMPANY.lobFromId,
+  // Bland.ai — phone number to transfer qualified leads to
+  transferPhone: "+19188966737",
+  // Supabase — contractor identifier for data isolation
+  contractorId: "jwood",
+  // Capacity defaults
+  crewSize:    12,
+  maxJobsWeek: 6,
+  weeklyTarget: 40000,
+  // Branding
+  accentColor: "#e8560a",            // orange — change for each contractor
+  tagline:     "Tulsa's Concrete Specialists",
 };
 
 
 // ─────────────────────────────────────────────
 // PRICING ENGINE
 // ─────────────────────────────────────────────
-const DRIVEWAY_SIZES = [
+const PROJECT_SIZES = [
   { label:"Small",  desc:"1-car, ~250 sq ft",  sqft:250  },
   { label:"Medium", desc:"2-car, ~400 sq ft",  sqft:400  },
   { label:"Large",  desc:"3-car, ~600 sq ft",  sqft:600  },
@@ -475,20 +556,20 @@ function calcPrice(sqft, service, damage) {
 const DEMO_MAILERS = {
   "Spring-Crack Repair-Free Estimate": {
     page1: { eyebrow:"Your Neighbors Are Already Upgrading", headline:"TULSA WINTERS ARE TOUGH ON DRIVEWAYS", subheadline:"Freeze-thaw cycles across Tulsa have left driveways cracked and crumbling this spring. Don't let small damage turn into a full replacement — JWood LLC is already working in your neighborhood.", badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"No Obligation" },
-    page2: { headline:"WHY YOUR DRIVEWAY CAN'T WAIT", intro:"Oklahoma's temperature swings — from icy winters to 100°F summers — are brutal on concrete. Cracks ignored now become costly replacements by fall.", benefits:[{icon:"🌡️",title:"Oklahoma Weather Damage",desc:"Tulsa's freeze-thaw cycles crack concrete fast. Spring is the best time to repair before summer heat sets in."},{icon:"💧",title:"Stop Water Intrusion",desc:"Cracks let water in. Water expands when frozen. That destroys your base and doubles repair costs."},{icon:"🏡",title:"Boost Curb Appeal",desc:"A repaired driveway instantly upgrades your home's appearance and protects its value."},{icon:"⏱️",title:"One-Day Turnaround",desc:"Most crack repairs completed same day. Driveable within 24 hours."}], whyTitle:"Why JWood LLC?", whyText:"We're local Tulsans — we know Oklahoma soil, Oklahoma weather, and Oklahoma homeowners. Every job is done with commercial-grade materials and backed by our written warranty." },
-    page3: { headline:"OUR SIMPLE 4-STEP PROCESS", intro:"From your first call to pulling your car back in — we make it effortless.", steps:[{title:"Free On-Site Estimate",desc:"We visit, assess the damage, and give you a written quote. No pressure, no surprises."},{title:"Schedule at Your Convenience",desc:"We work around your schedule, including Saturdays."},{title:"Expert Repair",desc:"Our crew arrives on time, protects your lawn, and gets to work with commercial-grade materials."},{title:"Done & Guaranteed",desc:"We clean up completely and hand you a written warranty before we leave."}], offerHeadline:"FREE ESTIMATE — CALL TODAY", offerSub:"Spring slots filling fast — mention code JWOOD25 when you call" },
+    page2: { headline:"WHY YOUR CONCRETE CAN'T WAIT", intro:"Oklahoma's temperature swings — from icy winters to 100°F summers — are brutal on concrete. Cracks ignored now become costly replacements by fall.", benefits:[{icon:"🌡️",title:"Oklahoma Weather Damage",desc:"Tulsa's freeze-thaw cycles crack concrete fast. Spring is the best time to repair before summer heat sets in."},{icon:"💧",title:"Stop Water Intrusion",desc:"Cracks let water in. Water expands when frozen. That destroys your base and doubles repair costs."},{icon:"🏡",title:"Boost Curb Appeal",desc:"A repaired surface instantly upgrades your home's appearance and protects its value."},{icon:"⏱️",title:"One-Day Turnaround",desc:"Most crack repairs completed same day. Driveable within 24 hours."}], whyTitle:"Why JWood LLC?", whyText:"We're local Tulsans — we know Oklahoma soil, Oklahoma weather, and Oklahoma homeowners. Every job is done with commercial-grade materials and backed by our written warranty." },
+    page3: { headline:"OUR SIMPLE 4-STEP PROCESS", intro:"From your first call to pulling your car back in — we make it effortless.", steps:[{title:"Free On-Site Estimate",desc:"We visit, assess the damage, and give you a written quote. No pressure, no surprises."},{title:"Schedule at Your Convenience",desc:"We work around your schedule, including Saturdays."},{title:"Expert Repair",desc:"Our crew arrives on time, protects your lawn, and gets to work with commercial-grade materials."},{title:"Done & Guaranteed",desc:"We clean up completely and hand you a written warranty before we leave."}], offerHeadline:"FREE ESTIMATE — CALL TODAY", offerSub:"Spring slots filling fast — mention code JWOOD when you call" },
     page4: { eyebrow:"Ready to Get Started?", headline:"CALL JWOOD LLC TODAY", sub:"Serving Tulsa and surrounding areas. Spring is our busiest season — call now to lock in your free estimate before your neighbors do.", guarantee:"We guarantee our work for 2 full years. If anything fails due to workmanship, we come back and fix it — no questions asked." }
   },
   "Summer-New Installation-Free Estimate": {
-    page1: { eyebrow:"Upgrade Before Summer Cookout Season", headline:"NEW CONCRETE DRIVEWAY INSTALLED THIS SUMMER", subheadline:"Long Tulsa summer days mean faster curing and better results. JWood LLC is installing driveways across your neighborhood — and we have a free estimate ready for you.", badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"Call Today" },
-    page2: { headline:"TRANSFORM YOUR HOME'S FIRST IMPRESSION", intro:"A new concrete driveway is one of the highest-ROI investments a Tulsa homeowner can make — averaging 98% return at resale.", benefits:[{icon:"☀️",title:"Summer Is Ideal",desc:"Oklahoma's warm temps and dry summers create perfect conditions for long-lasting concrete pours."},{icon:"💰",title:"Best ROI",desc:"New concrete driveways return nearly 100% of cost at resale — better than most home renovations."},{icon:"🏗️",title:"Custom Finish",desc:"Choose width, texture, color, and edging to perfectly match your Tulsa home."},{icon:"📅",title:"Done in Days",desc:"Most residential driveways installed and driveable within 3–5 days."}], whyTitle:"Why JWood LLC?", whyText:"Tulsa homeowners trust JWood LLC because we show up on time, communicate clearly, and stand behind every pour. We use reinforced concrete with proper base prep." },
-    page3: { headline:"HOW IT WORKS", intro:"A new driveway is easier than you think.", steps:[{title:"Free Design Consultation",desc:"We measure your space and help you choose the right width, finish, and budget."},{title:"Demo & Excavation",desc:"We remove your old surface and properly prepare the base — the most critical step."},{title:"Pour & Finish",desc:"Commercial-grade concrete poured by our experienced Tulsa crew."},{title:"Cure, Seal & Warranty",desc:"We apply a professional sealer and hand you a written warranty before we leave."}], offerHeadline:"FREE ESTIMATE — NO OBLIGATION", offerSub:"Summer slots limited — call 918-896-6737 and mention JWOOD25" },
+    page1: { eyebrow:"Upgrade Before Summer Cookout Season", headline:"NEW CONCRETE PROJECT COMPLETED THIS SUMMER", subheadline:"Long Tulsa summer days mean faster curing and better results. JWood LLC is completing concrete projects across your neighborhood — and we have a free estimate ready for you.", badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"Call Today" },
+    page2: { headline:"TRANSFORM YOUR HOME'S FIRST IMPRESSION", intro:"A new concrete project is one of the highest-ROI investments a Tulsa homeowner can make — averaging 98% return at resale.", benefits:[{icon:"☀️",title:"Summer Is Ideal",desc:"Oklahoma's warm temps and dry summers create perfect conditions for long-lasting concrete pours."},{icon:"💰",title:"Best ROI",desc:"New concrete projects return nearly 100% of cost at resale — better than most home renovations."},{icon:"🏗️",title:"Custom Finish",desc:"Choose width, texture, color, and edging to perfectly match your Tulsa home."},{icon:"📅",title:"Done in Days",desc:"Most residential projects installed and driveable within 3–5 days."}], whyTitle:"Why JWood LLC?", whyText:"Tulsa homeowners trust JWood LLC because we show up on time, communicate clearly, and stand behind every pour. We use reinforced concrete with proper base prep." },
+    page3: { headline:"HOW IT WORKS", intro:"A new concrete project is easier than you think.", steps:[{title:"Free Design Consultation",desc:"We measure your space and help you choose the right width, finish, and budget."},{title:"Demo & Excavation",desc:"We remove your old surface and properly prepare the base — the most critical step."},{title:"Pour & Finish",desc:"Commercial-grade concrete poured by our experienced Tulsa crew."},{title:"Cure, Seal & Warranty",desc:"We apply a professional sealer and hand you a written warranty before we leave."}], offerHeadline:"FREE ESTIMATE — NO OBLIGATION", offerSub:"Summer slots limited — call 918-896-6737 and mention JWOOD" },
     page4: { eyebrow:"Let's Build Something Great", headline:"CALL 918-896-6737 THIS WEEK", sub:"Summer slots fill fast across Tulsa. We can usually start within 2 weeks of your estimate.", guarantee:"5-year structural warranty on all new installations. We stand behind every pour." }
   },
   "Fall-Sealing-Free Estimate": {
-    page1: { eyebrow:"Protect Your Driveway Before Winter Hits", headline:"SEAL IT NOW BEFORE OKLAHOMA WINTER CRACKS IT", subheadline:"Fall is the last chance to seal your driveway before Tulsa's freeze-thaw season begins. JWood LLC is sealing driveways across your neighborhood right now.", badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"Limited Slots" },
-    page2: { headline:"WHY FALL SEALING IS CRITICAL IN TULSA", intro:"Oklahoma's winters are unpredictable — ice, snow, and freeze-thaw cycles can destroy an unsealed driveway in a single season.", benefits:[{icon:"❄️",title:"Winter Protection",desc:"Sealing blocks water before it freezes and expands inside your concrete."},{icon:"🛡️",title:"UV & Heat Shield",desc:"Tulsa summers hit 100°F+. Sealer protects against UV damage and surface deterioration."},{icon:"✨",title:"Like-New Appearance",desc:"Professional sealing restores color and gives your driveway a clean, finished look."},{icon:"💵",title:"Prevent Costly Repairs",desc:"A $300 seal job now prevents a $3,000 replacement later."}], whyTitle:"Why JWood LLC?", whyText:"We use commercial-grade penetrating sealers — not the hardware store stuff that peels in one season. Our sealing jobs are done right, and we're Tulsa locals." },
-    page3: { headline:"SIMPLE SEALING PROCESS", intro:"In and out in a few hours. Your driveway is protected all winter.", steps:[{title:"Free Assessment",desc:"We inspect your driveway and check for cracks that need repair before sealing."},{title:"Surface Prep & Clean",desc:"We power wash and prep the surface for maximum sealer adhesion."},{title:"Professional Application",desc:"Commercial-grade sealer applied evenly by our trained crew."},{title:"24-Hour Cure",desc:"Stay off it for 24 hours and you're fully protected for the season."}], offerHeadline:"FREE ESTIMATE THIS WEEK", offerSub:"Fall slots filling fast — mention JWOOD25 when you call 918-896-6737" },
+    page1: { eyebrow:"Protect Your Concrete Before Winter Hits", headline:"SEAL IT NOW BEFORE OKLAHOMA WINTER CRACKS IT", subheadline:"Fall is the last chance to protect your concrete before Tulsa's freeze-thaw season begins. JWood LLC is sealing concrete across your neighborhood right now.", badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"Limited Slots" },
+    page2: { headline:"WHY FALL SEALING IS CRITICAL IN TULSA", intro:"Oklahoma's winters are unpredictable — ice, snow, and freeze-thaw cycles can destroy unsealed concrete in a single season.", benefits:[{icon:"❄️",title:"Winter Protection",desc:"Sealing blocks water before it freezes and expands inside your concrete."},{icon:"🛡️",title:"UV & Heat Shield",desc:"Tulsa summers hit 100°F+. Sealer protects against UV damage and surface deterioration."},{icon:"✨",title:"Like-New Appearance",desc:"Professional sealing restores color and gives your concrete a clean, finished look."},{icon:"💵",title:"Prevent Costly Repairs",desc:"A $300 seal job now prevents a $3,000 replacement later."}], whyTitle:"Why JWood LLC?", whyText:"We use commercial-grade penetrating sealers — not the hardware store stuff that peels in one season. Our sealing jobs are done right, and we're Tulsa locals." },
+    page3: { headline:"SIMPLE SEALING PROCESS", intro:"In and out in a few hours. Your concrete is protected all winter.", steps:[{title:"Free Assessment",desc:"We inspect your concrete and check for cracks that need repair before sealing."},{title:"Surface Prep & Clean",desc:"We power wash and prep the surface for maximum sealer adhesion."},{title:"Professional Application",desc:"Commercial-grade sealer applied evenly by our trained crew."},{title:"24-Hour Cure",desc:"Stay off it for 24 hours and you're fully protected for the season."}], offerHeadline:"FREE ESTIMATE THIS WEEK", offerSub:"Fall slots filling fast — mention JWOOD when you call 918-896-6737" },
     page4: { eyebrow:"Don't Wait for the First Freeze", headline:"CALL JWOOD LLC BEFORE WINTER HITS", sub:"Once temperatures drop below 50°F sealing becomes less effective. Call now while fall conditions are still perfect.", guarantee:"All sealing work guaranteed for 2 seasons. If it peels or fails, we come back and redo it — free." }
   }
 };
@@ -1156,12 +1237,12 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 // ROUTES & MOCK DATA
 // ─────────────────────────────────────────────
 const ROUTES = [
-  {id:1,name:"South Tulsa / Midtown",zip:"74105",homes:312,color:"#e8560a"},
-  {id:2,name:"Broken Arrow",         zip:"74011",homes:428,color:"#2a7a52"},
-  {id:3,name:"Jenks / Riverview",    zip:"74037",homes:198,color:"#1a6fa8"},
-  {id:4,name:"Owasso",               zip:"74055",homes:267,color:"#8b5e3c"},
-  {id:5,name:"Bixby",                zip:"74008",homes:183,color:"#6a3a8a"},
-  {id:6,name:"Sand Springs",         zip:"74063",homes:154,color:"#2a6a6a"},
+  {id:1,name:"South Tulsa / Midtown",zip:"74105",homes:0,color:"#e8560a"},
+  {id:2,name:"Broken Arrow",         zip:"74011",homes:0,color:"#2a7a52"},
+  {id:3,name:"Jenks / Riverview",    zip:"74037",homes:0,color:"#1a6fa8"},
+  {id:4,name:"Owasso",               zip:"74055",homes:0,color:"#8b5e3c"},
+  {id:5,name:"Bixby",                zip:"74008",homes:0,color:"#6a3a8a"},
+  {id:6,name:"Sand Springs",         zip:"74063",homes:0,color:"#2a6a6a"},
 ];
 
 const MOCK_JOBS = [];
@@ -1295,7 +1376,7 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
         :dmgL.includes('full')||dmgL.includes('replace')?'NEEDS REPLACEMENT'
         :dmgL.includes('seal')?'NEEDS SEALING'
         :dmgL.includes('edge')?'EDGE CRUMBLING'
-        :'YOUR DRIVEWAY';
+        :'YOUR PROJECT';
       // Fit badge width to text
       ctx.font='bold 7px Arial';
       var bw=ctx.measureText(badge).width+16;
@@ -1391,9 +1472,105 @@ export default function App(){
   // ── AUTH ──
   const ACCESS_CODE = "8966";
   const STORAGE_KEY = "pavemail_auth";
-  const[unlocked,setUnlocked]=useState(()=>{
-    try{ return localStorage.getItem(STORAGE_KEY)==="true"; }catch{ return false; }
+  // ── AUTH STATE ──
+  const[authUser,setAuthUser]=useState(()=>{
+    try{ const s=localStorage.getItem("pm_session"); return s?JSON.parse(s):null; }catch{ return null; }
   });
+  const[contractor,setContractor]=useState(()=>{
+    try{ const s=localStorage.getItem("pm_profile"); return s?JSON.parse(s):null; }catch{ return null; }
+  });
+  const[authScreen,setAuthScreen]=useState("login"); // login | signup | forgot | profile-setup
+  const[authForm,setAuthForm]=useState({email:"",password:"",confirmPassword:"",inviteCode:"",ownerName:"",companyName:"",phone:"",city:"Tulsa"});
+  const[authLoading,setAuthLoading]=useState(false);
+  const[authError,setAuthError]=useState("");
+  const[authSuccess,setAuthSuccess]=useState("");
+
+  const unlocked = !!authUser;
+  const setUnlocked = () => {}; // kept for compatibility
+
+  // Login handler
+  const handleLogin = async () => {
+    if(!authForm.email||!authForm.password){ setAuthError("Enter your email and password"); return; }
+    setAuthLoading(true); setAuthError("");
+    const data = await auth.signIn(authForm.email, authForm.password);
+    if(data.access_token) {
+      const session = { token: data.access_token, user: data.user };
+      setAuthUser(session);
+      try{ localStorage.setItem("pm_session", JSON.stringify(session)); }catch{}
+      // Load profile
+      const profile = await auth.getProfile(data.access_token);
+      if(profile) {
+        setContractor(profile);
+        try{ localStorage.setItem("pm_profile", JSON.stringify(profile)); }catch{}
+      } else {
+        setAuthScreen("profile-setup");
+      }
+      track("login", { email: authForm.email });
+    } else {
+      setAuthError(data.error_description || data.msg || "Login failed — check your email and password");
+    }
+    setAuthLoading(false);
+  };
+
+  // Signup handler
+  const handleSignup = async () => {
+    if(authForm.inviteCode.trim().toUpperCase() !== "PAVE2026") { setAuthError("Invalid invite code — contact Joel for access"); return; }
+    if(!authForm.email||!authForm.password) { setAuthError("Enter your email and password"); return; }
+    if(authForm.password !== authForm.confirmPassword) { setAuthError("Passwords don't match"); return; }
+    if(authForm.password.length < 6) { setAuthError("Password must be at least 6 characters"); return; }
+    if(!authForm.ownerName||!authForm.companyName) { setAuthError("Enter your name and company name"); return; }
+    setAuthLoading(true); setAuthError("");
+    const data = await auth.signUp(authForm.email, authForm.password, {
+      owner_name: authForm.ownerName,
+      company_name: authForm.companyName,
+    });
+    if(data.id || data.user?.id) {
+      // Auto sign in after signup
+      const loginData = await auth.signIn(authForm.email, authForm.password);
+      if(loginData.access_token) {
+        const session = { token: loginData.access_token, user: loginData.user };
+        setAuthUser(session);
+        try{ localStorage.setItem("pm_session", JSON.stringify(session)); }catch{}
+        setAuthScreen("profile-setup");
+        track("signup", { email: authForm.email, company: authForm.companyName });
+      }
+    } else {
+      setAuthError(data.error_description || data.msg || "Signup failed — try again");
+    }
+    setAuthLoading(false);
+  };
+
+  // Profile setup handler
+  const handleProfileSetup = async () => {
+    if(!authUser?.token) return;
+    setAuthLoading(true);
+    const profile = {
+      id: authUser.user.id,
+      company_name: authForm.companyName || contractor?.company_name || "My Company",
+      owner_name: authForm.ownerName || contractor?.owner_name || "Owner",
+      phone: authForm.phone || contractor?.phone || "",
+      email: authForm.email || authUser.user.email,
+      city: authForm.city || "Tulsa",
+      state: "OK",
+      accent_color: "#e8560a",
+    };
+    const saved = await auth.updateProfile(authUser.token, profile);
+    const updatedProfile = Array.isArray(saved) ? saved[0] : saved;
+    setContractor(updatedProfile);
+    try{ localStorage.setItem("pm_profile", JSON.stringify(updatedProfile)); }catch{}
+    setAuthLoading(false);
+  };
+
+  // Logout
+  const handleLogout = async () => {
+    if(authUser?.token) await auth.signOut(authUser.token);
+    setAuthUser(null); setContractor(null);
+    try{ localStorage.removeItem("pm_session"); localStorage.removeItem("pm_profile"); }catch{}
+    setAuthScreen("login");
+    setAuthForm({email:"",password:"",confirmPassword:"",inviteCode:"",ownerName:"",companyName:"",phone:"",city:"Tulsa"});
+  };
+
+  // Legacy PIN state (kept for compatibility)
   const[pin,setPin]=useState("");
   const[pinError,setPinError]=useState(false);
   const[rememberMe,setRememberMe]=useState(true);
@@ -1457,6 +1634,9 @@ export default function App(){
   const[spotLoading,setSpotLoading]=useState(false);
   const[spotSending,setSpotSending]=useState(false);
   const[spotJobs,setSpotJobs]=useState([]);
+  const[previewJob,setPreviewJob]=useState(null); // spot bid being previewed
+  const[showHistoryPreview,setShowHistoryPreview]=useState(false);
+  const[historyCanvasUrl,setHistoryCanvasUrl]=useState(null);
 
   const[pipelineView,setPipelineView]=useState("kanban");
 
@@ -1597,7 +1777,7 @@ export default function App(){
         body:JSON.stringify({
           model:"claude-sonnet-4-5-20250929",
           max_tokens:400,
-          messages:[{role:"user",content:`Write a direct mail postcard for JWood LLC (concrete contractor, Tulsa OK, 918-896-6737). We just completed a driveway job at ${radiusLead.address}, ${radiusLead.city}. This postcard goes to their neighbors within ${radiusForm.radius} miles. The angle: we are already working in the neighborhood, equipment is here, we can offer a neighbor discount this week. Be warm, neighbor-to-neighbor tone. Return ONLY JSON: {"headline":"string","personalNote":"string","urgencyLine":"string","offer":"string"}`}]
+          messages:[{role:"user",content:`Write a direct mail postcard for JWood LLC (concrete contractor, Tulsa OK, 918-896-6737). We just completed a concrete project at ${radiusLead.address}, ${radiusLead.city}. This postcard goes to their neighbors within ${radiusForm.radius} miles. The angle: we are already working in the neighborhood, equipment is here, we can offer a neighbor discount this week. Be warm, neighbor-to-neighbor tone. Return ONLY JSON: {"headline":"string","personalNote":"string","urgencyLine":"string","offer":"string"}`}]
         })
       });
       const data=await res.json();
@@ -1623,7 +1803,7 @@ export default function App(){
       const radiusFt=Math.round(radiusMiles*5280);
       const front=`<html><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#1c1a17;color:#f5f0e6;position:relative;">
         <div style="background:linear-gradient(135deg,#2a7a52 0%,#1c5a3a 100%);padding:10px 20px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.8);">
-          YOUR NEIGHBOR AT ${radiusMailer.address.toUpperCase()} JUST GOT A NEW DRIVEWAY
+          YOUR NEIGHBOR AT ${radiusMailer.address.toUpperCase()} JUST GOT A NEW PROJECT DONE
         </div>
         <div style="padding:24px;">
           <h1 style="font-family:Arial,sans-serif;font-size:28px;color:#f5f0e6;margin:0 0 12px;line-height:1.1;">${radiusMailer.headline}</h1>
@@ -1642,10 +1822,10 @@ export default function App(){
 
       const back=`<html><body style="margin:0;padding:20px;font-family:Arial,sans-serif;background:#f5f0e6;color:#1c1a17;">
         <div style="background:#2a7a52;color:white;padding:10px 16px;border-radius:6px;margin-bottom:16px;text-align:center;">
-          <div style="font-size:11px;font-weight:700;letter-spacing:1px;">WE JUST FINISHED YOUR NEIGHBOR'S DRIVEWAY</div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;">WE JUST FINISHED YOUR NEIGHBOR'S PROJECT</div>
           <div style="font-size:10px;opacity:0.8;margin-top:2px;">${radiusMailer.address}, ${radiusMailer.city}</div>
         </div>
-        <p style="font-size:12px;line-height:1.7;margin-bottom:14px;">While our equipment is in your neighborhood, we'd love to give you a <strong>free estimate</strong> on your driveway. As your neighbor's contractor, you get our neighbor rate this week.</p>
+        <p style="font-size:12px;line-height:1.7;margin-bottom:14px;">While our equipment is in your neighborhood, we'd love to give you a <strong>free estimate</strong> on your project. As your neighbor's contractor, you get our neighbor rate this week.</p>
         <div style="background:#1c1a17;color:white;padding:12px;border-radius:8px;text-align:center;">
           <div style="font-size:14px;font-weight:700;">918-896-6737</div>
           <div style="font-size:10px;color:#b8b4ac;margin-top:2px;">Call or text Joel · JWood LLC · Tulsa, OK</div>
@@ -1666,7 +1846,7 @@ export default function App(){
             address_zip:radiusLead.zip||"74105",
             address_country:"US",
           },
-          from:"adr_910e8abc86e78815",
+          from:COMPANY.lobFromId,
           front,back,
           size:"6x11",
           metadata:{type:"radius",radius_miles:String(radiusMiles),center_address:radiusMailer.address}
@@ -1765,7 +1945,7 @@ export default function App(){
     if(!form.neighborhood)return;
     setLoading(true);setMailer(null);setLobResult(null);
     try{
-      const prompt=`You are a direct mail copywriter for a concrete driveway contractor in Tulsa, Oklahoma. Company: ${COMPANY.name}, Phone: ${COMPANY.phone}. Neighborhood: ${form.neighborhood}, OK. Season: ${form.season}, Service: ${form.angle}, Offer: ${form.offer}, Promo: ${form.promoCode}. Notes: ${form.extraNotes||"Tulsa area, Oklahoma weather"}.
+      const prompt=`You are a direct mail copywriter for a concrete contractor in Tulsa, Oklahoma. Company: ${COMPANY.name}, Phone: ${COMPANY.phone}. Neighborhood: ${form.neighborhood}, OK. Season: ${form.season}, Service: ${form.angle}, Offer: ${form.offer}, Promo: ${form.promoCode}. Notes: ${form.extraNotes||"Tulsa area, Oklahoma weather"}.
 Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subheadline":"string","badgeTop":"string","badgeMain":"string","badgeBottom":"string"},"page2":{"headline":"string","intro":"string","benefits":[{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"}],"whyTitle":"string","whyText":"string"},"page3":{"headline":"string","intro":"string","steps":[{"title":"string","desc":"string"},{"title":"string","desc":"string"},{"title":"string","desc":"string"},{"title":"string","desc":"string"}],"offerHeadline":"string","offerSub":"string"},"page4":{"eyebrow":"string","headline":"string","sub":"string","guarantee":"string"}}`;
       const res=await fetch(ANTHROPIC_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5-20250929",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
       const data=await res.json();
@@ -1814,7 +1994,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       // Graceful fallback — still add to tracker as queued
       const newJob={
         id:`JW-00${jobs.length+1}`,
-        lobId:"demo_"+Math.random().toString(36).slice(2,8),
+        lobId:"",
         name:form.neighborhood||"New Campaign",
         homes:parseInt(form.homes)||0,
         sent:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}),
@@ -1926,9 +2106,9 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       : spotForm.damage;
     console.log("Demo fallback, capturedPhoto:", capturedPhoto ? "YES ("+capturedPhoto.length+" chars)" : "NO");
     const demoMailer={
-      headline:"WE NOTICED YOUR DRIVEWAY",
+      headline:"WE NOTICED YOUR PROJECT",
       personalNote:`We were working in your neighborhood recently and noticed your driveway at ${spotForm.address} has ${damageList}. As local Tulsa concrete specialists, we would love to help you get ahead of this before it gets worse — and we can usually start within a week.`,
-      urgencyLine:"Oklahoma winters do not wait — neither should your driveway.",
+      urgencyLine:"Oklahoma winters do not wait — neither should your concrete.",
       address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,
       damage:detectedDemo,
       photoUsed:!!capturedPhoto,
@@ -1967,7 +2147,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
   <div style="position:relative;padding:26px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;">
     <div style="position:absolute;top:22px;left:26px;right:26px;display:flex;justify-content:space-between;align-items:center;">
       <div style="color:#e8560a;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">JWood LLC · Tulsa, OK</div>
-      ${hostedPhotoUrl?`<div style="background:rgba(232,86,10,0.9);color:white;font-size:8px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:1px;">📷 YOUR DRIVEWAY</div>`:""}
+      ${hostedPhotoUrl?`<div style="background:rgba(232,86,10,0.9);color:white;font-size:8px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:1px;">📷 YOUR PROJECT</div>`:""}
     </div>
     <div style="margin-top:auto;">
       <h1 style="font-size:26px;color:#f5f0e6;margin:0 0 8px;line-height:1.1;text-shadow:0 2px 8px rgba(0,0,0,0.8);">${spotMailer.headline}</h1>
@@ -1999,7 +2179,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       </div>
       <div style="width:120px;flex-shrink:0;">
         <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2a7a52;margin-bottom:4px;">After JWood LLC</div>
-        <img src="${BEFORE_AFTER_URL}" style="width:100%;height:90px;object-fit:cover;border-radius:6px;border:2px solid #2a7a52;" alt="Finished driveway"/>
+        <img src="${BEFORE_AFTER_URL}" style="width:100%;height:90px;object-fit:cover;border-radius:6px;border:2px solid #2a7a52;" alt="Finished project"/>
         <div style="font-size:7px;color:#2a7a52;text-align:center;margin-top:3px;font-weight:700;">✓ GUARANTEED RESULT</div>
       </div>
     </div>
@@ -2136,7 +2316,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     setVerifying(false);
   };
 
-  // Show login screen if not unlocked
+  // Show auth screen if not logged in
   if(!unlocked) return(
     <>
       <style>{STYLES}</style>
@@ -2145,55 +2325,134 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         <div className="login-texture"/>
         <div className="login-box">
           <div className="login-logo">PAVE<span>MAIL</span></div>
-          <div className="login-tagline">JWood LLC · Tulsa, OK</div>
-          <div className="login-label">Enter Access Code</div>
-          <div className={`pin-dots${shaking?" shake":""}`}>
-            {[0,1,2,3].map(i=>(
-              <div key={i} className={`pin-dot${i<pin.length?pinError?" error":" filled":""}`}/>
-            ))}
-          </div>
-          {/* Hidden input captures physical keyboard */}
-          <input
-            type="tel"
-            inputMode="numeric"
-            maxLength={4}
-            value={pin}
-            onChange={e=>{
-              const val=e.target.value.replace(/\D/g,"").slice(0,4);
-              setPin(val);
-              setPinError(false);
-              if(val.length===4){
-                const CORRECT="8966";
-                if(val===CORRECT){
-                  if(rememberMe){try{localStorage.setItem(STORAGE_KEY,"true");}catch{}}
-                  setUnlocked(true);
-                } else {
-                  setPinError(true);setShaking(true);
-                  setTimeout(()=>{setPin("");setPinError(false);setShaking(false);},600);
-                }
-              }
-            }}
-            autoFocus
-            style={{position:"absolute",opacity:0,width:1,height:1,pointerEvents:"none"}}
-          />
-          <div className="keypad">
-            {["1","2","3","4","5","6","7","8","9"].map(k=>(
-              <button key={k} className="key-btn" onClick={()=>pressKey(k)}>{k}</button>
-            ))}
-            <div/>
-            <button className="key-btn zero" onClick={()=>pressKey("0")}>0</button>
-            <button className="key-btn del" onClick={delKey}>⌫</button>
-          </div>
-          <label className="login-remember">
-            <input type="checkbox" checked={rememberMe} onChange={e=>setRememberMe(e.target.checked)}/>
-            Remember this device
-          </label>
-          <div className="login-error" style={{opacity:pinError?1:0}}>Incorrect code — try again</div>
-          <div className="login-footer">🔒 JWood LLC · Secured Access</div>
+          <div className="login-tagline">The Postcard That Knows Their Project</div>
+
+          {/* ── LOGIN ── */}
+          {authScreen==="login"&&(
+            <>
+              <div className="login-label" style={{marginTop:24}}>Sign In</div>
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+                <input type="email" placeholder="your@email.com" autoComplete="email"
+                  value={authForm.email} onChange={e=>setAuthForm(f=>({...f,email:e.target.value}))}
+                  onKeyDown={e=>e.key==="Enter"&&handleLogin()}
+                  style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"12px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:14,outline:"none"}}
+                />
+                <input type="password" placeholder="Password" autoComplete="current-password"
+                  value={authForm.password} onChange={e=>setAuthForm(f=>({...f,password:e.target.value}))}
+                  onKeyDown={e=>e.key==="Enter"&&handleLogin()}
+                  style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"12px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:14,outline:"none"}}
+                />
+              </div>
+              {authError&&<div style={{color:"#f08080",fontSize:12,marginBottom:10,textAlign:"center"}}>{authError}</div>}
+              <button className="gen-btn" onClick={handleLogin} disabled={authLoading} style={{marginBottom:12}}>
+                {authLoading?<span className="spin"/>:"Sign In"}
+              </button>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:12}}>
+                <button onClick={()=>{setAuthScreen("signup");setAuthError("");}} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>New contractor? Sign up</button>
+                <button onClick={()=>{setAuthScreen("forgot");setAuthError("");}} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>Forgot password?</button>
+              </div>
+            </>
+          )}
+
+          {/* ── SIGN UP ── */}
+          {authScreen==="signup"&&(
+            <>
+              <div className="login-label" style={{marginTop:20}}>Create Account</div>
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
+                {[
+                  {ph:"Invite Code *",key:"inviteCode",type:"text",ac:"off"},
+                  {ph:"Your First Name *",key:"ownerName",type:"text",ac:"given-name"},
+                  {ph:"Company Name *",key:"companyName",type:"text",ac:"organization"},
+                  {ph:"Email Address *",key:"email",type:"email",ac:"email"},
+                  {ph:"Password (min 6 chars) *",key:"password",type:"password",ac:"new-password"},
+                  {ph:"Confirm Password *",key:"confirmPassword",type:"password",ac:"new-password"},
+                ].map(f=>(
+                  <input key={f.key} type={f.type} placeholder={f.ph} autoComplete={f.ac}
+                    value={authForm[f.key]} onChange={e=>setAuthForm(p=>({...p,[f.key]:e.target.value}))}
+                    style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"11px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:13,outline:"none"}}
+                  />
+                ))}
+              </div>
+              {authError&&<div style={{color:"#f08080",fontSize:12,marginBottom:8,textAlign:"center"}}>{authError}</div>}
+              <button className="gen-btn" onClick={handleSignup} disabled={authLoading} style={{marginBottom:10}}>
+                {authLoading?<span className="spin"/>:"Create Account"}
+              </button>
+              <button onClick={()=>{setAuthScreen("login");setAuthError("");}} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:12,fontFamily:"'Syne',sans-serif",width:"100%"}}>← Back to Sign In</button>
+            </>
+          )}
+
+          {/* ── FORGOT PASSWORD ── */}
+          {authScreen==="forgot"&&(
+            <>
+              <div className="login-label" style={{marginTop:24}}>Reset Password</div>
+              <div style={{fontSize:12,color:"var(--stone)",marginBottom:12,textAlign:"center",lineHeight:1.6}}>Enter your email and we'll send a reset link</div>
+              <input type="email" placeholder="your@email.com" autoComplete="email"
+                value={authForm.email} onChange={e=>setAuthForm(f=>({...f,email:e.target.value}))}
+                style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"12px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:14,outline:"none",width:"100%",marginBottom:12,boxSizing:"border-box"}}
+              />
+              {authError&&<div style={{color:"#f08080",fontSize:12,marginBottom:8,textAlign:"center"}}>{authError}</div>}
+              {authSuccess&&<div style={{color:"var(--green2)",fontSize:12,marginBottom:8,textAlign:"center"}}>{authSuccess}</div>}
+              <button className="gen-btn" disabled={authLoading} onClick={async()=>{
+                if(!authForm.email){setAuthError("Enter your email");return;}
+                setAuthLoading(true);
+                await auth.resetPassword(authForm.email);
+                setAuthSuccess("Reset link sent! Check your email.");
+                setAuthLoading(false);
+              }} style={{marginBottom:10}}>
+                {authLoading?<span className="spin"/>:"Send Reset Link"}
+              </button>
+              <button onClick={()=>{setAuthScreen("login");setAuthError("");setAuthSuccess("");}} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:12,fontFamily:"'Syne',sans-serif",width:"100%"}}>← Back to Sign In</button>
+            </>
+          )}
+
+          {/* ── PROFILE SETUP ── */}
+          {authScreen==="profile-setup"&&(
+            <>
+              <div className="login-label" style={{marginTop:24}}>Set Up Your Profile</div>
+              <div style={{fontSize:12,color:"var(--stone)",marginBottom:12,textAlign:"center"}}>Tell us about your business so we can personalize your mailers</div>
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
+                {[
+                  {ph:"Your First Name",key:"ownerName",type:"text"},
+                  {ph:"Company Name",key:"companyName",type:"text"},
+                  {ph:"Phone Number",key:"phone",type:"tel"},
+                  {ph:"City",key:"city",type:"text"},
+                ].map(f=>(
+                  <input key={f.key} type={f.type} placeholder={f.ph}
+                    value={authForm[f.key]} onChange={e=>setAuthForm(p=>({...p,[f.key]:e.target.value}))}
+                    style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"11px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:13,outline:"none"}}
+                  />
+                ))}
+              </div>
+              {authError&&<div style={{color:"#f08080",fontSize:12,marginBottom:8,textAlign:"center"}}>{authError}</div>}
+              <button className="gen-btn" onClick={handleProfileSetup} disabled={authLoading}>
+                {authLoading?<span className="spin"/>:"Launch PaveMail →"}
+              </button>
+            </>
+          )}
+
+          <div className="login-footer" style={{marginTop:20}}>🔒 Secured · PaveMail</div>
         </div>
       </div>
     </>
   );
+
+  // Build dynamic COMPANY from contractor profile
+  const ACTIVE_COMPANY = contractor ? {
+    name:          contractor.company_name || COMPANY.name,
+    ownerName:     contractor.owner_name || COMPANY.ownerName,
+    phone:         contractor.phone || COMPANY.phone,
+    phoneRaw:      (contractor.phone||COMPANY.phone).replace(/\D/g,""),
+    email:         contractor.email || COMPANY.email,
+    city:          contractor.city || COMPANY.city,
+    state:         contractor.state || COMPANY.state,
+    lobFromId:     contractor.lob_from_id || COMPANY.lobFromId,
+    transferPhone: contractor.bland_transfer || COMPANY.transferPhone,
+    contractorId:  authUser?.user?.id || COMPANY.contractorId,
+    crewSize:      contractor.crew_size || COMPANY.crewSize,
+    maxJobsWeek:   contractor.max_jobs_week || COMPANY.maxJobsWeek,
+    weeklyTarget:  contractor.weekly_target || COMPANY.weeklyTarget,
+    accentColor:   contractor.accent_color || COMPANY.accentColor,
+  } : COMPANY;
 
   return(
     <>
@@ -2370,7 +2629,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div className="field"><label>Neighborhood *</label><input placeholder="e.g. South Tulsa, Broken Arrow, Jenks..." value={form.neighborhood} onChange={e=>set("neighborhood",e.target.value)}/></div>
                 <div className="row2">
                   <div className="field"><label>Homes to Mail</label><input type="number" placeholder="200" value={form.homes} onChange={e=>set("homes",e.target.value)}/></div>
-                  <div className="field"><label>Promo Code</label><input placeholder="JWOOD25" value={form.promoCode} onChange={e=>set("promoCode",e.target.value)}/></div>
+                  <div className="field"><label>Promo Code</label><input placeholder="JWOOD" value={form.promoCode} onChange={e=>set("promoCode",e.target.value)}/></div>
                 </div>
                 <div className="section-head">Campaign Settings</div>
                 <div className="field"><label>Season</label><div className="chips">{SEASONS.map(s=><button key={s} className={`chip${form.season===s?" on":""}`} onClick={()=>set("season",s)}>{s}</button>)}</div></div>
@@ -2479,7 +2738,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             <div className="spot-layout">
               <div className="spot-form">
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>SPOT BID</div>
-                <p style={{fontSize:12,color:"var(--stone)",marginBottom:16,lineHeight:1.6}}>See a cracked driveway? Send that homeowner a personal bid mailer from your truck.</p>
+                <p style={{fontSize:12,color:"var(--stone)",marginBottom:16,lineHeight:1.6}}>See a cracked concrete surface? Send that homeowner a personal bid mailer from your truck.</p>
                 <div className="section-head">Input Method</div>
                 <div className="mode-tabs">
                   {[{id:"address",icon:"📍",label:"Type Address"},{id:"map",icon:"🗺️",label:"Pin on Map"},{id:"photo",icon:"📷",label:"Photo"}].map(m=>(
@@ -2531,7 +2790,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     >
                       {spotPhoto ? (
                         <>
-                          <img src={spotPhoto} className="photo-preview" alt="driveway"/>
+                          <img src={spotPhoto} className="photo-preview" alt="project photo"/>
                           <div style={{fontSize:11,color:spotPhotoUrl?"var(--green2)":"var(--yellow)",textAlign:"center",marginTop:4}}>
                             {spotPhotoUrl?"✓ Photo uploaded & ready":"⏳ Uploading photo..."}
                           </div>
@@ -2623,9 +2882,9 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   {DAMAGES.map(d=><button key={d} className={`chip${spotForm.damage.includes(d)?" on":""}`} onClick={()=>toggleDamage(d)}>{d}</button>)}
                 </div>
 
-                <div className="section-head">Driveway Size</div>
+                <div className="section-head">Project Size</div>
                 <div className="chips" style={{marginBottom:8}}>
-                  {DRIVEWAY_SIZES.map(s=>(
+                  {PROJECT_SIZES.map(s=>(
                     <button key={s.label} className={`chip${spotForm.sqft===s.sqft&&!spotForm.customSqft?" on":""}`}
                       onClick={()=>setSpotForm(f=>({...f,sqft:s.sqft,customSqft:"",overridePrice:false}))}>
                       {s.label}<span style={{fontSize:9,opacity:0.7,display:"block"}}>{s.desc}</span>
@@ -2712,12 +2971,32 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                         </div>
                       )}
                       {spotJobs.slice(0,4).map(j=>(
-                        <div key={j.id} className="spot-job-row">
-                          <div>
+                        <div key={j.id} className="spot-job-row" onClick={()=>{
+                          setPreviewJob(j);
+                          setHistoryCanvasUrl(null);
+                          setShowHistoryPreview(true);
+                          // Re-render canvas from saved data
+                          if(j.mailerContent||j.photoUrl) {
+                            renderPostcardCanvas(
+                              j.photoUrl||j.photoData||null,
+                              j.mailerContent||{
+                                headline:"Your Personalized Estimate",
+                                personalNote:"Thank you for considering JWood LLC.",
+                                address:j.address, city:j.city,
+                                bidLo:j.bid, bid:j.bid,
+                              },
+                              setHistoryCanvasUrl
+                            );
+                          }
+                        }} style={{cursor:"pointer"}}>
+                          <div style={{flex:1}}>
                             <div className="spot-job-addr">{j.address}</div>
                             <div className="spot-job-sub">{j.city} · {j.sent} · <span className={`badge badge-${j.status}`} style={{fontSize:9,padding:"2px 6px"}}>{j.status}</span></div>
                           </div>
-                          <div className="spot-job-bid">{j.bid}</div>
+                          <div style={{display:"flex",alignItems:"center",gap:8}}>
+                            <div className="spot-job-bid">{j.bid}</div>
+                            <div style={{fontSize:10,color:"var(--stone)",background:"rgba(184,180,172,0.08)",padding:"3px 8px",borderRadius:5}}>👁 Preview</div>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -2734,7 +3013,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <div style={{marginTop:16,background:"rgba(232,86,10,0.08)",border:"1px solid rgba(232,86,10,0.2)",borderRadius:8,padding:"14px 18px",textAlign:"left",maxWidth:320}}>
                       <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--orange2)",marginBottom:8}}>How It Works</div>
                       <div style={{fontSize:12,color:"var(--stone)",lineHeight:1.8}}>
-                        <div>1. Drive past a cracked driveway</div>
+                        <div>1. Drive past a property that needs work</div>
                         <div>2. Enter the address on your phone</div>
                         <div>3. Check the damage you noticed</div>
                         <div>4. Enter your bid range</div>
@@ -2781,7 +3060,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                             <div style={{position:"relative",width:"100%",aspectRatio:"600/320",overflow:"hidden",borderRadius:"8px 8px 0 0"}}>
                               <img
                                 src={spotMailer.photoUrl||spotMailer.photoData}
-                                alt="driveway"
+                                alt="project photo"
                                 style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}
                               />
                               <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,rgba(10,9,8,0.25) 0%,rgba(10,9,8,0.7) 50%,rgba(10,9,8,0.97) 100%)"}}/>
@@ -2857,7 +3136,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                 if(dmgList.length>2) return `${dmgList.length} Problems Found — Free Estimate Inside`;
                                 if(dmgList.length>0) return "We Noticed Issues With Your Driveway";
                                 if(hasPhoto) return "We Assessed Your Driveway — Free Estimate Inside";
-                                return "Your Driveway Qualifies for a Free Estimate";
+                                return "Your Property Qualifies for a Free Estimate";
                               })()}
                             </div>
                             <div className="spot-back-header-sub">{spotMailer.address} · {spotMailer.city}, OK</div>
@@ -2886,7 +3165,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                             </div>
                             <div style={{textAlign:"right"}}>
                               <div style={{fontSize:9,color:"rgba(184,180,172,0.4)",marginBottom:4}}>Scan to call</div>
-                              <QRCode value="tel:9188966737" size={50} fgColor="#f5f0e6" bgColor="#1c1a17"/>
+                              <QRCode value=`tel:${COMPANY.phoneRaw}` size={50} fgColor="#f5f0e6" bgColor="#1c1a17"/>
                             </div>
                           </div>
                           {/* CTA */}
@@ -3411,7 +3690,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             <div className="settings-layout">
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4,flexWrap:"wrap",gap:10}}>
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"var(--cream)"}}>SETTINGS</div>
-                <button className="btn btn-ghost btn-sm" onClick={()=>{try{localStorage.removeItem("pavemail_auth");}catch{}setUnlocked(false);setPin("");}}>🔒 Lock App</button>
+                <button className="btn btn-ghost btn-sm" onClick={handleLogout}>🔒 Sign Out</button>
               </div>
               <p style={{fontSize:13,color:"var(--stone)",marginBottom:26}}>JWood LLC · Tulsa, OK · {COMPANY.phone}</p>
               <div className="settings-section">
@@ -3421,7 +3700,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <div>📞 <strong style={{color:"var(--cream)",fontFamily:"DM Mono"}}>918-896-6737</strong></div>
                   <div>✉️ <strong style={{color:"var(--cream)"}}>joelmwood@gmail.com</strong></div>
                   <div>📍 <strong style={{color:"var(--cream)"}}>Tulsa, Oklahoma</strong></div>
-                  <div>🏷️ Promo: <strong style={{color:"var(--orange2)",fontFamily:"DM Mono"}}>JWOOD25</strong></div>
+                  <div>🏷️ Promo: <strong style={{color:"var(--orange2)",fontFamily:"DM Mono"}}>JWOOD</strong></div>
                   <div style={{marginTop:10,display:"flex",alignItems:"center",gap:12}}>
                     <QRCode value={`tel:${COMPANY.phone.replace(/-/g,"")}`} size={80}/>
                     <div style={{fontSize:11,color:"var(--stone)"}}>QR on every mailer<br/>auto-dials 918-896-6737<br/>when scanned on mobile</div>
@@ -3445,7 +3724,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               <div className="settings-section">
                 <h3>Automation</h3>
                 {[
-                  {key:"autoSend",label:"Auto-Send After Job Completion",desc:"Mail Tulsa neighbors automatically when JWood LLC finishes a driveway"},
+                  {key:"autoSend",label:"Auto-Send After Job Completion",desc:"Mail Tulsa neighbors automatically when JWood LLC finishes a project"},
                   {key:"weeklyReport",label:"Weekly Report to joelmwood@gmail.com",desc:"Opens, calls, and spend summary every Monday"},
                   {key:"trackOpens",label:"QR Code Scan Tracking",desc:"Track who scans your QR codes and calls"},
                   {key:"smsAlerts",label:"SMS Alerts to 918-896-6737",desc:"Text when campaigns hit Tulsa mailboxes"},
@@ -3557,7 +3836,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div className="field">
                   <label>Personal Note (optional)</label>
                   <textarea
-                    placeholder="e.g. We just finished the Smiths' driveway — mention any special offer..."
+                    placeholder="e.g. We just finished the Smiths' project — mention any special offer..."
                     value={radiusForm.message}
                     onChange={e=>setRadiusForm(f=>({...f,message:e.target.value}))}
                     style={{height:60}}
@@ -3576,7 +3855,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div className="radius-preview" style={{marginBottom:16}}>
                   <div className="radius-preview-head">
                     <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"rgba(255,255,255,0.7)",marginBottom:6}}>
-                      YOUR NEIGHBOR AT {radiusMailer.address.toUpperCase()} JUST GOT A NEW DRIVEWAY
+                      YOUR NEIGHBOR AT {radiusMailer.address.toUpperCase()} JUST GOT A NEW PROJECT DONE
                     </div>
                     <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,color:"white",letterSpacing:1,lineHeight:1}}>{radiusMailer.headline}</div>
                   </div>
@@ -3619,6 +3898,98 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <button className="btn btn-primary" onClick={()=>{setShowRadiusModal(false);setRadiusStep(1);setRadiusMailer(null);}}>
                   Done
                 </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* SPOT BID HISTORY PREVIEW */}
+      {showHistoryPreview&&previewJob&&(
+        <div className="modal-overlay" onClick={e=>{if(e.target.className==="modal-overlay")setShowHistoryPreview(false);}}>
+          <div className="modal-box" style={{maxWidth:560,padding:0,overflow:"hidden"}}>
+            {/* Header */}
+            <div style={{padding:"16px 20px",background:"var(--ink)",borderBottom:"1px solid rgba(184,180,172,0.08)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2,color:"var(--cream)"}}>POSTCARD PREVIEW</div>
+                <div style={{fontSize:11,color:"var(--stone)",marginTop:2}}>{previewJob.address} · {previewJob.city} · Sent {previewJob.sent}</div>
+              </div>
+              <button className="btn btn-ghost btn-sm" onClick={()=>setShowHistoryPreview(false)}>✕ Close</button>
+            </div>
+
+            {/* Front of card */}
+            <div style={{padding:"16px 20px 8px"}}>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--stone)",marginBottom:8}}>Front of Postcard</div>
+              <div style={{borderRadius:8,overflow:"hidden",boxShadow:"0 4px 20px rgba(0,0,0,0.4)"}}>
+                {historyCanvasUrl ? (
+                  <img src={historyCanvasUrl} alt="Postcard front" style={{width:"100%",height:"auto",aspectRatio:"600/320",display:"block"}}/>
+                ) : (previewJob.photoUrl) ? (
+                  <div style={{position:"relative",aspectRatio:"600/320",background:"#111009",overflow:"hidden"}}>
+                    <img src={previewJob.photoUrl} alt="project photo" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                    <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,rgba(10,9,8,0.3),rgba(10,9,8,0.95))"}}/>
+                    <div style={{position:"absolute",bottom:16,left:16,right:16}}>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:"#f5f0e6",marginBottom:6}}>{previewJob.mailerContent?.headline||"Your Personalized Estimate"}</div>
+                      <div style={{background:"rgba(232,86,10,0.2)",border:"1px solid rgba(232,86,10,0.4)",borderRadius:6,padding:"8px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <div style={{fontSize:9,color:"rgba(232,86,10,0.8)",fontWeight:700,letterSpacing:1}}>YOUR ESTIMATE<br/><span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:"#f5f0e6"}}>{previewJob.bid}</span></div>
+                        <div style={{background:"#e8560a",padding:"6px 10px",borderRadius:5,textAlign:"center"}}>
+                          <div style={{fontSize:8,fontWeight:700,color:"white"}}>CALL NOW</div>
+                          <div style={{fontSize:11,fontFamily:"monospace",color:"white"}}>{COMPANY.phone}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{aspectRatio:"600/320",background:"linear-gradient(145deg,#1c1a17,#111009)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:"#f5f0e6",letterSpacing:1}}>{previewJob.mailerContent?.headline||previewJob.address}</div>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:"var(--orange)"}}>Estimate: {previewJob.bid}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Back of card summary */}
+            <div style={{padding:"8px 20px 16px"}}>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--stone)",marginBottom:8}}>Back of Postcard</div>
+              <div style={{background:"linear-gradient(145deg,#1a1814,#0e0d0b)",borderRadius:8,overflow:"hidden"}}>
+                <div style={{background:"linear-gradient(90deg,rgba(232,86,10,0.15),rgba(232,86,10,0.05))",borderBottom:"1px solid rgba(232,86,10,0.2)",padding:"10px 14px"}}>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:2,color:"#f5f0e6"}}>
+                    {previewJob.damage?.length>0?"We Noticed Issues With Your Concrete":"Your Property Qualifies for a Free Estimate"}
+                  </div>
+                  <div style={{fontSize:9,color:"rgba(184,180,172,0.5)",marginTop:2,letterSpacing:1,textTransform:"uppercase"}}>{previewJob.address} · {previewJob.city}, OK</div>
+                </div>
+                <div style={{padding:"12px 14px"}}>
+                  {previewJob.damage?.length>0&&(
+                    <div style={{marginBottom:10}}>
+                      <div style={{fontSize:8,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"#8a8680",marginBottom:6}}>What We Observed</div>
+                      {previewJob.damage.slice(0,3).map((d,i)=>(
+                        <div key={i} style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:"#9a9690",marginBottom:4}}>
+                          <div style={{width:5,height:5,borderRadius:"50%",background:"rgba(232,86,10,0.6)",flexShrink:0}}/>
+                          {d}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderLeft:"3px solid rgba(232,86,10,0.7)",borderRadius:6,padding:"10px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                    <div>
+                      <div style={{fontSize:8,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"rgba(232,86,10,0.7)"}}>Your Estimate</div>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,color:"#f5f0e6"}}>{previewJob.bid}</div>
+                    </div>
+                    <QRCode value={`tel:${COMPANY.phoneRaw}`} size={44} fgColor="#f5f0e6" bgColor="#1a1814"/>
+                  </div>
+                  <div style={{background:"rgba(232,86,10,0.1)",border:"1px solid rgba(232,86,10,0.2)",borderLeft:"3px solid rgba(232,86,10,0.6)",borderRadius:6,padding:"10px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    <div>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,letterSpacing:1,color:"#f5f0e6"}}>CALL OR TEXT {COMPANY.ownerName.toUpperCase()}</div>
+                      <div style={{fontSize:10,color:"rgba(184,180,172,0.5)",fontFamily:"monospace"}}>{COMPANY.phone} · Free estimate · No obligation</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Lob ID if available */}
+            {previewJob.lob&&(
+              <div style={{padding:"0 20px 16px"}}>
+                <div style={{fontSize:10,color:"var(--gravel)",fontFamily:"monospace"}}>Lob ID: {previewJob.lob} · <a href={`https://dashboard.lob.com`} target="_blank" rel="noreferrer" style={{color:"var(--blue2)"}}>View in Lob Dashboard ↗</a></div>
               </div>
             )}
           </div>
