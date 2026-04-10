@@ -727,7 +727,10 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .logo span{color:var(--orange);}
 .topbar-sep{width:1px;height:20px;background:rgba(184,180,172,0.15);}
 .topbar-meta{font-size:11px;color:var(--stone);letter-spacing:1px;text-transform:uppercase;}
-.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.topbar-center{display:flex;align-items:center;gap:6px;flex:1;justify-content:center;flex-wrap:nowrap;overflow:hidden;}
+.topbar-stat{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;color:var(--stone);border:1px solid rgba(184,180,172,0.1);background:rgba(184,180,172,0.04);white-space:nowrap;transition:all 0.15s;user-select:none;}
+.topbar-stat:hover{background:rgba(184,180,172,0.08);border-color:rgba(184,180,172,0.18);color:var(--concrete);}
+.topbar-right{margin-left:0;display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .co-pill{background:rgba(232,86,10,0.15);border:1px solid rgba(232,86,10,0.3);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--orange2);font-weight:700;}
 .lob-pill{background:rgba(42,122,82,0.15);border:1px solid rgba(42,122,82,0.3);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--green2);font-weight:700;display:flex;align-items:center;gap:5px;}
 .lob-dot{width:6px;height:6px;border-radius:50%;background:var(--green2);animation:blink 1.4s infinite;}
@@ -1252,6 +1255,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 
   .logo { font-size: 18px; letter-spacing: 2px; }
   .topbar-sep, .topbar-meta { display: none; }
+  .topbar-center { display: none; }
   .co-pill { font-size: 10px; padding: 3px 8px; }
   .lob-pill { display: none; }
 
@@ -2751,21 +2755,40 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               PAVE<span>MAIL</span>
             </div>
           <div className="topbar-sep"/>
-          <div className="topbar-meta" style={{display:"flex",alignItems:"center",gap:16}}>
-              <span style={{color:"var(--stone)",fontSize:12}}>{contractor?.company_name||COMPANY.name}</span>
-              {pipeline.filter(l=>l.stage==="won").length>0&&(
-                <span style={{display:"flex",alignItems:"center",gap:4,fontSize:11,color:"var(--green2)",fontFamily:"'DM Mono',monospace"}}>
-                  <span style={{opacity:0.6}}>Won</span>
-                  <strong>${pipeline.filter(l=>l.stage==="won").reduce((s,l)=>s+(l.value||0),0).toLocaleString()}</strong>
-                </span>
-              )}
-              {pipeline.filter(l=>l.stage!=="won").length>0&&(
-                <span style={{display:"flex",alignItems:"center",gap:4,fontSize:11,color:"var(--orange2)",fontFamily:"'DM Mono',monospace"}}>
-                  <span style={{opacity:0.6}}>Active</span>
-                  <strong>{pipeline.filter(l=>l.stage!=="won").length}</strong>
-                </span>
-              )}
+
+          {/* ── CENTER: Live stats strip ── */}
+          <div className="topbar-center">
+            {/* Capacity status pill */}
+            <div className="topbar-stat" onClick={()=>switchTab("capacity")} style={{cursor:"pointer",borderColor:CAPACITY_MODES[capacity.mode].color+"40",color:CAPACITY_MODES[capacity.mode].color}}>
+              <span style={{width:6,height:6,borderRadius:"50%",background:CAPACITY_MODES[capacity.mode].color,flexShrink:0,display:"inline-block"}}/>
+              <span>{CAPACITY_MODES[capacity.mode].label}</span>
             </div>
+            {/* Pipeline value */}
+            {pipeline.length>0&&(
+              <div className="topbar-stat" onClick={()=>switchTab("pipeline")} style={{cursor:"pointer"}}>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1L6.2 4H9L6.8 5.8L7.6 8.5L5 7L2.4 8.5L3.2 5.8L1 4H3.8L5 1Z" fill="currentColor" opacity="0.7"/></svg>
+                <span style={{fontFamily:"'DM Mono',monospace"}}>${pipeline.filter(l=>l.stage==="won").reduce((s,l)=>s+(l.value||0),0).toLocaleString()}</span>
+                <span style={{opacity:0.5}}>won</span>
+              </div>
+            )}
+            {/* Active leads */}
+            {pipeline.filter(l=>l.stage!=="won").length>0&&(
+              <div className="topbar-stat" onClick={()=>switchTab("pipeline")} style={{cursor:"pointer"}}>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" opacity="0.7"/><circle cx="5" cy="5" r="1.5" fill="currentColor"/></svg>
+                <span style={{fontFamily:"'DM Mono',monospace"}}>{pipeline.filter(l=>l.stage!=="won").length}</span>
+                <span style={{opacity:0.5}}>active</span>
+              </div>
+            )}
+            {/* Spot bids sent */}
+            {spotJobs.length>0&&(
+              <div className="topbar-stat" onClick={()=>switchTab("spotbid")} style={{cursor:"pointer"}}>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1" opacity="0.5"/><circle cx="5" cy="5" r="2.5" stroke="currentColor" strokeWidth="1" opacity="0.7"/><circle cx="5" cy="5" r="1" fill="currentColor"/></svg>
+                <span style={{fontFamily:"'DM Mono',monospace"}}>{spotJobs.length}</span>
+                <span style={{opacity:0.5}}>bids</span>
+              </div>
+            )}
+          </div>
+
           <div className="topbar-right">
             {isAdmin&&<div className="lob-pill"><div className="lob-dot"/>Mail: Test Mode</div>}
             <div className="user-menu-wrap">
