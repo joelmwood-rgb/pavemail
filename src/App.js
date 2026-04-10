@@ -1495,7 +1495,7 @@ export default function App(){
   const setUnlocked = () => {}; // kept for compatibility
 
   // Login handler
-  const handleLogin = async () => {
+  async function handleLogin() {
     if(!authForm.email||!authForm.password){ setAuthError("Enter your email and password"); return; }
     setAuthLoading(true); setAuthError("");
     const data = await auth.signIn(authForm.email, authForm.password);
@@ -1516,10 +1516,10 @@ export default function App(){
       setAuthError(data.error_description || data.msg || "Login failed — check your email and password");
     }
     setAuthLoading(false);
-  };
+  }
 
   // Signup handler
-  const handleSignup = async () => {
+  async function handleSignup() {
     if(authForm.inviteCode.trim().toUpperCase() !== "PAVE2026") { setAuthError("Invalid invite code — contact Joel for access"); return; }
     if(!authForm.email||!authForm.password) { setAuthError("Enter your email and password"); return; }
     if(authForm.password !== authForm.confirmPassword) { setAuthError("Passwords don't match"); return; }
@@ -1544,10 +1544,10 @@ export default function App(){
       setAuthError(data.error_description || data.msg || "Signup failed — try again");
     }
     setAuthLoading(false);
-  };
+  }
 
   // Profile setup handler
-  const handleProfileSetup = async () => {
+  async function handleProfileSetup() {
     if(!authUser?.token) return;
     setAuthLoading(true);
     const profile = {
@@ -1565,16 +1565,16 @@ export default function App(){
     setContractor(updatedProfile);
     try{ localStorage.setItem("pm_profile", JSON.stringify(updatedProfile)); }catch{}
     setAuthLoading(false);
-  };
+  }
 
   // Logout
-  const handleLogout = async () => {
+  async function handleLogout() {
     if(authUser?.token) await auth.signOut(authUser.token);
     setAuthUser(null); setContractor(null);
     try{ localStorage.removeItem("pm_session"); localStorage.removeItem("pm_profile"); }catch{}
     setAuthScreen("login");
     setAuthForm({email:"",password:"",confirmPassword:"",inviteCode:"",ownerName:"",companyName:"",phone:"",city:"Tulsa"});
-  };
+  }
 
   // Legacy PIN state (kept for compatibility)
   const[pin,setPin]=useState("");
@@ -1582,7 +1582,7 @@ export default function App(){
   const[rememberMe,setRememberMe]=useState(true);
   const[shaking,setShaking]=useState(false);
 
-  const pressKey=(k)=>{
+  function pressKey(k){
     if(pin.length>=4)return;
     const next=pin+k;
     setPin(next);
@@ -1599,12 +1599,12 @@ export default function App(){
         }
       },200);
     }
-  };
+  }
 
-  const delKey=()=>setPin(p=>p.slice(0,-1));
+  function delKey(){ setPin(p=>p.slice(0,-1)); }
 
   const[tab,setTab]=useState("map");
-  const switchTab=(t)=>{ track('tab_viewed',{tab:t}); setTab(t); };
+  function switchTab(t){ track('tab_viewed',{tab:t}); setTab(t); }
   const[toast,setToast]=useState(null);
   const[selectedRoutes,setSelectedRoutes]=useState([]);
   const[liveRoutes,setLiveRoutes]=useState([]);
@@ -1656,7 +1656,7 @@ export default function App(){
     manualOverride: null,
   });
   function showToast(msg,type="success") {setToast({msg,type});setTimeout(()=>setToast(null),4000);}
-  const toggleRoute=(id)=>setSelectedRoutes(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
+  function toggleRoute(id){ setSelectedRoutes(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]); }
 
 
   const[pipeline,setPipeline]=useState([]);
@@ -1872,7 +1872,7 @@ export default function App(){
     setRadiusSending(false);
   };
 
-  const addLead=()=>{
+  function addLead(){
     const id=`PL-00${pipeline.length+1}`;
     const lo=newLead.bidLow?`$${parseInt(newLead.bidLow).toLocaleString()}`:"";
     const hi=newLead.bidHigh?`$${parseInt(newLead.bidHigh).toLocaleString()}`:"";
@@ -1884,7 +1884,7 @@ export default function App(){
     setNewLead({address:"",city:"Tulsa",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
     setShowAddLead(false);
     showToast("📍 Lead added to pipeline","success");
-  };
+  }
   const setSpot=(k,v)=>setSpotForm(f=>({...f,[k]:v}));
 
   // ── LOAD ALL DATA FROM SUPABASE ON MOUNT ──
@@ -1936,7 +1936,7 @@ export default function App(){
       setSpotForm(f=>({...f,bidLow:String(lo),bidHigh:String(hi)}));
     }
   },[spotForm.sqft,spotForm.customSqft,spotForm.service,spotForm.damageLevel,spotForm.overridePrice]);
-  const toggleDamage=(d)=>setSpotForm(f=>({...f,damage:f.damage.includes(d)?f.damage.filter(x=>x!==d):[...f.damage,d]}));
+  function toggleDamage(d){ setSpotForm(f=>({...f,damage:f.damage.includes(d)?f.damage.filter(x=>x!==d):[...f.damage,d]})); }
   const DAMAGES=["Freeze-thaw cracking","Surface spalling","Tree root damage","Drainage issues","Sunken sections","Edge crumbling","Oil stains","Full replacement needed"];
 
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
