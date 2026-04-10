@@ -4,7 +4,8 @@ import React, { useState } from "react";
 // ANALYTICS + ERROR MONITORING
 // Initialized via useEffect in App component
 // ─────────────────────────────────────────────
-const POSTHOG_KEY = "phc_kqPn9wagFCAw9QaUF4XJxKMNEnHRooEX7uBvt4wdv29z";
+const POSTHOG_KEY   = "phc_kqPn9wagFCAw9QaUF4XJxKMNEnHRooEX7uBvt4wdv29z";
+const ADMIN_EMAIL   = "joelmwood@gmail.com";
 const SENTRY_DSN  = "https://7dbac4cf1178f77cd4f219c54e11225f@o4511197222797312.ingest.us.sentry.io/4511197260021760";
 
 function track(event, props) {
@@ -170,6 +171,36 @@ const COMPANY = {
   tagline:     "Tulsa's Concrete Specialists",
 };
 
+const ADMIN_EMAIL = "joelmwood@gmail.com";
+
+// Admin DB helpers
+const adminDb = {
+  async getAllContractors(token) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/contractor_profiles?select=*&order=created_at.desc`, {
+      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+    return res.json();
+  },
+  async getAllPipeline(token) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/pipeline_leads?select=*&order=created_at.desc`, {
+      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+    return res.json();
+  },
+  async getAllSpotBids(token) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/spot_bids?select=*&order=created_at.desc`, {
+      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+    return res.json();
+  },
+  async getAllCampaigns(token) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/campaigns?select=*&order=created_at.desc`, {
+      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+    return res.json();
+  },
+};
+
 // DB helpers
 const db = {
   // Pipeline
@@ -288,6 +319,32 @@ const db = {
         calls: job.calls||0,
       }),
     });
+  },
+
+  // ── ADMIN ONLY ──
+  async getAllContractors(token) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/contractor_profiles?select=*&order=created_at.desc`, {
+      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+    return res.ok ? res.json() : [];
+  },
+  async getAllPipeline(token) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/pipeline_leads?select=*,contractor_profiles(company_name,owner_name)&order=created_at.desc&limit=500`, {
+      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+    return res.ok ? res.json() : [];
+  },
+  async getAllSpotBids(token) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/spot_bids?select=*&order=created_at.desc&limit=500`, {
+      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+    return res.ok ? res.json() : [];
+  },
+  async getAllCampaigns(token) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/campaigns?select=*&order=created_at.desc&limit=500`, {
+      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+    return res.ok ? res.json() : [];
   },
 };
 const BLAND_PROXY     = PROXY_BASE + "/?target=bland-call";
@@ -904,6 +961,28 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .smart-suggest-text{font-size:11px;color:var(--concrete);line-height:1.6;}
 .smart-suggest-text strong{color:var(--cream);}
 
+/* ── ADMIN ── */
+.admin-layout{padding:24px 28px;}
+.admin-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.admin-stat{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:10px;padding:16px;text-align:center;}
+.admin-stat-val{font-family:"Bebas Neue",sans-serif;font-size:36px;line-height:1;margin-bottom:4px;}
+.admin-stat-label{font-size:10px;color:var(--stone);letter-spacing:1px;text-transform:uppercase;}
+.contractor-card{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:10px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;}
+.contractor-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0;}
+.contractor-name{font-size:14px;font-weight:700;color:var(--cream);}
+.contractor-meta{font-size:11px;color:var(--stone);margin-top:2px;}
+.contractor-stats{margin-left:auto;display:flex;gap:16px;text-align:right;}
+.contractor-stat-val{font-family:"DM Mono",monospace;font-size:14px;font-weight:600;color:var(--cream);}
+.contractor-stat-lbl{font-size:9px;color:var(--gravel);letter-spacing:1px;text-transform:uppercase;}
+.admin-table{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:10px;overflow:hidden;}
+.admin-thead{display:grid;padding:10px 16px;background:rgba(0,0,0,0.2);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);border-bottom:1px solid rgba(184,180,172,0.07);}
+.admin-row{display:grid;padding:12px 16px;border-bottom:1px solid rgba(184,180,172,0.04);font-size:12px;color:var(--concrete);align-items:center;}
+.admin-row:last-child{border-bottom:none;}
+.admin-nav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.admin-nav-btn{padding:6px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(184,180,172,0.12);background:transparent;color:var(--stone);font-family:"Syne",sans-serif;transition:all 0.12s;}
+.admin-nav-btn.active{background:rgba(232,86,10,0.15);color:var(--orange2);border-color:rgba(232,86,10,0.3);}
+@media(max-width:768px){.admin-stat-grid{grid-template-columns:1fr 1fr;}}
+
 /* ── AI PHONE ── */
 .ai-phone-nav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
 .ai-lead-card{background:var(--char);border:1px solid rgba(184,180,172,0.08);border-radius:10px;padding:16px 18px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;transition:all 0.15s;}
@@ -1488,6 +1567,8 @@ export default function App(){
   const[authLoading,setAuthLoading]=useState(false);
   const[authError,setAuthError]=useState("");
   const[authSuccess,setAuthSuccess]=useState("");
+  const isAdmin = authUser?.user?.email === ADMIN_EMAIL;
+  const[adminData,setAdminData]=useState({contractors:[],pipeline:[],spotBids:[],campaigns:[],loading:false});
 
 
   // Login handler
@@ -1641,6 +1722,25 @@ export default function App(){
   const[historyCanvasUrl,setHistoryCanvasUrl]=useState(null);
 
   const[pipelineView,setPipelineView]=useState("kanban");
+
+  // ── ADMIN STATE ──
+  const isAdmin = authUser?.user?.email === ADMIN_EMAIL;
+  const[adminView,setAdminView]=useState("overview"); // overview | contractors | pipeline | bids
+  const[adminData,setAdminData]=useState({contractors:[],pipeline:[],bids:[],campaigns:[],loaded:false});
+  const[adminLoading,setAdminLoading]=useState(false);
+
+  async function loadAdminData() {
+    if(!authUser?.token) return;
+    setAdminLoading(true);
+    const [contractors, pipeline, bids, campaigns] = await Promise.all([
+      db.getAllContractors(authUser.token),
+      db.getAllPipeline(authUser.token),
+      db.getAllSpotBids(authUser.token),
+      db.getAllCampaigns(authUser.token),
+    ]);
+    setAdminData({ contractors, pipeline, bids, campaigns, loaded:true });
+    setAdminLoading(false);
+  }
 
   // ── CAPACITY ENGINE ──
   // CAPACITY_CONFIG moved to module scope
@@ -1886,6 +1986,27 @@ export default function App(){
   // ── LOAD ALL DATA FROM SUPABASE ON MOUNT ──
   React.useEffect(()=>{
     initAnalytics();
+    // Load admin data if admin user
+    if(authUser?.user?.email === ADMIN_EMAIL && authUser?.token) {
+      setAdminData(d=>({...d,loading:true}));
+      Promise.all([
+        adminDb.getAllContractors(authUser.token),
+        adminDb.getAllPipeline(authUser.token),
+        adminDb.getAllSpotBids(authUser.token),
+        adminDb.getAllCampaigns(authUser.token),
+      ]).then(([contractors,pipeline,spotBids,campaigns])=>{
+        setAdminData({
+          contractors: Array.isArray(contractors)?contractors:[],
+          pipeline: Array.isArray(pipeline)?pipeline:[],
+          spotBids: Array.isArray(spotBids)?spotBids:[],
+          campaigns: Array.isArray(campaigns)?campaigns:[],
+          loading:false,
+        });
+      }).catch(e=>{
+        console.error("Admin data load failed:", e);
+        setAdminData(d=>({...d,loading:false}));
+      });
+    }
     track('app_open', {tab: 'map', device: /iPhone|Android/i.test(navigator.userAgent)?'mobile':'desktop'});
     const loadAll = async () => {
       try {
@@ -2477,7 +2598,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         {/* NAV */}
         <nav className="nav">
           <div className="nav-label">Campaigns</div>
-          {[{id:"map",icon:"🗺️",label:"Neighborhood Scan"},{id:"create",icon:"✏️",label:"Create Mailer"},{id:"tracker",icon:"📊",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length},{id:"spotbid",icon:"🎯",label:"Spot Bid"},{id:"pipeline",icon:"📍",label:"Pipeline"},{id:"capacity",icon:"⚡",label:"Capacity"},{id:"aiphone",icon:"📞",label:"AI Phone",badge:aiLeads.filter(l=>l.status==="pending").length||null}].map(item=>(
+          {[{id:"map",icon:"🗺️",label:"Neighborhood Scan"},{id:"create",icon:"✏️",label:"Create Mailer"},{id:"tracker",icon:"📊",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length},{id:"spotbid",icon:"🎯",label:"Spot Bid"},{id:"pipeline",icon:"📍",label:"Pipeline"},{id:"capacity",icon:"⚡",label:"Capacity"},{id:"aiphone",icon:"📞",label:"AI Phone",badge:aiLeads.filter(l=>l.status==="pending").length||null},...(isAdmin?[{id:"admin",icon:"⚙️",label:"Admin"}]:[]) ].filter(item=>!item.adminOnly||isAdmin).map(item=>(
             <button key={item.id} className={`nav-item${tab===item.id?" active":""}`} onClick={()=>switchTab(item.id)}>
               <span className="nav-icon">{item.icon}</span>{item.label}
               {item.badge?<span className="nav-badge">{item.badge}</span>:null}
@@ -3300,6 +3421,161 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             </div>
           )}
 
+          {/* ADMIN */}
+          {tab==="admin"&&isAdmin&&(
+            <div className="admin-layout">
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:10}}>
+                <div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)",lineHeight:1}}>ADMIN DASHBOARD</div>
+                  <div style={{fontSize:12,color:"var(--stone)",marginTop:3}}>joelmwood@gmail.com · Full access</div>
+                </div>
+                <button className="btn btn-primary btn-sm" onClick={loadAdminData} disabled={adminLoading}>
+                  {adminLoading?<span className="spin"/>:"↺ Refresh Data"}
+                </button>
+              </div>
+
+              {/* Nav */}
+              <div className="admin-nav">
+                {["overview","contractors","pipeline","bids"].map(v=>(
+                  <button key={v} className={`admin-nav-btn${adminView===v?" active":""}`} onClick={()=>{ setAdminView(v); if(!adminData.loaded) loadAdminData(); }}>
+                    {v==="overview"?"📊 Overview":v==="contractors"?"👷 Contractors":v==="pipeline"?"📍 Pipeline":"🎯 Spot Bids"}
+                  </button>
+                ))}
+              </div>
+
+              {!adminData.loaded&&(
+                <div style={{textAlign:"center",padding:"40px 0",color:"var(--gravel)"}}>
+                  <div style={{fontSize:32,marginBottom:12}}>⚙️</div>
+                  <div style={{fontSize:13,marginBottom:16}}>Click Refresh Data to load all contractor data</div>
+                  <button className="btn btn-primary" onClick={loadAdminData} disabled={adminLoading}>
+                    {adminLoading?<><span className="spin"/> Loading...</>:"Load All Data"}
+                  </button>
+                </div>
+              )}
+
+              {/* OVERVIEW */}
+              {adminView==="overview"&&adminData.loaded&&(
+                <>
+                  <div className="admin-stat-grid">
+                    {[
+                      {label:"Contractors",val:adminData.contractors.length,color:"var(--cream)"},
+                      {label:"Total Leads",val:adminData.pipeline.length,color:"var(--blue2)"},
+                      {label:"Spot Bids Sent",val:adminData.bids.length,color:"var(--orange2)"},
+                      {label:"Campaigns",val:adminData.campaigns.length,color:"var(--green2)"},
+                    ].map((s,i)=>(
+                      <div key={i} className="admin-stat">
+                        <div className="admin-stat-val" style={{color:s.color}}>{s.val}</div>
+                        <div className="admin-stat-label">{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>CONTRACTOR ACTIVITY</div>
+                  {adminData.contractors.map((c,i)=>{
+                    const cLeads = adminData.pipeline.filter(l=>l.user_id===c.id).length;
+                    const cBids = adminData.bids.filter(b=>b.user_id===c.id).length;
+                    const cWon = adminData.pipeline.filter(l=>l.user_id===c.id&&l.stage==="won").length;
+                    const colors=["#e8560a","#2a7a52","#1a6fa8","#8b5e3c","#6a3a8a"];
+                    return(
+                      <div key={c.id} className="contractor-card">
+                        <div className="contractor-avatar" style={{background:colors[i%colors.length]}}>
+                          {(c.owner_name||c.company_name||"?")[0].toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="contractor-name">{c.company_name||"Unnamed"}</div>
+                          <div className="contractor-meta">{c.owner_name} · {c.city}, {c.state} · {c.email}</div>
+                          <div className="contractor-meta" style={{marginTop:4}}>
+                            <span style={{color:"var(--concrete)"}}>Plan: </span>
+                            <span style={{fontWeight:700,color:"var(--orange2)"}}>{(c.plan||"starter").toUpperCase()}</span>
+                            <span style={{marginLeft:8}}>Joined: {new Date(c.created_at).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <div className="contractor-stats">
+                          <div><div className="contractor-stat-val">{cLeads}</div><div className="contractor-stat-lbl">Leads</div></div>
+                          <div><div className="contractor-stat-val">{cWon}</div><div className="contractor-stat-lbl">Won</div></div>
+                          <div><div className="contractor-stat-val">{cBids}</div><div className="contractor-stat-lbl">Bids Sent</div></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {adminData.contractors.length===0&&<div style={{color:"var(--gravel)",fontSize:13,textAlign:"center",padding:"20px 0"}}>No contractors signed up yet</div>}
+                </>
+              )}
+
+              {/* CONTRACTORS */}
+              {adminView==="contractors"&&adminData.loaded&&(
+                <>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>ALL CONTRACTORS ({adminData.contractors.length})</div>
+                  <div className="admin-table">
+                    <div className="admin-thead" style={{gridTemplateColumns:"2fr 1.5fr 1fr 1fr 1fr"}}>
+                      <div>Company</div><div>Email</div><div>City</div><div>Plan</div><div>Joined</div>
+                    </div>
+                    {adminData.contractors.map(c=>(
+                      <div key={c.id} className="admin-row" style={{gridTemplateColumns:"2fr 1.5fr 1fr 1fr 1fr"}}>
+                        <div><div style={{fontWeight:600,color:"var(--cream)"}}>{c.company_name}</div><div style={{fontSize:10,color:"var(--stone)"}}>{c.owner_name}</div></div>
+                        <div style={{fontSize:11,fontFamily:"monospace",color:"var(--stone)"}}>{c.email}</div>
+                        <div>{c.city}, {c.state}</div>
+                        <div><span style={{background:"rgba(232,86,10,0.15)",color:"var(--orange2)",padding:"2px 8px",borderRadius:4,fontSize:10,fontWeight:700}}>{(c.plan||"starter").toUpperCase()}</span></div>
+                        <div style={{fontSize:11}}>{new Date(c.created_at).toLocaleDateString()}</div>
+                      </div>
+                    ))}
+                    {adminData.contractors.length===0&&<div style={{padding:"20px",textAlign:"center",color:"var(--gravel)",fontSize:12}}>No contractors yet</div>}
+                  </div>
+                </>
+              )}
+
+              {/* PIPELINE */}
+              {adminView==="pipeline"&&adminData.loaded&&(
+                <>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>ALL PIPELINE LEADS ({adminData.pipeline.length})</div>
+                  <div className="admin-table">
+                    <div className="admin-thead" style={{gridTemplateColumns:"2fr 1.5fr 1fr 1fr 1fr"}}>
+                      <div>Address</div><div>Contractor</div><div>Stage</div><div>Bid</div><div>Date</div>
+                    </div>
+                    {adminData.pipeline.slice(0,100).map(l=>{
+                      const stage=STAGES.find(s=>s.id===l.stage);
+                      const contractor=adminData.contractors.find(c=>c.id===l.user_id);
+                      return(
+                        <div key={l.id} className="admin-row" style={{gridTemplateColumns:"2fr 1.5fr 1fr 1fr 1fr"}}>
+                          <div><div style={{fontWeight:600,color:"var(--cream)"}}>{l.address}</div><div style={{fontSize:10,color:"var(--stone)"}}>{l.city}</div></div>
+                          <div style={{fontSize:11,color:"var(--stone)"}}>{contractor?.company_name||"Unknown"}</div>
+                          <div><span style={{background:stage?.bg,color:stage?.color,padding:"2px 6px",borderRadius:4,fontSize:10,fontWeight:700}}>{stage?.icon} {stage?.label}</span></div>
+                          <div style={{fontFamily:"monospace",color:"var(--orange2)"}}>{l.bid_lo||"—"}</div>
+                          <div style={{fontSize:11}}>{l.spotted||new Date(l.created_at).toLocaleDateString()}</div>
+                        </div>
+                      );
+                    })}
+                    {adminData.pipeline.length===0&&<div style={{padding:"20px",textAlign:"center",color:"var(--gravel)",fontSize:12}}>No pipeline leads yet</div>}
+                  </div>
+                </>
+              )}
+
+              {/* SPOT BIDS */}
+              {adminView==="bids"&&adminData.loaded&&(
+                <>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>ALL SPOT BIDS ({adminData.bids.length})</div>
+                  <div className="admin-table">
+                    <div className="admin-thead" style={{gridTemplateColumns:"2fr 1.5fr 1fr 1fr"}}>
+                      <div>Address</div><div>Contractor</div><div>Bid</div><div>Date</div>
+                    </div>
+                    {adminData.bids.slice(0,100).map(b=>{
+                      const contractor=adminData.contractors.find(c=>c.id===b.user_id);
+                      return(
+                        <div key={b.id} className="admin-row" style={{gridTemplateColumns:"2fr 1.5fr 1fr 1fr"}}>
+                          <div><div style={{fontWeight:600,color:"var(--cream)"}}>{b.address}</div><div style={{fontSize:10,color:"var(--stone)"}}>{b.city}</div></div>
+                          <div style={{fontSize:11,color:"var(--stone)"}}>{contractor?.company_name||"Unknown"}</div>
+                          <div style={{fontFamily:"monospace",color:"var(--orange2)"}}>{b.bid||"—"}</div>
+                          <div style={{fontSize:11}}>{b.sent_date||new Date(b.created_at).toLocaleDateString()}</div>
+                        </div>
+                      );
+                    })}
+                    {adminData.bids.length===0&&<div style={{padding:"20px",textAlign:"center",color:"var(--gravel)",fontSize:12}}>No spot bids yet</div>}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* AI PHONE */}
           {tab==="aiphone"&&(
             <div style={{padding:"24px 28px"}}>
@@ -3685,6 +3961,130 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   </div>
                 </>
               )}
+            </div>
+          )}
+
+          {/* ADMIN */}
+          {tab==="admin"&&isAdmin&&(
+            <div style={{padding:"24px 28px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
+                <div style={{fontSize:28}}>👑</div>
+                <div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)",lineHeight:1}}>ADMIN DASHBOARD</div>
+                  <div style={{fontSize:12,color:"var(--stone)",marginTop:2}}>Full visibility across all contractors · joelmwood@gmail.com</div>
+                </div>
+              </div>
+
+              {adminData.loading&&<div style={{textAlign:"center",padding:"40px",color:"var(--stone)"}}>Loading all contractor data...</div>}
+
+              {/* Platform stats */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:24}}>
+                {[
+                  {label:"Contractors",value:adminData.contractors.length,icon:"👷",color:"var(--orange2)"},
+                  {label:"Total Leads",value:adminData.pipeline.length,icon:"📍",color:"var(--blue2)"},
+                  {label:"Spot Bids",value:adminData.spotBids.length,icon:"🎯",color:"var(--green2)"},
+                  {label:"Campaigns",value:adminData.campaigns.length,icon:"📬",color:"var(--gold2)"},
+                ].map((s,i)=>(
+                  <div key={i} style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,padding:"16px",textAlign:"center"}}>
+                    <div style={{fontSize:24,marginBottom:6}}>{s.icon}</div>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:32,color:s.color,lineHeight:1}}>{s.value}</div>
+                    <div style={{fontSize:10,color:"var(--stone)",letterSpacing:1,textTransform:"uppercase",marginTop:4}}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Contractors table */}
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>ALL CONTRACTORS</div>
+              <div style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,overflow:"hidden",marginBottom:24}}>
+                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr",padding:"10px 16px",background:"rgba(0,0,0,0.3)",fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",borderBottom:"1px solid rgba(184,180,172,0.07)"}}>
+                  <div>Company</div><div>Owner</div><div>City</div><div>Plan</div><div>Joined</div>
+                </div>
+                {adminData.contractors.length===0&&!adminData.loading&&(
+                  <div style={{padding:"24px",textAlign:"center",color:"var(--gravel)",fontSize:12}}>No contractors yet</div>
+                )}
+                {adminData.contractors.map((c,i)=>{
+                  const leads = adminData.pipeline.filter(l=>l.user_id===c.id).length;
+                  const bids = adminData.spotBids.filter(b=>b.user_id===c.id).length;
+                  return(
+                    <div key={c.id} style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr",padding:"12px 16px",borderBottom:"1px solid rgba(184,180,172,0.05)",alignItems:"center"}}>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:600,color:"var(--cream)"}}>{c.company_name}</div>
+                        <div style={{fontSize:10,color:"var(--stone)",marginTop:2}}>{c.email} · {c.phone}</div>
+                        <div style={{display:"flex",gap:8,marginTop:4}}>
+                          <span style={{fontSize:9,background:"rgba(26,111,168,0.15)",color:"var(--blue2)",padding:"2px 6px",borderRadius:4}}>{leads} leads</span>
+                          <span style={{fontSize:9,background:"rgba(232,86,10,0.15)",color:"var(--orange2)",padding:"2px 6px",borderRadius:4}}>{bids} bids</span>
+                        </div>
+                      </div>
+                      <div style={{fontSize:12,color:"var(--concrete)"}}>{c.owner_name}</div>
+                      <div style={{fontSize:12,color:"var(--concrete)"}}>{c.city}, {c.state}</div>
+                      <div>
+                        <span style={{fontSize:9,fontWeight:700,background:"rgba(42,122,82,0.15)",color:"var(--green2)",padding:"3px 8px",borderRadius:10,textTransform:"uppercase"}}>{c.plan||"starter"}</span>
+                      </div>
+                      <div style={{fontSize:11,color:"var(--stone)",fontFamily:"monospace"}}>{c.created_at?new Date(c.created_at).toLocaleDateString():"-"}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Recent activity across all contractors */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+                {/* Recent spot bids */}
+                <div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1,color:"var(--concrete)",marginBottom:10}}>RECENT SPOT BIDS</div>
+                  <div style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,overflow:"hidden"}}>
+                    {adminData.spotBids.slice(0,8).map((b,i)=>{
+                      const contractor = adminData.contractors.find(c=>c.id===b.user_id);
+                      return(
+                        <div key={b.id} style={{padding:"10px 14px",borderBottom:"1px solid rgba(184,180,172,0.05)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                          <div>
+                            <div style={{fontSize:12,fontWeight:600,color:"var(--cream)"}}>{b.address}</div>
+                            <div style={{fontSize:10,color:"var(--stone)",marginTop:1}}>{contractor?.company_name||"Unknown"} · {b.city}</div>
+                          </div>
+                          <div style={{fontFamily:"monospace",fontSize:12,color:"var(--orange2)",fontWeight:600}}>{b.bid||"-"}</div>
+                        </div>
+                      );
+                    })}
+                    {adminData.spotBids.length===0&&<div style={{padding:"20px",textAlign:"center",color:"var(--gravel)",fontSize:12}}>No spot bids yet</div>}
+                  </div>
+                </div>
+
+                {/* Recent pipeline leads */}
+                <div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1,color:"var(--concrete)",marginBottom:10}}>RECENT PIPELINE</div>
+                  <div style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,overflow:"hidden"}}>
+                    {adminData.pipeline.slice(0,8).map((l,i)=>{
+                      const contractor = adminData.contractors.find(c=>c.id===l.user_id);
+                      const stage = ["spotted","sent","called","won"].find(s=>s===l.stage)||l.stage;
+                      const stageColors = {spotted:"var(--stone)",sent:"var(--blue2)",called:"var(--gold2)",won:"var(--green2)"};
+                      return(
+                        <div key={l.id} style={{padding:"10px 14px",borderBottom:"1px solid rgba(184,180,172,0.05)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                          <div>
+                            <div style={{fontSize:12,fontWeight:600,color:"var(--cream)"}}>{l.address}</div>
+                            <div style={{fontSize:10,color:"var(--stone)",marginTop:1}}>{contractor?.company_name||"Unknown"} · {l.city}</div>
+                          </div>
+                          <span style={{fontSize:9,fontWeight:700,color:stageColors[stage]||"var(--stone)",background:"rgba(184,180,172,0.08)",padding:"3px 8px",borderRadius:10,textTransform:"uppercase"}}>{stage}</span>
+                        </div>
+                      );
+                    })}
+                    {adminData.pipeline.length===0&&<div style={{padding:"20px",textAlign:"center",color:"var(--gravel)",fontSize:12}}>No pipeline leads yet</div>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Refresh button */}
+              <div style={{textAlign:"center",marginTop:20}}>
+                <button className="btn btn-ghost" onClick={()=>{
+                  setAdminData(d=>({...d,loading:true}));
+                  Promise.all([
+                    adminDb.getAllContractors(authUser.token),
+                    adminDb.getAllPipeline(authUser.token),
+                    adminDb.getAllSpotBids(authUser.token),
+                    adminDb.getAllCampaigns(authUser.token),
+                  ]).then(([contractors,pipeline,spotBids,campaigns])=>{
+                    setAdminData({contractors:Array.isArray(contractors)?contractors:[],pipeline:Array.isArray(pipeline)?pipeline:[],spotBids:Array.isArray(spotBids)?spotBids:[],campaigns:Array.isArray(campaigns)?campaigns:[],loading:false});
+                  }).catch(()=>setAdminData(d=>({...d,loading:false})));
+                }}>↺ Refresh Data</button>
+              </div>
             </div>
           )}
 
