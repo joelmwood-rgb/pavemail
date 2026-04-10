@@ -3171,7 +3171,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                             </div>
                             <div style={{textAlign:"right"}}>
                               <div style={{fontSize:9,color:"rgba(184,180,172,0.4)",marginBottom:4}}>Scan to call</div>
-                              <QRCode value=`tel:${COMPANY.phoneRaw}` size={50} fgColor="#f5f0e6" bgColor="#1c1a17"/>
+                              <QRCode value={`tel:${COMPANY.phoneRaw}`} size={50} fgColor="#f5f0e6" bgColor="#1c1a17"/>
                             </div>
                           </div>
                           {/* CTA */}
