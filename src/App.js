@@ -1355,6 +1355,17 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 // ─────────────────────────────────────────────
 // ROUTES & MOCK DATA
 // ─────────────────────────────────────────────
+// Inject styles into document head at module load time
+(function injectStyles() {
+  if(typeof document === 'undefined') return;
+  const existing = document.getElementById('pavemail-styles');
+  if(existing) return;
+  const el = document.createElement('style');
+  el.id = 'pavemail-styles';
+  el.textContent = STYLES;
+  document.head.appendChild(el);
+})();
+
 const ROUTES = [
   {id:1,name:"South Tulsa / Midtown",zip:"74105",homes:0,color:"#e8560a"},
   {id:2,name:"Broken Arrow",         zip:"74011",homes:0,color:"#2a7a52"},
@@ -2512,7 +2523,6 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
   // Show auth screen if not logged in
   if(!authUser) return(
     <React.Fragment>
-      <style>{STYLES}</style>
       <div className="login-screen">
         <div className="login-bg"/>
         <div className="login-texture"/>
@@ -2632,7 +2642,6 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
   return(
     <React.Fragment>
-      <style>{STYLES}</style>
       <div className="shell">
 
         {/* TOPBAR */}
