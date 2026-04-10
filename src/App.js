@@ -62,12 +62,20 @@ const PROXY_BASE      = "https://joelmwood--b166b8c432db11f19dff42b51c65c3df.web
 const SUPABASE_URL = "https://pzbvvohedpgeiynqoujr.supabase.co";
 const SUPABASE_KEY = "sb_publishable_H6U94DoMxk7_Cap6ftIoew_14fhh8Qe";
 
-async function sbFetch(path, options={} ) {
+function getAuthToken() {
+  try {
+    const s = localStorage.getItem("pm_session");
+    return s ? JSON.parse(s).token : null;
+  } catch { return null; }
+}
+
+async function sbFetch(path, options={}) {
+  const token = getAuthToken();
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...options,
     headers: {
       "apikey": SUPABASE_KEY,
-      "Authorization": `Bearer ${SUPABASE_KEY}`,
+      "Authorization": `Bearer ${token || SUPABASE_KEY}`,
       "Content-Type": "application/json",
       "Prefer": options.prefer || "return=representation",
       ...(options.headers || {}),
@@ -204,7 +212,11 @@ const adminDb = {
 const db = {
   // Pipeline
   async getPipeline() {
-    return sbFetch("pipeline_leads?contractor_id=eq.jwood&order=created_at.desc");
+    const token = getAuthToken();
+    if(!token) return [];
+    const user = (() => { try { return JSON.parse(localStorage.getItem("pm_session"))?.user; } catch { return null; } })();
+    if(!user?.id) return [];
+    return sbFetch(`pipeline_leads?user_id=eq.${user.id}&order=created_at.desc`);
   },
   async upsertLead(lead) {
     return sbFetch("pipeline_leads", {
@@ -232,6 +244,7 @@ const db = {
     return sbFetch(`pipeline_leads?id=eq.${id}`, {
       method: "PATCH",
       body: JSON.stringify({ stage, updated_at: new Date().toISOString() }),
+      prefer: "return=minimal",
     });
   },
   async deleteLead(id) {
@@ -240,7 +253,11 @@ const db = {
 
   // Campaigns
   async getCampaigns() {
-    return sbFetch("campaigns?contractor_id=eq.jwood&order=created_at.desc");
+    const token = getAuthToken();
+    if(!token) return [];
+    const user = (() => { try { return JSON.parse(localStorage.getItem("pm_session"))?.user; } catch { return null; } })();
+    if(!user?.id) return [];
+    return sbFetch(`campaigns?user_id=eq.${user.id}&order=created_at.desc`);
   },
   async saveCampaign(campaign) {
     return sbFetch("campaigns", {
@@ -260,7 +277,11 @@ const db = {
 
   // Spot bids
   async getSpotBids() {
-    return sbFetch("spot_bids?contractor_id=eq.jwood&order=created_at.desc");
+    const token = getAuthToken();
+    if(!token) return [];
+    const user = (() => { try { return JSON.parse(localStorage.getItem("pm_session"))?.user; } catch { return null; } })();
+    if(!user?.id) return [];
+    return sbFetch(`spot_bids?user_id=eq.${user.id}&order=created_at.desc`);
   },
   async saveSpotBid(bid) {
     return sbFetch("spot_bids", {
@@ -281,7 +302,11 @@ const db = {
 
   // AI calls
   async getAiCalls() {
-    return sbFetch("ai_calls?contractor_id=eq.jwood&order=created_at.desc");
+    const token = getAuthToken();
+    if(!token) return [];
+    const user = (() => { try { return JSON.parse(localStorage.getItem("pm_session"))?.user; } catch { return null; } })();
+    if(!user?.id) return [];
+    return sbFetch(`ai_calls?user_id=eq.${user.id}&order=created_at.desc`);
   },
   async saveAiCall(call) {
     return sbFetch("ai_calls", {
