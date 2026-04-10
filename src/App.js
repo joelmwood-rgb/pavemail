@@ -2833,7 +2833,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div className="section-head">AI Guidance</div>
                 <div className="field"><label>Extra Notes</label><textarea placeholder="e.g. Just finished a job on 71st St. Mention freeze-thaw damage." value={form.extraNotes} onChange={e=>set("extraNotes",e.target.value)}></textarea></div>
                 <div className="divider"/>
-                <div className="cost-bar"><div><div className="cb-label">Est. Print + Mail Cost</div><div className="cb-sub">{form.homes||0} homes × $0.62 (EDDM rate)</div></div><div className="cb-value">${estCost}</div></div>
+                <div className="cost-bar"><div><div className="cb-label">Est. Print + Mail Cost</div><div className="cb-sub">{form.homes||0} homes x $0.62 (EDDM rate)</div></div><div className="cb-value">${estCost}</div></div>
                 <button className="gen-btn" onClick={generate} disabled={loading||!form.neighborhood}>
                   {loading?<><span className="spin"/>WRITING YOUR MAILER...</>:"⚡ GENERATE MAILER"}
                 </button>
@@ -4087,7 +4087,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div style={{display:"flex",flexDirection:"column",gap:10}}>
                   {[
                     {label:"USPS Every Door Direct Mail",desc:"Neighborhood route data — real delivery counts for every ZIP",status:"live"},
-                    {label:"Postcard Print & Mail",desc:"Physical 6"×9" postcards printed and mailed to real addresses",status:"live"},
+                    {label:"Postcard Print & Mail",desc:"Physical 6x9 inch postcards printed and mailed to real addresses",status:"live"},
                     {label:"USPS Delivery Tracking",desc:"Know when your mail reaches the neighborhood",status:"soon"},
                   ].map((a,i)=>(
                     <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:8,padding:"12px 14px"}}>
