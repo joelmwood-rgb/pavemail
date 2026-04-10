@@ -150,13 +150,13 @@ const COMPANY = {
   name:        "JWood LLC",
   ownerName:   "Joel",
   phone:       "918-896-6737",
-  phoneRaw:    COMPANY.phoneRaw,          // digits only, for QR codes + Bland transfer
+  phoneRaw:    "9188966737",             // digits only, for QR codes + Bland transfer
   email:       "joelmwood@gmail.com",
   city:        "Tulsa",
   state:       "OK",
   promo:       "JWOOD",
   // Lob.com — address ID for return address on postcards
-  lobFromId:   COMPANY.lobFromId,
+  lobFromId:   "adr_910e8abc86e78815",
   // Bland.ai — phone number to transfer qualified leads to
   transferPhone: "+19188966737",
   // Supabase — contractor identifier for data isolation
