@@ -1567,7 +1567,6 @@ export default function App(){
   const[authError,setAuthError]=useState("");
   const[authSuccess,setAuthSuccess]=useState("");
   const isAdmin = authUser?.user?.email === ADMIN_EMAIL;
-  const[adminData,setAdminData]=useState({contractors:[],pipeline:[],spotBids:[],campaigns:[],loading:false});
 
 
   // Login handler
