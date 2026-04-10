@@ -1476,8 +1476,6 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
 
 export default function App(){
   // ── AUTH ──
-  const ACCESS_CODE = "8966";
-  const STORAGE_KEY = "pavemail_auth";
   // ── AUTH STATE ──
   const[authUser,setAuthUser]=useState(()=>{
     try{ const s=localStorage.getItem("pm_session"); return s?JSON.parse(s):null; }catch{ return null; }
@@ -1491,8 +1489,6 @@ export default function App(){
   const[authError,setAuthError]=useState("");
   const[authSuccess,setAuthSuccess]=useState("");
 
-  const unlocked = !!authUser;
-  const setUnlocked = () => {}; // kept for compatibility
 
   // Login handler
   async function handleLogin() {
@@ -1590,7 +1586,7 @@ export default function App(){
       setTimeout(()=>{
         if(next===ACCESS_CODE){
           if(rememberMe){ try{localStorage.setItem(STORAGE_KEY,"true");}catch{} }
-          setUnlocked(true);
+          // setUnlocked removed - now using authUser
           setPin("");
         } else {
           setPinError(true);
@@ -2324,7 +2320,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
   };
 
   // Show auth screen if not logged in
-  if(!unlocked) return(
+  if(!authUser) return(
     <>
       <style>{STYLES}</style>
       <div className="login-screen">
