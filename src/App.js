@@ -4719,7 +4719,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
                       <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1.5,color:"var(--concrete)"}}>MAIL ROI</div>
                       <div style={{fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:10,background:onPace?"rgba(42,122,82,0.15)":"rgba(212,160,23,0.15)",color:onPace?"var(--green2)":"var(--gold2)",border:`1px solid ${onPace?"rgba(42,122,82,0.3)":"rgba(212,160,23,0.3)"}`}}>
-                        {onPace?"✓ ON TARGET":"⚑ BEHIND"} · ${weeklyTarget.toLocaleString()} target
+                        {onPace?"✓ ON TARGET":"⚑ BEHIND"} · {"$"}{weeklyTarget.toLocaleString()} target
                       </div>
                     </div>
                     <div style={{background:"rgba(42,122,82,0.08)",border:"1px solid rgba(42,122,82,0.2)",borderRadius:12,padding:"20px"}}>
