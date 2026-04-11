@@ -2763,30 +2763,26 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               <span style={{width:6,height:6,borderRadius:"50%",background:CAPACITY_MODES[capacity.mode].color,flexShrink:0,display:"inline-block"}}/>
               <span>{CAPACITY_MODES[capacity.mode].label}</span>
             </div>
-            {/* Pipeline value */}
-            {pipeline.length>0&&(
-              <div className="topbar-stat" onClick={()=>switchTab("pipeline")} style={{cursor:"pointer"}}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1L6.2 4H9L6.8 5.8L7.6 8.5L5 7L2.4 8.5L3.2 5.8L1 4H3.8L5 1Z" fill="currentColor" opacity="0.7"/></svg>
-                <span style={{fontFamily:"'DM Mono',monospace"}}>${pipeline.filter(l=>l.stage==="won").reduce((s,l)=>s+(l.value||0),0).toLocaleString()}</span>
-                <span style={{opacity:0.5}}>won</span>
-              </div>
-            )}
-            {/* Active leads */}
-            {pipeline.filter(l=>l.stage!=="won").length>0&&(
-              <div className="topbar-stat" onClick={()=>switchTab("pipeline")} style={{cursor:"pointer"}}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" opacity="0.7"/><circle cx="5" cy="5" r="1.5" fill="currentColor"/></svg>
-                <span style={{fontFamily:"'DM Mono',monospace"}}>{pipeline.filter(l=>l.stage!=="won").length}</span>
-                <span style={{opacity:0.5}}>active</span>
-              </div>
-            )}
-            {/* Spot bids sent */}
-            {spotJobs.length>0&&(
-              <div className="topbar-stat" onClick={()=>switchTab("spotbid")} style={{cursor:"pointer"}}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1" opacity="0.5"/><circle cx="5" cy="5" r="2.5" stroke="currentColor" strokeWidth="1" opacity="0.7"/><circle cx="5" cy="5" r="1" fill="currentColor"/></svg>
-                <span style={{fontFamily:"'DM Mono',monospace"}}>{spotJobs.length}</span>
-                <span style={{opacity:0.5}}>bids</span>
-              </div>
-            )}
+            {/* Divider */}
+            <span style={{width:1,height:14,background:"rgba(184,180,172,0.12)",flexShrink:0}}/>
+            {/* Won */}
+            <div className="topbar-stat" onClick={()=>switchTab("pipeline")} style={{cursor:"pointer",color:"var(--green2)"}}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1L6.2 4H9L6.8 5.8L7.6 8.5L5 7L2.4 8.5L3.2 5.8L1 4H3.8L5 1Z" fill="currentColor" opacity="0.8"/></svg>
+              <span style={{fontFamily:"'DM Mono',monospace",color:"var(--green2)"}}>${pipeline.filter(l=>l.stage==="won").reduce((s,l)=>s+(l.value||0),0).toLocaleString()}</span>
+              <span style={{opacity:0.5,color:"var(--stone)"}}>won</span>
+            </div>
+            {/* Active */}
+            <div className="topbar-stat" onClick={()=>switchTab("pipeline")} style={{cursor:"pointer"}}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" opacity="0.6"/><circle cx="5" cy="5" r="1.5" fill="currentColor"/></svg>
+              <span style={{fontFamily:"'DM Mono',monospace"}}>{pipeline.filter(l=>l.stage!=="won").length}</span>
+              <span style={{opacity:0.5}}>active</span>
+            </div>
+            {/* Spot bids */}
+            <div className="topbar-stat" onClick={()=>switchTab("spotbid")} style={{cursor:"pointer"}}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1" opacity="0.5"/><circle cx="5" cy="5" r="2.5" stroke="currentColor" strokeWidth="1" opacity="0.7"/><circle cx="5" cy="5" r="1" fill="currentColor"/></svg>
+              <span style={{fontFamily:"'DM Mono',monospace"}}>{spotJobs.length}</span>
+              <span style={{opacity:0.5}}>bids</span>
+            </div>
           </div>
 
           <div className="topbar-right">
