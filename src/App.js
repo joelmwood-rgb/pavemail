@@ -4408,7 +4408,6 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 </div>
               )}
             </div>
-          </div>
           {/* JOB BOARD */}
           {tab==="jobboard"&&(
             <div style={{height:"100%",overflowY:"auto",padding:"20px 24px"}}>
