@@ -13,7 +13,7 @@ const CONFIG = {
   SUPABASE_URL:  window.__ENV__?.SUPABASE_URL  || "https://pzbvvohedpgeiynqoujr.supabase.co",
   SUPABASE_KEY:  window.__ENV__?.SUPABASE_KEY  || "sb_publishable_H6U94DoMxk7_Cap6ftIoew_14fhh8Qe",
   PROXY_BASE:    window.__ENV__?.PROXY_BASE    || "https://joelmwood--b166b8c432db11f19dff42b51c65c3df.web.val.run",
-  STRIPE_KEY:    window.__ENV__?.STRIPE_KEY    || "", // Stripe publishable key — set before billing goes live
+  STRIPE_KEY:    window.__ENV__?.STRIPE_KEY    || "pk_live_51TL54NE8Fzrv1kXNOgsYsP3lVz2wXqN738azn5vmcvzojC97eHET5001GvEE3xKqSrLTyY8xmo1Wntrzal4XYQaf00n0J8uZSU",
   ADMIN_EMAIL:   window.__ENV__?.ADMIN_EMAIL   || "joel@jwoodllc.com", // Super admin login email
 };
 // Inject via <script>window.__ENV__ = {...}</script> in your HTML shell for zero-rebuild config changes.
