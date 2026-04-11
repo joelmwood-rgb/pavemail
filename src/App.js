@@ -3288,7 +3288,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   </div>
                   <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2,color:"var(--cream)",marginBottom:8}}>STEP 2: SPOT BID</div>
                   <div style={{fontSize:13,color:"var(--concrete)",lineHeight:1.7,marginBottom:20}}>
-                    AI reads the damage, writes a personal postcard — <em style={{color:"var(--orange2)"}}"We noticed your concrete at 4821 Oak Ridge Dr..."</em> — and sends it to print.
+                    AI reads the damage, writes a personal postcard — <em style={{color:"var(--orange2)"}}>{"\"We noticed your concrete at 4821 Oak Ridge Dr...\""}</em> — and sends it to print.
                   </div>
                   <div style={{background:"rgba(42,122,82,0.08)",border:"1px solid rgba(42,122,82,0.2)",borderRadius:10,padding:"12px 16px",fontSize:11,color:"var(--green2)",textAlign:"left",lineHeight:1.8,marginBottom:20}}>
                     <div>✓ Photo → AI damage analysis → personal note</div>
