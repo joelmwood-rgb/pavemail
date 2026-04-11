@@ -1234,10 +1234,37 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 }
 
 /* ── LOGIN SCREEN ── */
-.login-screen{position:fixed;inset:0;inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:var(--black);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0;min-height:100dvh;overflow-y:auto;}
+.login-screen{position:fixed;inset:0;inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:var(--black);display:flex;align-items:flex-start;justify-content:center;z-index:9999;flex-direction:column;gap:0;min-height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:env(safe-area-inset-top);}
+/* Animated login background */
+.login-bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(232,86,10,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(232,86,10,0.04) 1px,transparent 1px);background-size:40px 40px;animation:gridMove 20s linear infinite;}
+@keyframes gridMove{0%{background-position:0 0;}100%{background-position:40px 40px;}}
+@media(prefers-reduced-motion:reduce){.login-bg-grid{animation:none;}.login-glow{animation:none;}.onboard-step{animation:none;}}
+.login-glow{position:absolute;width:400px;height:400px;background:radial-gradient(circle,rgba(232,86,10,0.12) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-60%);pointer-events:none;animation:glowPulse 4s ease-in-out infinite;}
+@keyframes glowPulse{0%,100%{opacity:0.6;transform:translate(-50%,-60%) scale(1);}50%{opacity:1;transform:translate(-50%,-60%) scale(1.1);}}
+/* ROI calculator */
+.roi-calc{background:rgba(232,86,10,0.06);border:1px solid rgba(232,86,10,0.2);border-radius:14px;padding:20px 22px;margin:16px 0;}
+.roi-slider-wrap{margin:10px 0;}
+.roi-slider{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:rgba(184,180,172,0.15);outline:none;}
+.roi-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--orange);cursor:pointer;box-shadow:0 0 0 3px rgba(232,86,10,0.2);}
+.roi-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--orange);cursor:pointer;border:none;}
+.roi-number{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--orange);letter-spacing:2px;line-height:1;}
+.roi-return{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--green2);letter-spacing:2px;}
+@media(max-width:400px){.roi-number{font-size:34px;}.roi-return{font-size:22px;}}
+
+/* Onboarding steps */
+.onboard-step{animation:slideUp 0.4s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.step-dots{display:flex;gap:6px;justify-content:center;margin-bottom:20px;}
+.step-dot{width:6px;height:6px;border-radius:50%;background:rgba(184,180,172,0.2);transition:all 0.3s;}
+.step-dot.active{background:var(--orange);width:20px;border-radius:3px;}
+.step-dot.done{background:rgba(232,86,10,0.4);}
+/* Proof ticker */
+.proof-ticker{display:flex;gap:12px;overflow:hidden;mask-image:linear-gradient(90deg,transparent,black 15%,black 85%,transparent);}
+.proof-ticker-inner{display:flex;gap:12px;animation:ticker 20s linear infinite;}
+.proof-chip{background:rgba(42,122,82,0.1);border:1px solid rgba(42,122,82,0.2);borderRadius:20px;padding:4px 10px;fontSize:10px;color:var(--green2);white-space:nowrap;display:flex;align-items:center;gap:4px;}
 .login-bg{position:absolute;inset:0;background:linear-gradient(145deg,#0e0d0b 0%,#1c1a17 60%,#0e0d0b 100%);}
 .login-texture{position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,rgba(184,180,172,0.02) 0,rgba(184,180,172,0.02) 1px,transparent 0,transparent 8px);}
-.login-box{position:relative;width:100%;max-width:360px;padding:32px 28px;animation:scaleIn 0.3s ease;}
+.login-box{position:relative;width:100%;max-width:360px;padding:32px 20px 40px;box-sizing:border-box;animation:scaleIn 0.3s ease;}
 .demo-dots{display:flex;gap:12px;justify-content:center;margin:20px 0 24px;}
 .demo-dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(184,180,172,0.2);background:transparent;transition:all 0.15s;}
 .demo-dot.filled{background:var(--orange);border-color:var(--orange);box-shadow:0 0 8px rgba(232,86,10,0.4);}
@@ -1863,7 +1890,11 @@ export default function App(){
   const[contractor,setContractor]=useState(()=>{
     try{ const s=localStorage.getItem("pm_profile"); return s?JSON.parse(s):null; }catch{ return null; }
   });
-  const[authScreen,setAuthScreen]=useState("login"); // login | signup | forgot | profile-setup | demo-code
+  const[authScreen,setAuthScreen]=useState("login"); // login | signup | forgot | profile-setup | demo-code | roi-calc | onboard
+  const[roiMailers,setRoiMailers]=useState(300);
+  const[roiAvgJob,setRoiAvgJob]=useState(1500);
+  const[roiCloseRate,setRoiCloseRate]=useState(2);
+  const[onboardStep,setOnboardStep]=useState(0);
   const[demoCode,setDemoCode]=useState("");
   const[demoShake,setDemoShake]=useState(false);
   const[authForm,setAuthForm]=useState({email:"",password:"",confirmPassword:"",inviteCode:"",ownerName:"",companyName:"",phone:"",city:"Tulsa"});
@@ -1988,7 +2019,7 @@ export default function App(){
   }
 
 
-  const[tab,setTab]=useState("map");
+  const[tab,setTab]=useState("command");
   function switchTab(t){ track('tab_viewed',{tab:t}); setTab(t); }
   const[toast,setToast]=useState(null);
   const[selectedRoutes,setSelectedRoutes]=useState([]);
@@ -2981,26 +3012,41 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
   // Show auth screen if not logged in
   if(!authUser) return(
     <div className="login-screen">
+        {/* Animated background */}
         <div className="login-bg"/>
         <div className="login-texture"/>
-        <div className="login-box">
-          <div className="login-logo" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
-            <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-              <rect width="52" height="52" rx="14" fill="rgba(232,86,10,0.1)"/>
-              <rect x="8" y="22" width="36" height="22" rx="3" fill="rgba(232,86,10,0.15)" stroke="rgba(232,86,10,0.5)" strokeWidth="1.5"/>
-              <rect x="13" y="27" width="26" height="3.5" rx="1.5" fill="#e8560a" opacity="0.9"/>
-              <rect x="13" y="33.5" width="16" height="3.5" rx="1.5" fill="#e8560a" opacity="0.5"/>
-              <path d="M18 22V16C18 12.7 21 10 26 10C31 10 34 12.7 34 16V22" stroke="rgba(232,86,10,0.6)" strokeWidth="1.5" strokeLinecap="round"/>
-              <circle cx="26" cy="16" r="2" fill="rgba(232,86,10,0.4)"/>
-            </svg>
-            PAVE<span>MAIL</span>
+        <div className="login-bg-grid"/>
+        <div className="login-glow"/>
+
+        <div className="login-box" style={{position:"relative",zIndex:1}}>
+
+          {/* ── LOGO ── */}
+          <div style={{textAlign:"center",marginBottom:authScreen==="login"?0:16}}>
+            <div style={{display:"inline-flex",alignItems:"center",gap:10,marginBottom:6}}>
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <rect width="32" height="32" rx="8" fill="rgba(232,86,10,0.15)" stroke="rgba(232,86,10,0.4)" strokeWidth="1"/>
+                <rect x="5" y="14" width="22" height="13" rx="2" fill="rgba(232,86,10,0.2)" stroke="rgba(232,86,10,0.6)" strokeWidth="1.2"/>
+                <rect x="8" y="17" width="16" height="2.5" rx="1" fill="#e8560a" opacity="0.9"/>
+                <rect x="8" y="21.5" width="10" height="2" rx="1" fill="#e8560a" opacity="0.5"/>
+                <path d="M11 14V10C11 8 13 6.5 16 6.5C19 6.5 21 8 21 10V14" stroke="rgba(232,86,10,0.7)" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:32,letterSpacing:4,color:"var(--cream)"}}>PAVE<span style={{color:"var(--orange)"}}>MAIL</span></div>
+            </div>
+            {authScreen==="login"&&<div style={{fontSize:10,color:"var(--stone)",letterSpacing:3,textTransform:"uppercase",opacity:0.7}}>The postcard that knows their project</div>}
           </div>
-          <div className="login-tagline">The Postcard That Knows Their Project</div>
 
           {/* ── LOGIN ── */}
           {authScreen==="login"&&(
             <>
-              <div className="login-label" style={{marginTop:24}}>Sign In</div>
+              {/* ROI teaser strip */}
+              <div style={{background:"rgba(42,122,82,0.08)",border:"1px solid rgba(42,122,82,0.15)",borderRadius:10,padding:"10px 14px",marginBottom:20,marginTop:20,display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer"}} onClick={()=>setAuthScreen("roi-calc")}>
+                <div>
+                  <div style={{fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--green2)",marginBottom:2}}>Average PaveMail ROI</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,color:"var(--orange2)",lineHeight:1}}>12–18x <span style={{fontSize:13,color:"var(--stone)",fontFamily:"'Syne',sans-serif",fontWeight:400}}>return on mail spend</span></div>
+                </div>
+                <div style={{fontSize:10,color:"var(--orange2)",fontWeight:700,flexShrink:0}}>Calculate yours →</div>
+              </div>
+              <div className="login-label" style={{marginTop:0}}>Sign In</div>
               <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
                 <input type="email" placeholder="your@email.com" autoComplete="email"
                   value={authForm.email} onChange={e=>setAuthForm(f=>({...f,email:e.target.value}))}
@@ -3120,6 +3166,180 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             </>
           )}
 
+          {/* ── ROI CALCULATOR ── */}
+          {authScreen==="roi-calc"&&(
+            <div className="onboard-step">
+              <div style={{textAlign:"center",marginBottom:20}}>
+                <div style={{fontSize:10,fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:"var(--orange2)",marginBottom:8}}>Your potential ROI</div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:"var(--cream)"}}>HOW MUCH COULD YOU MAKE?</div>
+              </div>
+
+              <div className="roi-calc">
+                {/* Mailers slider */}
+                <div style={{marginBottom:16}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                    <span style={{fontSize:11,color:"var(--stone)"}}>Monthly mailers sent</span>
+                    <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"var(--cream)",fontWeight:700}}>{roiMailers.toLocaleString()}</span>
+                  </div>
+                  <input type="range" className="roi-slider" min={50} max={1000} step={50} value={roiMailers} onChange={e=>setRoiMailers(Number(e.target.value))}/>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"var(--gravel)",marginTop:3}}>
+                    <span>50</span><span>1,000</span>
+                  </div>
+                </div>
+
+                {/* Close rate */}
+                <div style={{marginBottom:16}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                    <span style={{fontSize:11,color:"var(--stone)"}}>Jobs won per 100 mailers</span>
+                    <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"var(--cream)",fontWeight:700}}>{roiCloseRate}</span>
+                  </div>
+                  <input type="range" className="roi-slider" min={1} max={8} step={1} value={roiCloseRate} onChange={e=>setRoiCloseRate(Number(e.target.value))}/>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"var(--gravel)",marginTop:3}}>
+                    <span>Industry avg: 1-2%</span><span>PaveMail: 3-5%</span>
+                  </div>
+                </div>
+
+                {/* Avg job value */}
+                <div style={{marginBottom:20}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                    <span style={{fontSize:11,color:"var(--stone)"}}>Average job value</span>
+                    <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"var(--cream)",fontWeight:700}}>${roiAvgJob.toLocaleString()}</span>
+                  </div>
+                  <input type="range" className="roi-slider" min={500} max={5000} step={100} value={roiAvgJob} onChange={e=>setRoiAvgJob(Number(e.target.value))}/>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"var(--gravel)",marginTop:3}}>
+                    <span>$500</span><span>$5,000</span>
+                  </div>
+                </div>
+
+                {/* Results */}
+                {(()=>{
+                  const spend = roiMailers * 0.62;
+                  const jobs = Math.round(roiMailers * (roiCloseRate/100));
+                  const revenue = jobs * roiAvgJob;
+                  const roi = spend > 0 ? (revenue/spend).toFixed(1) : 0;
+                  return(
+                    <div style={{borderTop:"1px solid rgba(232,86,10,0.2)",paddingTop:16,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                      <div>
+                        <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",marginBottom:4}}>Mail spend</div>
+                        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,color:"var(--cream)"}}>${spend.toFixed(0)}<span style={{fontSize:12,opacity:0.5}}>/mo</span></div>
+                      </div>
+                      <div>
+                        <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",marginBottom:4}}>Jobs won</div>
+                        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,color:"var(--cream)"}}>{jobs}<span style={{fontSize:12,opacity:0.5}}>/mo</span></div>
+                      </div>
+                      <div>
+                        <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",marginBottom:4}}>Revenue</div>
+                        <div className="roi-return">${revenue.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",marginBottom:4}}>Return</div>
+                        <div className="roi-number">{roi}x</div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div style={{fontSize:10,color:"var(--gravel)",textAlign:"center",marginBottom:16,lineHeight:1.6}}>
+                Industry average direct mail ROI is 4-7x.<br/>PaveMail's personalized postcards average <strong style={{color:"var(--orange2)"}}>12-18x</strong>.
+              </div>
+
+              <button className="gen-btn" onClick={()=>setAuthScreen("signup")} style={{marginBottom:10}}>
+                I want this → Create Account
+              </button>
+              <button onClick={()=>setAuthScreen("login")} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:12,fontFamily:"'Syne',sans-serif",width:"100%"}}>
+                Already have an account? Sign in
+              </button>
+            </div>
+          )}
+
+          {/* ── ONBOARDING STEPS (after profile setup) ── */}
+          {authScreen==="onboard"&&(
+            <div className="onboard-step">
+              <div className="step-dots">
+                {[0,1,2].map(i=>(
+                  <div key={i} className={`step-dot${onboardStep===i?" active":onboardStep>i?" done":""}`}/>
+                ))}
+              </div>
+
+              {onboardStep===0&&(
+                <div style={{textAlign:"center"}}>
+                  <div style={{width:72,height:72,background:"rgba(232,86,10,0.1)",borderRadius:20,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}>
+                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M18 3C11.4 3 6 8.4 6 15C6 23.5 18 33 18 33C18 33 30 23.5 30 15C30 8.4 24.6 3 18 3Z" fill="rgba(232,86,10,0.2)" stroke="#e8560a" strokeWidth="1.5"/><circle cx="18" cy="15" r="5" fill="#e8560a" opacity="0.8"/></svg>
+                  </div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2,color:"var(--cream)",marginBottom:8}}>STEP 1: SCOUT</div>
+                  <div style={{fontSize:13,color:"var(--concrete)",lineHeight:1.7,marginBottom:20}}>
+                    Drive past a property with cracked concrete.<br/>
+                    Open PaveMail → tap <strong style={{color:"var(--orange2)"}}>Scout</strong> → tap that house on the satellite map.
+                  </div>
+                  <div style={{background:"rgba(0,0,0,0.3)",borderRadius:10,padding:"12px 16px",fontSize:11,color:"var(--stone)",textAlign:"left",lineHeight:1.8,marginBottom:20}}>
+                    <div>📍 GPS centers the map on you automatically</div>
+                    <div>🏠 Tap any house to tag it</div>
+                    <div>📬 Auto-fills the address for you</div>
+                  </div>
+                  <button className="gen-btn" onClick={()=>setOnboardStep(1)}>Next →</button>
+                </div>
+              )}
+
+              {onboardStep===1&&(
+                <div style={{textAlign:"center"}}>
+                  <div style={{width:72,height:72,background:"rgba(232,86,10,0.1)",borderRadius:20,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}>
+                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect x="3" y="7" width="30" height="22" rx="3" fill="rgba(232,86,10,0.15)" stroke="#e8560a" strokeWidth="1.5"/><path d="M3 14L18 22L33 14" stroke="#e8560a" strokeWidth="1.5"/><path d="M24 3L26.5 9H33L28 12.5L30.5 19L24 15.5L17.5 19L20 12.5L15 9H21.5L24 3Z" fill="#e8560a" opacity="0.8"/></svg>
+                  </div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2,color:"var(--cream)",marginBottom:8}}>STEP 2: SPOT BID</div>
+                  <div style={{fontSize:13,color:"var(--concrete)",lineHeight:1.7,marginBottom:20}}>
+                    AI reads the damage, writes a personal postcard — <em style={{color:"var(--orange2)"}}"We noticed your concrete at 4821 Oak Ridge Dr..."</em> — and sends it to print.
+                  </div>
+                  <div style={{background:"rgba(42,122,82,0.08)",border:"1px solid rgba(42,122,82,0.2)",borderRadius:10,padding:"12px 16px",fontSize:11,color:"var(--green2)",textAlign:"left",lineHeight:1.8,marginBottom:20}}>
+                    <div>✓ Photo → AI damage analysis → personal note</div>
+                    <div>✓ Real postcard printed and mailed for $0.62</div>
+                    <div>✓ QR code auto-dials your number when scanned</div>
+                  </div>
+                  <button className="gen-btn" onClick={()=>setOnboardStep(2)}>Next →</button>
+                  <button onClick={()=>setOnboardStep(0)} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:11,fontFamily:"'Syne',sans-serif",width:"100%",marginTop:8}}>← Back</button>
+                </div>
+              )}
+
+              {onboardStep===2&&(
+                <div style={{textAlign:"center"}}>
+                  <div style={{width:72,height:72,background:"rgba(42,122,82,0.1)",borderRadius:20,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}>
+                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M18 3L22 13H33L24 19.5L27.5 30L18 24L8.5 30L12 19.5L3 13H14L18 3Z" fill="#2a7a52" stroke="#2a7a52" strokeWidth="0.5"/></svg>
+                  </div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2,color:"var(--cream)",marginBottom:8}}>STEP 3: CLOSE</div>
+                  <div style={{fontSize:13,color:"var(--concrete)",lineHeight:1.7,marginBottom:16}}>
+                    Homeowner scans the QR code. AI agent answers, qualifies the lead, transfers them live. You close the job.
+                  </div>
+
+                  {/* The money math */}
+                  <div style={{background:"rgba(42,122,82,0.08)",border:"1px solid rgba(42,122,82,0.25)",borderRadius:12,padding:"16px",marginBottom:20}}>
+                    <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--green2)",marginBottom:12}}>The math</div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,textAlign:"left"}}>
+                      {[
+                        {label:"200 mailers",val:"$124",color:"var(--stone)"},
+                        {label:"3 jobs at $1,500",val:"$4,500",color:"var(--green2)"},
+                        {label:"PaveMail/month",val:"$199",color:"var(--stone)"},
+                        {label:"Your return",val:"29x",color:"var(--orange2)"},
+                      ].map((r,i)=>(
+                        <div key={i} style={{background:"rgba(0,0,0,0.2)",borderRadius:8,padding:"8px 10px"}}>
+                          <div style={{fontSize:9,color:"var(--gravel)",marginBottom:3}}>{r.label}</div>
+                          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:r.color}}>{r.val}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button className="gen-btn" onClick={()=>{
+                    setAuthScreen("login");
+                    setOnboardStep(0);
+                  }} style={{background:"linear-gradient(135deg,#e8560a,#c44008)",marginBottom:10}}>
+                    🚀 Start Making Money
+                  </button>
+                  <button onClick={()=>setOnboardStep(1)} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:11,fontFamily:"'Syne',sans-serif",width:"100%"}}>← Back</button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ── PROFILE SETUP ── */}
           {authScreen==="profile-setup"&&(
             <>
@@ -3147,16 +3367,26 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             </>
           )}
 
-          {authScreen!=="demo-code"&&(
-            <div style={{textAlign:"center",marginTop:20}}>
-              <div style={{height:1,background:"rgba(184,180,172,0.08)",marginBottom:16}}/>
-              <button
-                onClick={()=>{setAuthScreen("demo-code");setDemoCode("");setDemoShake(false);}}
-                style={{background:"none",border:"none",color:"var(--stone)",fontFamily:"'Syne',sans-serif",fontSize:12,cursor:"pointer",letterSpacing:0.3,display:"flex",alignItems:"center",gap:6,margin:"0 auto",padding:"4px 0",opacity:0.7,transition:"opacity 0.15s"}}
-              >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/><path d="M4 5.5C4 4.4 4.9 3.5 6 3.5C7.1 3.5 8 4.4 8 5.5C8 6.3 7.5 7 6.8 7.4L6 7.8V8.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><circle cx="6" cy="10" r="0.6" fill="currentColor"/></svg>
-                Have a demo access code?
-              </button>
+          {authScreen!=="demo-code"&&authScreen!=="roi-calc"&&authScreen!=="onboard"&&(
+            <div style={{textAlign:"center",marginTop:16}}>
+              <div style={{height:1,background:"rgba(184,180,172,0.08)",marginBottom:12}}/>
+              <div style={{display:"flex",justifyContent:"center",gap:16,flexWrap:"wrap"}}>
+                <button onClick={()=>setAuthScreen("roi-calc")}
+                  style={{background:"none",border:"none",color:"var(--stone)",fontFamily:"'Syne',sans-serif",fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",gap:4,opacity:0.7}}>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1L6.2 3.8H9.5L7 5.5L8 8.5L5 6.8L2 8.5L3 5.5L0.5 3.8H3.8L5 1Z" fill="currentColor" opacity="0.7"/></svg>
+                  Calculate my ROI
+                </button>
+                <button onClick={()=>{setAuthScreen("onboard");setOnboardStep(0);}}
+                  style={{background:"none",border:"none",color:"var(--stone)",fontFamily:"'Syne',sans-serif",fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",gap:4,opacity:0.7}}>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="currentColor" strokeWidth="1"/><path d="M3.5 5L4.8 6.3L6.5 3.8" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  See how it works
+                </button>
+                <button onClick={()=>{setAuthScreen("demo-code");setDemoCode("");setDemoShake(false);}}
+                  style={{background:"none",border:"none",color:"var(--stone)",fontFamily:"'Syne',sans-serif",fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",gap:4,opacity:0.7}}>
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/><path d="M4 5.5C4 4.4 4.9 3.5 6 3.5C7.1 3.5 8 4.4 8 5.5C8 6.3 7.5 7 6.8 7.4L6 7.8V8.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><circle cx="6" cy="10" r="0.6" fill="currentColor"/></svg>
+                  Demo access code
+                </button>
+              </div>
             </div>
           )}
           <div className="login-footer" style={{marginTop:12}}>🔒 Secured · PaveMail</div>
@@ -3182,31 +3412,60 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
           {/* ── CENTER: Live stats strip ── */}
           <div className="topbar-center">
-            {/* Capacity status pill */}
-            <div className="topbar-stat" onClick={()=>switchTab("capacity")} style={{cursor:"pointer",borderColor:CAPACITY_MODES[capacity.mode].color+"40",color:CAPACITY_MODES[capacity.mode].color}}>
-              <span style={{width:6,height:6,borderRadius:"50%",background:CAPACITY_MODES[capacity.mode].color,flexShrink:0,display:"inline-block"}}/>
-              <span>{CAPACITY_MODES[capacity.mode].label}</span>
-            </div>
-            {/* Divider */}
-            <span style={{width:1,height:14,background:"rgba(184,180,172,0.12)",flexShrink:0}}/>
-            {/* Won */}
-            <div className="topbar-stat" onClick={()=>switchTab("pipeline")} style={{cursor:"pointer",color:"var(--green2)"}}>
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1L6.2 4H9L6.8 5.8L7.6 8.5L5 7L2.4 8.5L3.2 5.8L1 4H3.8L5 1Z" fill="currentColor" opacity="0.8"/></svg>
-              <span style={{fontFamily:"'DM Mono',monospace",color:"var(--green2)"}}>${pipeline.filter(l=>l.stage==="won").reduce((s,l)=>s+(l.value||0),0).toLocaleString()}</span>
-              <span style={{opacity:0.5,color:"var(--stone)"}}>won</span>
-            </div>
-            {/* Active */}
-            <div className="topbar-stat" onClick={()=>switchTab("pipeline")} style={{cursor:"pointer"}}>
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" opacity="0.6"/><circle cx="5" cy="5" r="1.5" fill="currentColor"/></svg>
-              <span style={{fontFamily:"'DM Mono',monospace"}}>{pipeline.filter(l=>l.stage!=="won").length}</span>
-              <span style={{opacity:0.5}}>active</span>
-            </div>
-            {/* Spot bids */}
-            <div className="topbar-stat" onClick={()=>switchTab("spotbid")} style={{cursor:"pointer"}}>
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1" opacity="0.5"/><circle cx="5" cy="5" r="2.5" stroke="currentColor" strokeWidth="1" opacity="0.7"/><circle cx="5" cy="5" r="1" fill="currentColor"/></svg>
-              <span style={{fontFamily:"'DM Mono',monospace"}}>{spotJobs.length}</span>
-              <span style={{opacity:0.5}}>bids</span>
-            </div>
+            {(()=>{
+              const todayStr = new Date().toISOString().split("T")[0];
+              const todayJobs = jobBoardJobs.filter(j=>j.date===todayStr);
+              const crewDaysAvail = (ACTIVE_COMPANY.crewSize||12)*5;
+              const crewDaysBooked = jobBoardJobs.filter(j=>j.status!=="complete"&&j.status!=="collected").length*2;
+              const utilPct = Math.min(100,Math.round((crewDaysBooked/crewDaysAvail)*100));
+              const followUpsDue = pipeline.filter(l=>{
+                if(l.stage==="won"||l.stage==="spotted"||!l.mailerSent) return false;
+                return Math.floor((Date.now()-new Date(l.mailerSent))/86400000)>=5&&!l.calledBack;
+              }).length;
+              return(<>
+                {/* Crew utilization — clicks to Command */}
+                <div className="topbar-stat" onClick={()=>switchTab("command")} style={{cursor:"pointer",borderColor:CAPACITY_MODES[capacity.mode].color+"40",color:CAPACITY_MODES[capacity.mode].color}}>
+                  <span style={{width:6,height:6,borderRadius:"50%",background:CAPACITY_MODES[capacity.mode].color,flexShrink:0,display:"inline-block"}}/>
+                  <span style={{fontFamily:"'DM Mono',monospace",fontWeight:700}}>{utilPct}%</span>
+                  <span style={{opacity:0.6,color:"var(--stone)"}}>crew</span>
+                </div>
+                <span style={{width:1,height:14,background:"rgba(184,180,172,0.12)",flexShrink:0}}/>
+                {/* Won revenue */}
+                <div className="topbar-stat" onClick={()=>switchTab("pipeline")} style={{cursor:"pointer"}}>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1L6.2 4H9L6.8 5.8L7.6 8.5L5 7L2.4 8.5L3.2 5.8L1 4H3.8L5 1Z" fill="currentColor" opacity="0.8"/></svg>
+                  <span style={{fontFamily:"'DM Mono',monospace",color:"var(--green2)"}}>${pipeline.filter(l=>l.stage==="won").reduce((s,l)=>s+(l.value||0),0).toLocaleString()}</span>
+                  <span style={{opacity:0.5,color:"var(--stone)"}}>won</span>
+                </div>
+                {/* Active leads */}
+                <div className="topbar-stat" onClick={()=>switchTab("pipeline")} style={{cursor:"pointer"}}>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" opacity="0.6"/><circle cx="5" cy="5" r="1.5" fill="currentColor"/></svg>
+                  <span style={{fontFamily:"'DM Mono',monospace"}}>{pipeline.filter(l=>l.stage!=="won").length}</span>
+                  <span style={{opacity:0.5}}>leads</span>
+                </div>
+                {/* Today's jobs */}
+                <div className="topbar-stat" onClick={()=>switchTab("jobboard")} style={{cursor:"pointer",color:todayJobs.length>0?"var(--orange2)":"var(--stone)"}}>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="2" width="8" height="7" rx="1" stroke="currentColor" strokeWidth="1.1"/><line x1="1" y1="4.5" x2="9" y2="4.5" stroke="currentColor" strokeWidth="1" opacity="0.5"/><line x1="3.5" y1="1" x2="3.5" y2="3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><line x1="6.5" y1="1" x2="6.5" y2="3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                  <span style={{fontFamily:"'DM Mono',monospace"}}>{todayJobs.length}</span>
+                  <span style={{opacity:0.5,color:"var(--stone)"}}>today</span>
+                </div>
+                {/* Follow-ups due — shows red when urgent */}
+                {followUpsDue>0&&(
+                  <div className="topbar-stat" onClick={()=>switchTab("command")} style={{cursor:"pointer",borderColor:"rgba(224,82,82,0.4)",color:"#e05252"}}>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" fill="rgba(224,82,82,0.2)" stroke="#e05252" strokeWidth="1"/><line x1="5" y1="2.5" x2="5" y2="5.5" stroke="#e05252" strokeWidth="1.3" strokeLinecap="round"/><circle cx="5" cy="7.5" r="0.6" fill="#e05252"/></svg>
+                    <span style={{fontFamily:"'DM Mono',monospace",fontWeight:700}}>{followUpsDue}</span>
+                    <span style={{opacity:0.7}}>follow-up{followUpsDue!==1?"s":""}</span>
+                  </div>
+                )}
+                {/* Field tags — shows when addresses tagged */}
+                {fieldTags.length>0&&(
+                  <div className="topbar-stat" onClick={()=>switchTab("fieldmap")} style={{cursor:"pointer",color:"var(--orange2)"}}>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1C3.3 1 2 2.3 2 4C2 6.2 5 9.5 5 9.5C5 9.5 8 6.2 8 4C8 2.3 6.7 1 5 1Z" fill="currentColor" fillOpacity="0.3" stroke="currentColor" strokeWidth="1.1"/><circle cx="5" cy="4" r="1.2" fill="currentColor"/></svg>
+                    <span style={{fontFamily:"'DM Mono',monospace"}}>{fieldTags.length}</span>
+                    <span style={{opacity:0.5,color:"var(--stone)"}}>tagged</span>
+                  </div>
+                )}
+              </>);
+            })()}
           </div>
 
           <div className="topbar-right">
@@ -3318,7 +3577,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <p style={{fontSize:12,color:"var(--stone)",lineHeight:1.6,marginBottom:14}}>Enter any ZIP to load live USPS carrier routes and real home counts.</p>
                 <div style={{display:"flex",gap:8,marginBottom:10}}>
                   <div className="field" style={{margin:0,flex:1}}>
-                    <input placeholder="Enter ZIP (e.g. 74105)" value={zipSearch} onChange={e=>setZipSearch(e.target.value.replace(/[^0-9]/g,"").slice(0,5))} onKeyDown={e=>e.key==="Enter"&&searchZip(zipSearch)} maxLength={5} style={{fontFamily:"'DM Mono',monospace",fontSize:15,letterSpacing:2}}/>
+                    <input placeholder="Enter ZIP (e.g. 74105)" value={zipSearch} onChange={e=>setZipSearch(e.target.value.replace(/[^0-9]/g,"").slice(0,5))} onKeyDown={e=>e.key==="Enter"&&searchZip(zipSearch)} maxLength={5} style={{fontFamily:"'DM Mono',monospace",fontSize:16,letterSpacing:2}}/>
                   </div>
                   <button className="btn btn-primary btn-sm" onClick={()=>searchZip(zipSearch)} disabled={routesLoading} style={{flexShrink:0,padding:"0 14px"}}>
                     {routesLoading?<span className="spin"/>:"Search"}
@@ -4269,11 +4528,65 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {/* COMMAND CENTER */}
           {tab==="command"&&(
             <div style={{height:"100%",overflowY:"auto",padding:"20px 24px"}}>
-              <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:4}}>
-                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)"}}>COMMAND CENTER</div>
-                <div style={{fontSize:11,color:"var(--stone)"}}>{new Date().toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"})}</div>
+              {/* Morning greeting */}
+              <div style={{marginBottom:20}}>
+                <div style={{fontSize:11,color:"var(--stone)",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>{new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}</div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,letterSpacing:2,color:"var(--cream)",lineHeight:1.1}}>
+                  {new Date().getHours()<12?"GOOD MORNING,":new Date().getHours()<17?"GOOD AFTERNOON,":"GOOD EVENING,"}<br/>
+                  <span style={{color:"var(--orange)"}}>{ACTIVE_COMPANY.ownerName.toUpperCase()}.</span>
+                </div>
+                {/* Live revenue pulse */}
+                {(()=>{
+                  const wonRev = pipeline.filter(l=>l.stage==="won").reduce((s,l)=>s+(l.value||0),0);
+                  const target = ACTIVE_COMPANY.weeklyTarget||40000;
+                  const pct = Math.min(100,Math.round((wonRev/target)*100));
+                  const followDue = pipeline.filter(l=>{
+                    if(l.stage==="won"||l.stage==="spotted"||!l.mailerSent) return false;
+                    return Math.floor((Date.now()-new Date(l.mailerSent))/86400000)>=5&&!l.calledBack;
+                  }).length;
+                  return(
+                    <div style={{marginTop:14,background:"rgba(0,0,0,0.2)",borderRadius:12,padding:"14px 16px"}}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                        <span style={{fontSize:10,color:"var(--stone)",letterSpacing:1,textTransform:"uppercase"}}>Weekly revenue pace</span>
+                        <span style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:pct>=100?"var(--green2)":"var(--orange2)"}}>${wonRev.toLocaleString()} / ${target.toLocaleString()}</span>
+                      </div>
+                      <div style={{height:6,background:"rgba(184,180,172,0.1)",borderRadius:3,overflow:"hidden",marginBottom:10}}>
+                        <div style={{height:"100%",width:`${pct}%`,background:pct>=100?"var(--green2)":"var(--orange)",borderRadius:3,transition:"width 0.8s ease"}}/>
+                      </div>
+                      {followDue>0&&(
+                        <div style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:"#e05252",cursor:"pointer"}} onClick={()=>{}}>
+                          <span style={{width:7,height:7,borderRadius:"50%",background:"#e05252",display:"inline-block",animation:"blink 1s infinite"}}/>
+                          {followDue} lead{followDue!==1?"s":""} need{followDue===1?"s":""} a follow-up call today
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
-              <div style={{fontSize:11,color:"var(--stone)",marginBottom:20}}>Daily dashboard · follow-ups · mail ROI</div>
+
+              {/* QUICK ACTIONS — the money buttons */}
+              <div style={{marginBottom:24}}>
+                <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--stone)",marginBottom:10}}>Quick Actions</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                  {[
+                    {id:"spotbid",icon:<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="13" rx="2" fill="rgba(232,86,10,0.2)" stroke="#e8560a" strokeWidth="1.4"/><path d="M2 10L11 15L20 10" stroke="#e8560a" strokeWidth="1.4"/><path d="M15 2L17 7.5L22.5 7.5L18.3 10.5L20.3 16L15 13L9.7 16L11.7 10.5L7.5 7.5H13L15 2Z" fill="#e8560a"/></svg>,
+                      label:"Spot Bid",sub:"Photo → AI → Mail",color:"#e8560a",bg:"rgba(232,86,10,0.08)"},
+                    {id:"fieldmap",icon:<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="2" width="18" height="18" rx="3" fill="rgba(58,143,212,0.15)" stroke="#3a8fd4" strokeWidth="1.4"/><path d="M2 8L7 6L13 9L20 6" stroke="#3a8fd4" strokeWidth="1.2" opacity="0.6"/><circle cx="14" cy="11" r="3" fill="#3a8fd4" fillOpacity="0.3" stroke="#3a8fd4" strokeWidth="1.3"/><circle cx="14" cy="11" r="1.2" fill="#3a8fd4"/></svg>,
+                      label:"Scout",sub:"Tag properties on map",color:"#3a8fd4",bg:"rgba(58,143,212,0.08)"},
+                    {id:"create",icon:<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="5" width="18" height="14" rx="2" fill="rgba(212,160,23,0.15)" stroke="#d4a017" strokeWidth="1.4"/><path d="M2 9L11 14L20 9" stroke="#d4a017" strokeWidth="1.4"/><path d="M15 1L16.5 5H21L17.5 7.5L19 12L15 9.5L11 12L12.5 7.5L9 5H13.5L15 1Z" fill="#d4a017" opacity="0.8"/></svg>,
+                      label:"Campaign",sub:"EDDM neighborhood blast",color:"#d4a017",bg:"rgba(212,160,23,0.08)"},
+                    {id:"pipeline",icon:<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M2 4H20L14 11V18L8 16V11L2 4Z" fill="rgba(42,122,82,0.15)" stroke="#2a7a52" strokeWidth="1.4" strokeLinejoin="round"/></svg>,
+                      label:"Leads",sub:"Pipeline & follow-ups",color:"#2a7a52",bg:"rgba(42,122,82,0.08)"},
+                  ].map(a=>(
+                    <button key={a.id} onClick={()=>switchTab(a.id)}
+                      style={{background:a.bg,border:`1px solid ${a.color}30`,borderRadius:12,padding:"14px 14px",cursor:"pointer",textAlign:"left",transition:"all 0.15s",touchAction:"manipulation",minHeight:80}}>
+                      <div style={{marginBottom:8}}>{a.icon}</div>
+                      <div style={{fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700,color:"var(--cream)",marginBottom:2}}>{a.label}</div>
+                      <div style={{fontSize:10,color:"var(--stone)"}}>{a.sub}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               {/* TODAY'S JOBS */}
               {(()=>{
@@ -4390,37 +4703,38 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 );
               })()}
 
-              {/* CAPACITY STATUS */}
+              {/* TOP LEADS TO CLOSE */}
               {(()=>{
-                const C = ACTIVE_COMPANY;
-                const maxJobs = C.maxJobsWeek||6;
-                const crewDaysAvail = (C.crewSize||12)*5;
-                const crewDaysBooked = jobBoardJobs.filter(j=>j.status!=="complete"&&j.status!=="collected").length * 2;
-                const utilPct = Math.min(100,Math.round((crewDaysBooked/crewDaysAvail)*100));
-                const autoMode = utilPct>=100?"paused":utilPct>=75?"selective":utilPct>=45?"normal":"hungry";
-                const cfg = CAPACITY_MODES[autoMode];
+                const topLeads = pipeline
+                  .filter(l=>l.stage!=="won"&&l.stage!=="spotted")
+                  .map(l=>({...l,score:scoreLead(l)}))
+                  .sort((a,b)=>b.score-a.score)
+                  .slice(0,4);
+                if(topLeads.length===0) return null;
                 return(
                   <div>
-                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1.5,color:"var(--concrete)",marginBottom:10}}>CAPACITY STATUS</div>
-                    <div className="cmd-capacity" style={{background:cfg.bg,border:`1px solid ${cfg.color}40`,borderRadius:12,padding:"16px 20px",display:"flex",alignItems:"center",gap:16}}>
-                      <div style={{position:"relative",width:64,height:64,flexShrink:0}}>
-                        <svg width="64" height="64" viewBox="0 0 64 64" style={{transform:"rotate(-90deg)"}}>
-                          <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(184,180,172,0.1)" strokeWidth="6"/>
-                          <circle cx="32" cy="32" r="26" fill="none" stroke={cfg.color} strokeWidth="6"
-                            strokeDasharray={`${2*Math.PI*26}`}
-                            strokeDashoffset={`${2*Math.PI*26*(1-utilPct/100)}`}
-                            strokeLinecap="round"/>
-                        </svg>
-                        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:cfg.color}}>{utilPct}%</div>
-                      </div>
-                      <div style={{flex:1}}>
-                        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:cfg.color,letterSpacing:1}}>{cfg.label.toUpperCase()} MODE</div>
-                        <div style={{fontSize:11,color:"var(--concrete)",marginTop:2}}>{cfg.desc}</div>
-                        <div style={{fontSize:10,color:"var(--stone)",marginTop:4}}>
-                          {crewDaysBooked} of {crewDaysAvail} crew-days booked · Auto-calculated from Job Board
-                        </div>
-                      </div>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1.5,color:"var(--concrete)",marginBottom:10}}>TOP LEADS TO CLOSE</div>
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {topLeads.map(lead=>{
+                        const stage = lead.stage==="sent"?"Mailer Sent":lead.stage==="called"?"Called Back":"Active";
+                        const scoreColor = lead.score>=70?"var(--green2)":lead.score>=50?"var(--gold2)":"var(--stone)";
+                        return(
+                          <div key={lead.id} onClick={()=>switchTab("pipeline")} style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,padding:"11px 16px",cursor:"pointer",display:"flex",alignItems:"center",gap:12,transition:"all 0.12s"}}>
+                            <div style={{width:36,height:36,borderRadius:"50%",background:`conic-gradient(${scoreColor} ${lead.score}%, rgba(184,180,172,0.1) 0)`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                              <div style={{width:28,height:28,borderRadius:"50%",background:"var(--ink)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Bebas Neue',sans-serif",fontSize:11,color:scoreColor}}>{lead.score}</div>
+                            </div>
+                            <div style={{flex:1,minWidth:0}}>
+                              <div style={{fontSize:12,fontWeight:600,color:"var(--cream)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{lead.address}</div>
+                              <div style={{fontSize:10,color:"var(--stone)",marginTop:2}}>{stage} · {lead.city}</div>
+                            </div>
+                            {lead.value>0&&<div style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"var(--orange2)",fontWeight:600,flexShrink:0}}>${lead.value.toLocaleString()}</div>}
+                          </div>
+                        );
+                      })}
                     </div>
+                    <button onClick={()=>switchTab("pipeline")} style={{width:"100%",marginTop:8,background:"none",border:"1px solid rgba(184,180,172,0.08)",borderRadius:8,padding:"8px 0",color:"var(--stone)",fontSize:11,cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>
+                      View all pipeline leads →
+                    </button>
                   </div>
                 );
               })()}
