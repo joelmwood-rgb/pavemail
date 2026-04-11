@@ -1226,6 +1226,17 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 .login-bg{position:absolute;inset:0;background:linear-gradient(145deg,#0e0d0b 0%,#1c1a17 60%,#0e0d0b 100%);}
 .login-texture{position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,rgba(184,180,172,0.02) 0,rgba(184,180,172,0.02) 1px,transparent 0,transparent 8px);}
 .login-box{position:relative;width:100%;max-width:360px;padding:32px 28px;animation:scaleIn 0.3s ease;}
+.demo-dots{display:flex;gap:12px;justify-content:center;margin:20px 0 24px;}
+.demo-dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(184,180,172,0.2);background:transparent;transition:all 0.15s;}
+.demo-dot.filled{background:var(--orange);border-color:var(--orange);box-shadow:0 0 8px rgba(232,86,10,0.4);}
+.demo-dot.error{background:#c0392b;border-color:#c0392b;}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.pin-key{height:52px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(184,180,172,0.1);color:var(--cream);font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;cursor:pointer;transition:all 0.12s;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.pin-key:hover{background:rgba(232,86,10,0.1);border-color:rgba(232,86,10,0.3);}
+.pin-key:active{transform:scale(0.94);background:rgba(232,86,10,0.18);}
+.pin-key.del{color:var(--stone);font-size:16px;}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-6px);}40%{transform:translateX(6px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);}}
+.shake{animation:shake 0.35s ease;}
 .login-logo{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:6px;color:var(--cream);text-align:center;margin-bottom:6px;}
 .login-logo span{color:var(--orange);}
 .login-tagline{font-size:10px;color:var(--stone);text-align:center;letter-spacing:3px;text-transform:uppercase;margin-bottom:32px;opacity:0.7;}
@@ -1452,6 +1463,39 @@ const ROUTES = [
 ];
 
 const MOCK_JOBS = [];
+
+// ─────────────────────────────────────────────
+// DEMO MODE DATA — realistic Tulsa contractor data
+// ─────────────────────────────────────────────
+const DEMO_PIPELINE = [
+  {id:"demo-1",address:"4821 Oak Ridge Dr",city:"Broken Arrow",neighborhood:"Broken Arrow",stage:"won",bidLo:"$1,200",bidHi:"$1,800",spotted:"Mar 12",mailerSent:"Mar 18",calledBack:"Mar 22",jobWon:"Mar 28",notes:"Full driveway replacement. Easy job, great customer.",value:1600,flags:["repeat"]},
+  {id:"demo-2",address:"7234 S Memorial Dr",city:"Tulsa",neighborhood:"South Tulsa",stage:"called",bidLo:"$800",bidHi:"$1,100",spotted:"Apr 01",mailerSent:"Apr 06",calledBack:"Apr 09",jobWon:null,notes:"Interested — getting HOA approval first.",value:950,flags:["hoa"]},
+  {id:"demo-3",address:"1892 E 91st St",city:"Tulsa",neighborhood:"South Tulsa",stage:"sent",bidLo:"$2,400",bidHi:"$3,200",spotted:"Apr 03",mailerSent:"Apr 07",calledBack:null,jobWon:null,notes:"Large 3-car garage, significant cracking.",value:2800,flags:[]},
+  {id:"demo-4",address:"3341 S Peoria Ave",city:"Tulsa",neighborhood:"Midtown",stage:"won",bidLo:"$600",bidHi:"$900",spotted:"Mar 20",mailerSent:"Mar 25",calledBack:"Mar 28",jobWon:"Apr 02",notes:"Crack repair only. Paid same day.",value:750,flags:["repeat"]},
+  {id:"demo-5",address:"9102 N 129th E Ave",city:"Owasso",neighborhood:"Owasso",stage:"spotted",bidLo:"$1,800",bidHi:"$2,600",spotted:"Apr 06",mailerSent:null,calledBack:null,jobWon:null,notes:"Saw severe cracking from road. Large property.",value:2200,flags:[]},
+  {id:"demo-6",address:"2847 E 51st St",city:"Tulsa",neighborhood:"Midtown",stage:"spotted",bidLo:"$400",bidHi:"$700",spotted:"Apr 07",mailerSent:null,calledBack:null,jobWon:null,notes:"Minor sealing job. Good neighborhood.",value:550,flags:[]},
+  {id:"demo-7",address:"5512 S Harvard Ave",city:"Tulsa",neighborhood:"South Tulsa",stage:"won",bidLo:"$3,100",bidHi:"$4,200",spotted:"Mar 08",mailerSent:"Mar 14",calledBack:"Mar 17",jobWon:"Mar 24",notes:"Full replacement + driveway extension.",value:3800,flags:["referral"]},
+  {id:"demo-8",address:"1103 W 38th St",city:"Tulsa",neighborhood:"Midtown",stage:"sent",bidLo:"$950",bidHi:"$1,400",spotted:"Apr 04",mailerSent:"Apr 08",calledBack:null,jobWon:null,notes:"Surface spalling across entire pad.",value:1175,flags:["negotiator"]},
+];
+
+const DEMO_SPOT_JOBS = [
+  {id:"demo-sb-1",address:"4821 Oak Ridge Dr",city:"Broken Arrow",bid:"$1,200–$1,800",damage:["Freeze-thaw cracking across slab","Spalling near garage apron"],sent:"Mar 18",status:"delivered",mailerContent:{headline:"WE NOTICED YOUR CONCRETE NEEDS ATTENTION",personalNote:"We were in your neighborhood and noticed some significant cracking that's only going to get worse through Oklahoma's freeze-thaw cycles. We can fix this before it becomes a full replacement.",bidLo:"$1,200",bidHi:"$1,800",bid:"$1,200–$1,800",urgencyLine:"Oklahoma winters don't wait — neither should your concrete.",address:"4821 Oak Ridge Dr",city:"Broken Arrow",damage:["Freeze-thaw cracking across slab","Spalling near garage apron"]}},
+  {id:"demo-sb-2",address:"7234 S Memorial Dr",city:"Tulsa",bid:"$800–$1,100",damage:["Surface cracks running NE-SW","Minor drainage issue at base"],sent:"Apr 06",status:"sent",mailerContent:{headline:"YOUR CONCRETE HAS CRACKS WE CAN FIX",personalNote:"Spotted two crack patterns that suggest settling under your pad. Catching this now is a fraction of replacement cost.",bidLo:"$800",bidHi:"$1,100",bid:"$800–$1,100",urgencyLine:"Small cracks become big problems fast in Tulsa summers.",address:"7234 S Memorial Dr",city:"Tulsa",damage:["Surface cracks running NE-SW","Minor drainage issue at base"]}},
+  {id:"demo-sb-3",address:"1892 E 91st St",city:"Tulsa",bid:"$2,400–$3,200",damage:["Severe cracking across 3 panels","Root damage from oak tree","Surface deterioration"],sent:"Apr 07",status:"queued",mailerContent:{headline:"THREE ISSUES SPOTTED ON YOUR CONCRETE",personalNote:"Your property has some of the worst tree root damage I've seen this season. The oak roots have lifted two panels and cracked a third. This needs to be addressed before the summer heat.",bidLo:"$2,400",bidHi:"$3,200",bid:"$2,400–$3,200",urgencyLine:"Root damage gets exponentially worse — act before summer.",address:"1892 E 91st St",city:"Tulsa",damage:["Severe cracking across 3 panels","Root damage from oak tree","Surface deterioration"]}},
+  {id:"demo-sb-4",address:"5512 S Harvard Ave",city:"Tulsa",bid:"$3,100–$4,200",damage:["Full slab replacement needed","Edge crumbling on 3 sides","Oil staining throughout"],sent:"Mar 14",status:"delivered",mailerContent:{headline:"YOUR CONCRETE IS PAST THE POINT OF REPAIR",personalNote:"After 20+ years, this slab has reached end of life. A full replacement will increase your curb appeal and home value immediately.",bidLo:"$3,100",bidHi:"$4,200",bid:"$3,100–$4,200",urgencyLine:"Replacement now costs less than waiting another year.",address:"5512 S Harvard Ave",city:"Tulsa",damage:["Full slab replacement needed","Edge crumbling on 3 sides","Oil staining throughout"]}},
+];
+
+const DEMO_AI_CALLS = [
+  {id:"demo-c1",caller:"Sarah Mitchell",phone:"918-555-0142",summary:"Wants full replacement, double car garage. Timeline: next month. Address: 3421 S Peoria Ave. Homeowner for 12 years.",service:"New Concrete",address:"3421 S Peoria Ave, Tulsa",status:"qualified",time:"2 hrs ago",transferred:true},
+  {id:"demo-c2",caller:"Robert Chen",phone:"918-555-0287",summary:"Called about crack repair on driveway. Left callback number. Mentioned budget around $600-800.",service:"Crack Repair",address:"",status:"pending",time:"Yesterday",transferred:false},
+  {id:"demo-c3",caller:"Linda Graves",phone:"918-555-0391",summary:"Referral from Oak Ridge job. Wants estimate on 2-car garage. Very motivated, wants work done before daughter's graduation party.",service:"New Concrete",address:"4902 E 81st St, Tulsa",status:"qualified",time:"2 days ago",transferred:true},
+];
+
+const DEMO_JOBS = [
+  {id:"demo-j1",lobId:"lob_7f8a2e",name:"South Tulsa / Midtown",homes:312,sent:"Mar 12",status:"delivered",cost:"193.44",calls:11},
+  {id:"demo-j2",lobId:"lob_4c2b1d",name:"Broken Arrow East",homes:428,sent:"Mar 20",status:"delivered",cost:"265.36",calls:18},
+  {id:"demo-j3",lobId:"lob_9e5f3a",name:"Owasso / Collinsville",homes:198,sent:"Apr 01",status:"sent",cost:"122.76",calls:4},
+];
 
 const TRACK_STEPS = [
   {label:"Approved",  icon:"✓"},
@@ -1695,13 +1739,16 @@ function NavIcon({id}) {
 export default function App(){
   // ── AUTH ──
   // ── AUTH STATE ──
+  const[isDemoMode,setIsDemoMode]=useState(false);
   const[authUser,setAuthUser]=useState(()=>{
     try{ const s=localStorage.getItem("pm_session"); return s?JSON.parse(s):null; }catch{ return null; }
   });
   const[contractor,setContractor]=useState(()=>{
     try{ const s=localStorage.getItem("pm_profile"); return s?JSON.parse(s):null; }catch{ return null; }
   });
-  const[authScreen,setAuthScreen]=useState("login"); // login | signup | forgot | profile-setup
+  const[authScreen,setAuthScreen]=useState("login"); // login | signup | forgot | profile-setup | demo-code
+  const[demoCode,setDemoCode]=useState("");
+  const[demoShake,setDemoShake]=useState(false);
   const[authForm,setAuthForm]=useState({email:"",password:"",confirmPassword:"",inviteCode:"",ownerName:"",companyName:"",phone:"",city:"Tulsa"});
   const[authLoading,setAuthLoading]=useState(false);
   const[authError,setAuthError]=useState("");
@@ -1794,11 +1841,31 @@ export default function App(){
 
   // Logout
   async function handleLogout() {
-    if(authUser?.token) await auth.signOut(authUser.token);
-    setAuthUser(null); setContractor(null);
+    if(authUser?.token && authUser.token !== "demo") await auth.signOut(authUser.token);
+    setAuthUser(null); setContractor(null); setIsDemoMode(false);
+    setPipeline([]); setSpotJobs([]); setAiLeads([]); setJobs([]);
     try{ localStorage.removeItem("pm_session"); localStorage.removeItem("pm_profile"); }catch{}
     setAuthScreen("login");
     setAuthForm({email:"",password:"",confirmPassword:"",inviteCode:"",ownerName:"",companyName:"",phone:"",city:"Tulsa"});
+  }
+
+  async function handleDemoMode() {
+    setIsDemoMode(true);
+    setAuthUser({token:"demo",user:{id:"demo-user",email:"demo@pavemail.io"}});
+    setContractor({
+      company_name:"Tulsa Concrete Co",owner_name:"Demo",phone:"918-555-0100",
+      email:"demo@pavemail.io",city:"Tulsa",state:"OK",plan:"pro",
+      lob_from_id:"",bland_transfer:"",accent_color:"#e8560a",
+      crew_size:8,max_jobs_week:5,weekly_target:35000,
+    });
+    // Load all demo data immediately — no Supabase needed
+    setPipeline(DEMO_PIPELINE);
+    setSpotJobs(DEMO_SPOT_JOBS);
+    setAiLeads(DEMO_AI_CALLS);
+    setJobs(DEMO_JOBS);
+    try{ localStorage.setItem("pm_session",JSON.stringify({token:"demo",refresh_token:"demo",expires_at:9999999999,user:{id:"demo-user",email:"demo@pavemail.io"}})); }catch{}
+    await new Promise(r=>setTimeout(r,300));
+    showToast("🎯 Demo loaded — explore PaveMail","success");
   }
 
   // Legacy PIN state (kept for compatibility)
@@ -2142,11 +2209,40 @@ export default function App(){
   const setSpot=(k,v)=>setSpotForm(f=>({...f,[k]:v}));
 
   // ── LOAD ALL DATA FROM SUPABASE ON MOUNT ──
+  // Keyboard input for demo code screen
+  React.useEffect(()=>{
+    if(authScreen !== "demo-code") return;
+    const handler = (e) => {
+      if(e.key >= "0" && e.key <= "9") {
+        setDemoCode(c => {
+          const next = (c + e.key).slice(0, 4);
+          if(next.length === 4) {
+            setTimeout(() => {
+              if(next === "1234") { handleDemoMode(); }
+              else { setDemoShake(true); setDemoCode(""); setTimeout(()=>setDemoShake(false),400); }
+            }, 100);
+          }
+          return next;
+        });
+      } else if(e.key === "Backspace") {
+        setDemoCode(c => c.slice(0, -1));
+      } else if(e.key === "Escape") {
+        setAuthScreen("login"); setDemoCode("");
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [authScreen]);
+
   React.useEffect(()=>{
     initAnalytics();
+    // Demo mode — data already loaded, skip Supabase entirely
+    if(isDemoMode) {
+      track('app_open',{tab:'map',demo:true});
+      return;
+    }
     // Load admin data if admin user
-    if(authUser?.user?.email === ADMIN_EMAIL && authUser?.token) {
-      setAdminData(d=>({...d,loading:true}));
+    if(authUser?.user?.email === ADMIN_EMAIL && authUser?.token) {      setAdminData(d=>({...d,loading:true}));
       Promise.all([
         db.getAllContractors(authUser.token),
         db.getAllPipeline(authUser.token),
@@ -2200,7 +2296,7 @@ export default function App(){
       } catch(e){ console.error("Supabase load error:", e); }
     };
     loadAll();
-  },[]);
+  },[isDemoMode]);
 
   // Auto-recalculate price whenever inputs change
   React.useEffect(()=>{
@@ -2731,6 +2827,50 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             </>
           )}
 
+          {/* ── DEMO ACCESS CODE ── */}
+          {authScreen==="demo-code"&&(
+            <>
+              <div style={{textAlign:"center",marginTop:16,marginBottom:4}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:3,color:"var(--cream)"}}>DEMO ACCESS</div>
+                <div style={{fontSize:11,color:"var(--stone)",marginTop:4}}>Enter the 4-digit demo code</div>
+              </div>
+              {/* Dots */}
+              <div className={`demo-dots${demoShake?" shake":""}`}>
+                {[0,1,2,3].map(i=>(
+                  <div key={i} className={`demo-dot${demoCode.length>i?(demoShake?" error":" filled"):""}`}/>
+                ))}
+              </div>
+              {/* PIN Grid */}
+              <div className="pin-grid">
+                {["1","2","3","4","5","6","7","8","9","",  "0","⌫"].map((k,i)=>(
+                  k===""
+                  ? <div key={i}/>
+                  : <button key={i} className={`pin-key${k==="⌫"?" del":""}`}
+                      onClick={()=>{
+                        if(k==="⌫"){
+                          setDemoCode(c=>c.slice(0,-1));
+                        } else {
+                          setDemoCode(c=>{
+                            const next=(c+k).slice(0,4);
+                            if(next.length===4){
+                              setTimeout(()=>{
+                                if(next==="1234"){ handleDemoMode(); }
+                                else{ setDemoShake(true); setDemoCode(""); setTimeout(()=>setDemoShake(false),400); }
+                              },100);
+                            }
+                            return next;
+                          });
+                        }
+                      }}
+                    >{k}</button>
+                ))}
+              </div>
+              {demoShake&&<div style={{color:"#f08080",fontSize:12,textAlign:"center",marginBottom:8}}>Incorrect code — try again</div>}
+              <div style={{fontSize:10,color:"var(--gravel)",textAlign:"center",marginBottom:12,opacity:0.6}}>Keyboard input supported · Press Esc to go back</div>
+              <button onClick={()=>{setAuthScreen("login");setDemoCode("");}} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:12,fontFamily:"'Syne',sans-serif",width:"100%",padding:"4px 0"}}>← Back</button>
+            </>
+          )}
+
           {/* ── PROFILE SETUP ── */}
           {authScreen==="profile-setup"&&(
             <>
@@ -2758,7 +2898,19 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             </>
           )}
 
-          <div className="login-footer" style={{marginTop:20}}>🔒 Secured · PaveMail</div>
+          {authScreen!=="demo-code"&&(
+            <div style={{textAlign:"center",marginTop:20}}>
+              <div style={{height:1,background:"rgba(184,180,172,0.08)",marginBottom:16}}/>
+              <button
+                onClick={()=>{setAuthScreen("demo-code");setDemoCode("");setDemoShake(false);}}
+                style={{background:"none",border:"none",color:"var(--stone)",fontFamily:"'Syne',sans-serif",fontSize:12,cursor:"pointer",letterSpacing:0.3,display:"flex",alignItems:"center",gap:6,margin:"0 auto",padding:"4px 0",opacity:0.7,transition:"opacity 0.15s"}}
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/><path d="M4 5.5C4 4.4 4.9 3.5 6 3.5C7.1 3.5 8 4.4 8 5.5C8 6.3 7.5 7 6.8 7.4L6 7.8V8.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><circle cx="6" cy="10" r="0.6" fill="currentColor"/></svg>
+                Have a demo access code?
+              </button>
+            </div>
+          )}
+          <div className="login-footer" style={{marginTop:12}}>🔒 Secured · PaveMail</div>
         </div>
     </div>
   );
@@ -2810,6 +2962,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
           <div className="topbar-right">
             {isAdmin&&<div className="lob-pill"><div className="lob-dot"/>Mail: Test Mode</div>}
+            {isDemoMode&&<div style={{background:"rgba(212,160,23,0.15)",border:"1px solid rgba(212,160,23,0.3)",borderRadius:20,padding:"3px 10px",fontSize:10,color:"#d4a017",fontWeight:700,display:"flex",alignItems:"center",gap:5}}>◎ DEMO</div>}
             <div className="user-menu-wrap">
               <div
                 className="avatar"
