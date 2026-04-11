@@ -246,9 +246,6 @@ const COMPANY = {
   lobFromId:    "",
   transferPhone:"",
   contractorId: "",
-  crewSize:     10,
-  maxJobsWeek:  5,
-  weeklyTarget: 30000,
   accentColor:  "#e8560a",
   tagline:      "Concrete Specialists",
   logoUrl:      "",
@@ -272,6 +269,7 @@ const db = {
       headers: { "Prefer": "resolution=merge-duplicates,return=representation" },
       body: JSON.stringify({
         id: lead.id,
+        user_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         contractor_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         address: lead.address,
         city: lead.city,
@@ -310,6 +308,7 @@ const db = {
     return sbFetch("campaigns", {
       method: "POST",
       body: JSON.stringify({
+        user_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         contractor_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         name: campaign.name,
         area: campaign.area,
@@ -334,9 +333,10 @@ const db = {
     return sbFetch("spot_bids", {
       method: "POST",
       body: JSON.stringify({
+        user_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         contractor_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         address: bid.address,
-        city: bid.city||"Tulsa",
+        city: bid.city||"",
         bid: bid.bid||"",
         damage: bid.damage||[],
         photo_url: bid.photoUrl||"",
@@ -359,6 +359,7 @@ const db = {
     return sbFetch("ai_calls", {
       method: "POST",
       body: JSON.stringify({
+        user_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         contractor_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         caller: call.caller||"Unknown",
         phone: call.phone||"",
@@ -384,6 +385,7 @@ const db = {
     return sbFetch("jobs", {
       method: "POST",
       body: JSON.stringify({
+        user_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         contractor_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         name: job.name,
         area: job.area||"",
@@ -423,6 +425,69 @@ const db = {
     return res.ok ? res.json() : [];
   },
 };
+// ─────────────────────────────────────────────
+// USAGE METERING
+// Records every successful mail send to mailer_usage
+// and increments the monthly counter on contractor_profiles.
+// Plan limits are enforced here — set to Infinity during trial.
+// ─────────────────────────────────────────────
+const PLAN_LIMITS = {
+  trial:    Infinity,  // unlimited during pilot — flip to real limits when Stripe is live
+  starter:  300,
+  pro:      750,
+  growth:   1500,
+  cancelled: 0,
+};
+
+async function recordMailerUsage({ mailerType, homesCount, lobId, costCents }) {
+  try {
+    const token = getAuthToken();
+    if(!token) return;
+    const user = (() => { try { return JSON.parse(localStorage.getItem("pm_session"))?.user; } catch { return null; } })();
+    if(!user?.id) return;
+
+    // 1. Write to mailer_usage audit log (user_id required for RLS)
+    await sbFetch("mailer_usage", {
+      method: "POST",
+      headers: { "Prefer": "return=minimal" },
+      body: JSON.stringify({
+        user_id:       user.id,
+        mailer_type:   mailerType,
+        homes_count:   homesCount || 1,
+        lob_id:        lobId || "",
+        cost_cents:    costCents || Math.round((homesCount || 1) * 62),
+        billing_month: new Date().toISOString().slice(0, 7),
+      }),
+    });
+
+    // 2. Atomic increment via RPC (PostgREST PATCH can't do col = col + N)
+    await sbFetch("rpc/increment_mailers_sent", {
+      method: "POST",
+      body: JSON.stringify({
+        user_uuid: user.id,
+        amount: homesCount || 1,
+      }),
+    }).catch(()=>{}); // Non-critical
+
+  } catch(e) { console.warn("Usage metering failed (non-critical):", e); }
+}
+
+async function checkPlanLimit(homesCount) {
+  // Returns {allowed: bool, used: number, limit: number, plan: string}
+  try {
+    const user = (() => { try { return JSON.parse(localStorage.getItem("pm_session"))?.user; } catch { return null; } })();
+    if(!user?.id) return { allowed: true, used: 0, limit: Infinity, plan: "trial" };
+    const profile = await sbFetch(`contractor_profiles?id=eq.${user.id}&select=plan,mailers_sent_month`);
+    const row = Array.isArray(profile) ? profile[0] : profile;
+    const plan  = row?.plan || "trial";
+    const used  = row?.mailers_sent_month || 0;
+    const limit = PLAN_LIMITS[plan] ?? Infinity;
+    return { allowed: (used + homesCount) <= limit, used, limit, plan };
+  } catch(e) {
+    return { allowed: true, used: 0, limit: Infinity, plan: "trial" }; // fail open
+  }
+}
+
 const BLAND_PROXY     = PROXY_BASE + "/?target=bland-call";
 const BLAND_STATUS    = PROXY_BASE + "/?target=bland-status";
 
@@ -1112,13 +1177,6 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
    MOBILE RESPONSIVE
 ═══════════════════════════════════════ */
 
-/* ── CAPACITY ENGINE ── */
-.capacity-bar-wrap{background:rgba(0,0,0,0.3);border-radius:20px;height:8px;overflow:hidden;margin:8px 0;}
-.capacity-bar{height:100%;border-radius:20px;transition:width 0.5s ease;}
-.capacity-gauge{position:relative;width:120px;height:60px;margin:0 auto;}
-.mode-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px;cursor:pointer;transition:all 0.15s;border:1px solid transparent;}
-.mode-pill.active{border-color:currentColor;}
-.capacity-widget{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:10px;padding:14px 16px;}
 .score-pill{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;font-family:"DM Mono",monospace;}
 .score-high{background:rgba(42,122,82,0.15);color:var(--green2);}
 .score-mid{background:rgba(196,160,32,0.15);color:var(--gold2);}
@@ -1302,9 +1360,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
   .jobboard-revenue-grid{grid-template-columns:1fr 1fr !important;}
   /* ROI grid — stack on mobile */
   .cmd-roi-grid{grid-template-columns:1fr 1fr !important;}
-  /* Command center capacity — stack */
-  .cmd-capacity{flex-direction:column !important;align-items:flex-start !important;}
-  /* Field map tag sidebar — full width bottom */
+/* Field map tag sidebar — full width bottom */
   .fieldmap-tag-panel{width:100% !important;right:0 !important;top:auto !important;bottom:0 !important;max-height:40% !important;border-radius:12px 12px 0 0 !important;}
 }
 
@@ -1412,8 +1468,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
   .nav::-webkit-scrollbar { display: none; }
   .nav { scrollbar-width: none; }
   .nav-label, .nav-divider, .nav-mini { display: none; }
-  .capacity-widget { display: none; }
-  .nav-item {
+.nav-item {
     flex-direction: column;
     gap: 2px;
     padding: 6px 14px;
@@ -1576,7 +1631,7 @@ const DEMO_COMPANY = {
   city:"Tulsa", state:"OK", promo:"DEMO25",
   tagline:"Tulsa's Concrete Specialists",
   accentColor:"#e8560a", lobFromId:"", transferPhone:"",
-  contractorId:"demo", crewSize:8, maxJobsWeek:5, weeklyTarget:35000,
+  contractorId:"demo",
 };
 
 const ROUTES = [
@@ -1787,15 +1842,7 @@ class ErrorBoundary extends React.Component {
 // ─────────────────────────────────────────────
 // MAIN APP
 // ─────────────────────────────────────────────
-// Capacity config - module scope for stability
-const CAPACITY_CONFIG = { crewSize:12, maxJobs:6, weeklyTarget:40000 };
 
-const CAPACITY_MODES = {
-    hungry:   { label:"Hungry",   color:"#e05252", bg:"rgba(224,82,82,0.12)",   icon:"🔴", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L10 6.5H15.5L11 9.8L13 15.5L8 12.2L3 15.5L5 9.8L0.5 6.5H6L8 1Z" fill="#e05252"/></svg>, desc:"Aggressive outbound - large radius, fast follow-up, low bid threshold" },
-    normal:   { label:"Normal",   color:"#d4a017", bg:"rgba(212,160,23,0.12)",  icon:"🟡", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L9.5 6H14.5L10.5 9L12 13.5L8 10.8L4 13.5L5.5 9L1.5 6H6.5L8 1.5Z" fill="#d4a017"/></svg>, desc:"Standard outbound - normal radius, normal pricing" },
-    selective:{ label:"Selective",color:"#3a8fd4", bg:"rgba(58,143,212,0.12)",  icon:"🔵", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" fill="#3a8fd4" fillOpacity="0.2" stroke="#3a8fd4" strokeWidth="1.5"/><circle cx="8" cy="8" r="3.5" fill="#3a8fd4" fillOpacity="0.4" stroke="#3a8fd4" strokeWidth="1"/><circle cx="8" cy="8" r="1.5" fill="#3a8fd4"/></svg>, desc:"High-value leads only - bids +15%, radius reduced" },
-    paused:   { label:"Paused",   color:"#8a8682", bg:"rgba(138,134,130,0.12)", icon:"⚫", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" fill="#8a8682" fillOpacity="0.3" stroke="#8a8682" strokeWidth="1.5"/><rect x="5" y="4.5" width="2.2" height="7" rx="1" fill="#8a8682"/><rect x="8.8" y="4.5" width="2.2" height="7" rx="1" fill="#8a8682"/></svg>, desc:"Fully booked - campaigns paused, AI agent books 3 weeks out" },
-  };
 
 function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
   const canvas = document.createElement('canvas');
@@ -1958,10 +2005,6 @@ function NavIcon({id}) {
       <path d="M2 3H16L11 9V15L7 13V9L2 3Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
       <line x1="9" y1="9" x2="9" y2="14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
     </svg>,
-    // Capacity - lightning bolt, bold and filled
-    capacity: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <path d="M10.5 1.5L4 10H8.5L7.5 16.5L14 7.5H9.5L10.5 1.5Z" fill="currentColor" stroke="currentColor" strokeWidth="0.5" strokeLinejoin="round"/>
-    </svg>,
     // AI Phone - handset with sound waves, bold
     aiphone: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M4 3.5C4 3.5 5.2 2 7 2C8 2 8.8 3 9.5 4.5L10 6C10.3 6.8 10 7.8 9.2 8.3L8 9C8.8 10.3 10 11.5 11.2 12.2L12.3 11C13 10.4 14 10.2 14.8 10.5L16.5 11.5C17.5 12 18 13 18 14C18 16 16 17.5 16 17.5C13 20 2 10 4 3.5Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
@@ -2098,9 +2141,6 @@ export default function App(){
           accent_color: "#e8560a",
           lob_from_id: "",
           bland_transfer: authForm.phone.replace(/\D/g,"") ? "+1"+authForm.phone.replace(/\D/g,"") : "",
-          crew_size: 10,
-          max_jobs_week: 5,
-          weekly_target: 30000,
         };
         const saved = await auth.updateProfile(loginData.access_token, profile);
         const updatedProfile = Array.isArray(saved) ? saved[0] : saved;
@@ -2163,36 +2203,107 @@ export default function App(){
   }
 
   function BillingSection() {
-    const [billingView,setBillingView]=React.useState("plans");
-    const billingSuccess=new URLSearchParams(window.location.search).get("billing")==="success";
+    const [usage, setUsage] = React.useState(null);
+    React.useEffect(()=>{
+      const load = async () => {
+        try {
+          const user = (() => { try { return JSON.parse(localStorage.getItem("pm_session"))?.user; } catch { return null; } })();
+          if(!user?.id) return;
+          const profile = await sbFetch(`contractor_profiles?id=eq.${user.id}&select=plan,mailers_sent_month,mailers_reset_at,stripe_customer_id`);
+          const row = Array.isArray(profile) ? profile[0] : profile;
+          if(row) setUsage(row);
+        } catch(e) {}
+      };
+      load();
+    },[]);
+
+    const plan      = usage?.plan || "trial";
+    const used      = usage?.mailers_sent_month || 0;
+    const limit     = PLAN_LIMITS[plan] ?? Infinity;
+    const pct       = limit === Infinity ? 0 : Math.min(100, Math.round((used/limit)*100));
+    const resetDate = usage?.mailers_reset_at ? new Date(usage.mailers_reset_at).toLocaleDateString("en-US",{month:"short",day:"numeric"}) : "next month";
+    const hasStripe = !!usage?.stripe_customer_id;
+    const stripeActive = CONFIG.STRIPE_KEY;
+    const billingSuccess = new URLSearchParams(window.location.search).get("billing")==="success";
+
     return(
       <div className="settings-section">
         <h3>Subscription & Billing</h3>
+
         {billingSuccess&&(
           <div style={{background:"rgba(42,122,82,0.12)",border:"1px solid rgba(42,122,82,0.3)",borderRadius:8,padding:"10px 14px",marginBottom:12,fontSize:12,color:"var(--green2)"}}>
-            ✅ Subscription active — welcome to PaveMail Pro!
+            ✅ Subscription active — welcome to PaveMail!
           </div>
         )}
-        {!CONFIG.STRIPE_KEY&&(
-          <div style={{background:"rgba(212,160,23,0.1)",border:"1px solid rgba(212,160,23,0.25)",borderRadius:8,padding:"10px 14px",marginBottom:12,fontSize:11,color:"var(--yellow)"}}>
-            ⚠ Billing not yet active — add your Stripe publishable key to CONFIG.STRIPE_KEY
-          </div>
-        )}
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>
-          {Object.entries(STRIPE_PLANS).map(([id,plan])=>(
-            <div key={id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(0,0,0,0.2)",border:"1px solid rgba(184,180,172,0.1)",borderRadius:10,padding:"14px 16px"}}>
-              <div>
-                <div style={{fontWeight:700,color:"var(--cream)",fontSize:13}}>{plan.name}</div>
-                <div style={{fontSize:11,color:"var(--stone)",marginTop:2}}>{plan.label}</div>
+
+        {/* Current plan + usage */}
+        <div style={{background:"rgba(0,0,0,0.2)",border:"1px solid rgba(184,180,172,0.1)",borderRadius:10,padding:"16px 18px",marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+            <div>
+              <div style={{fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)"}}>Current Plan</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:"var(--orange2)",letterSpacing:1,marginTop:2}}>
+                {plan.charAt(0).toUpperCase()+plan.slice(1)}
+                {plan==="trial"&&<span style={{fontSize:11,color:"var(--stone)",fontFamily:"'Syne',sans-serif",letterSpacing:0,marginLeft:8,fontWeight:400}}>— unlimited during pilot</span>}
               </div>
-              <button onClick={()=>startCheckout(id)} style={{background:"var(--orange)",color:"white",border:"none",borderRadius:7,padding:"8px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Syne',sans-serif",flexShrink:0}}>
-                Subscribe
-              </button>
             </div>
-          ))}
+            {plan!=="trial"&&(
+              <div style={{textAlign:"right"}}>
+                <div style={{fontSize:11,color:"var(--stone)"}}>Resets {resetDate}</div>
+              </div>
+            )}
+          </div>
+
+          {/* Usage bar */}
+          {plan!=="trial"&&(
+            <>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"var(--stone)",marginBottom:5}}>
+                <span>Mailers this month</span>
+                <span style={{fontFamily:"'DM Mono',monospace",color:pct>80?"var(--red)":pct>60?"var(--yellow)":"var(--green2)"}}>
+                  {used.toLocaleString()} / {limit.toLocaleString()}
+                </span>
+              </div>
+              <div style={{height:6,background:"rgba(184,180,172,0.1)",borderRadius:3,overflow:"hidden"}}>
+                <div style={{height:"100%",width:`${pct}%`,background:pct>80?"var(--red)":pct>60?"var(--yellow)":"var(--green2)",borderRadius:3,transition:"width 0.4s"}}/>
+              </div>
+            </>
+          )}
+
+          {plan==="trial"&&usage&&(
+            <div style={{fontSize:11,color:"var(--stone)"}}>
+              {used.toLocaleString()} mailer{used!==1?"s":""} sent so far
+            </div>
+          )}
         </div>
-        <div style={{marginTop:12,fontSize:10,color:"var(--gravel)",lineHeight:1.7}}>
-          All plans include unlimited AI mailer generation, AI phone agent, pipeline management, field map, and job board. Additional mailers billed at $0.62 each.
+
+        {/* Plan cards */}
+        {stripeActive ? (
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {Object.entries(STRIPE_PLANS).map(([id,p])=>{
+              const isCurrent = plan === id;
+              return(
+                <div key={id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:isCurrent?"rgba(232,86,10,0.08)":"rgba(0,0,0,0.15)",border:`1px solid ${isCurrent?"rgba(232,86,10,0.3)":"rgba(184,180,172,0.08)"}`,borderRadius:10,padding:"14px 16px"}}>
+                  <div>
+                    <div style={{fontWeight:700,color:"var(--cream)",fontSize:13}}>{p.name} {isCurrent&&<span style={{fontSize:10,color:"var(--orange2)"}}>● Current</span>}</div>
+                    <div style={{fontSize:11,color:"var(--stone)",marginTop:2}}>{p.label}</div>
+                  </div>
+                  {!isCurrent&&(
+                    <button onClick={()=>startCheckout(id)} style={{background:"var(--orange)",color:"white",border:"none",borderRadius:7,padding:"8px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Syne',sans-serif",flexShrink:0}}>
+                      {plan==="trial"?"Subscribe":"Upgrade"}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{background:"rgba(184,180,172,0.04)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,padding:"14px 16px",textAlign:"center"}}>
+            <div style={{fontSize:12,color:"var(--stone)",marginBottom:4}}>Billing activation coming soon</div>
+            <div style={{fontSize:11,color:"var(--gravel)"}}>You'll be notified when subscription plans are available</div>
+          </div>
+        )}
+
+        <div style={{marginTop:10,fontSize:10,color:"var(--gravel)",lineHeight:1.7}}>
+          All plans include unlimited AI mailer generation, AI phone agent, pipeline, field map, and job board. Additional mailers billed at $0.62 each.
         </div>
       </div>
     );
@@ -2205,7 +2316,6 @@ export default function App(){
       company_name:"Tulsa Concrete Co",owner_name:"Demo",phone:"918-555-0100",
       email:"demo@pavemail.io",city:"Tulsa",state:"OK",plan:"pro",
       lob_from_id:"",bland_transfer:"",accent_color:"#e8560a",
-      crew_size:8,max_jobs_week:5,weekly_target:35000,
     });
     // Load all demo data immediately - no Supabase needed
     setPipeline(DEMO_PIPELINE);
@@ -2233,7 +2343,7 @@ export default function App(){
   const[gpsLoading,setGpsLoading]=useState(false);
   const[gpsAccuracy,setGpsAccuracy]=useState(null);
   const[verifying,setVerifying]=useState(false);
-  const[form,setForm]=useState({company:"",phone:"",neighborhood:"",city:"Tulsa",season:"Spring",offer:"Free Estimate",angle:"Crack Repair",homes:"200",promoCode:"",extraNotes:""});
+  const[form,setForm]=useState({company:"",phone:"",neighborhood:"",city:"",season:"Spring",offer:"Free Estimate",angle:"Crack Repair",homes:"200",promoCode:"",extraNotes:""});
   const[loading,setLoading]=useState(false);
   const[sending,setSending]=useState(false);
   const[mailer,setMailer]=useState(null);
@@ -2284,131 +2394,18 @@ export default function App(){
     setAdminLoading(false);
   }
 
-  // ── CAPACITY ENGINE ──
-  // CAPACITY_CONFIG moved to module scope
-  const[capacity,setCapacity]=useState({
-    activeJobs: 0,
-    weeklyRevenue: 0,
-    weeksBooked: 0,
-    mode: "hungry", // hungry | normal | selective | paused
-    manualOverride: null,
-  });
-  function showToast(msg,type="success") {setToast({msg,type});setTimeout(()=>setToast(null),4000);}
+function showToast(msg,type="success") {setToast({msg,type});setTimeout(()=>setToast(null),4000);}
   function toggleRoute(id){ setSelectedRoutes(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]); }
 
   const[pipeline,setPipeline]=useState([]);
 
-  // ── JOB BOARD STATE — declared here so capacity engine can read it ──
+  // ── JOB BOARD STATE ──
   const[jobBoardJobs,setJobBoardJobs]=useState([]);
   const[jobBoardView,setJobBoardView]=useState("week");
   const[newJobModal,setNewJobModal]=useState(false);
   const[newJob,setNewJob]=useState({address:"",service:"Crack Repair",value:"",crew:"",date:"",notes:"",status:"scheduled"});
   const[selectedJobDetail,setSelectedJobDetail]=useState(null);
 
-  // Real capacity engine - data-driven, auto-sets mode
-  React.useEffect(()=>{
-    const C = ACTIVE_COMPANY;
-    const maxJobs    = C.maxJobsWeek || 6;
-    const crewSize   = C.crewSize    || 12;
-    const weeklyTarget = C.weeklyTarget || 40000;
-
-    const wonJobs    = pipeline.filter(l=>l.stage==="won");
-    const wonRevenue = wonJobs.reduce((s,l)=>s+(l.value||0),0);
-    const pipeValue  = pipeline.filter(l=>l.stage!=="won").reduce((s,l)=>s+(l.value||0),0);
-
-    // ── Real schedule utilization ──
-    // Use actual job board dates to count crew-days booked THIS week
-    const now      = new Date();
-    const monday   = new Date(now); monday.setDate(now.getDate()-((now.getDay()+6)%7)); monday.setHours(0,0,0,0);
-    const friday   = new Date(monday); friday.setDate(monday.getDate()+4); friday.setHours(23,59,59,999);
-
-    const thisWeekJobs = jobBoardJobs.filter(j=>{
-      if(!j.date) return false;
-      const d = new Date(j.date);
-      return d >= monday && d <= friday && j.status !== "complete" && j.status !== "collected";
-    });
-
-    // Jobs without a date fall back to won-pipeline count × avg 2 days
-    const scheduledDays   = thisWeekJobs.length * 2;
-    const unscheduledWon  = wonJobs.filter(l=>!jobBoardJobs.find(j=>j.address===l.address)).length;
-    const committedDays   = scheduledDays + (unscheduledWon * 2);
-    const availDays       = crewSize * 5;
-    const utilizationPct  = Math.min(100, Math.round((committedDays / availDays) * 100));
-
-    // Next 2 weeks lookahead — are we getting tight?
-    const twoWeeksOut = new Date(friday); twoWeeksOut.setDate(friday.getDate()+7);
-    const nextWeekJobs = jobBoardJobs.filter(j=>{
-      if(!j.date) return false;
-      const d = new Date(j.date);
-      return d > friday && d <= twoWeeksOut && j.status !== "complete";
-    });
-    const lookaheadPct = Math.min(100, Math.round(((nextWeekJobs.length*2)/availDays)*100));
-
-    // Revenue velocity
-    const revenueGap = Math.max(0, weeklyTarget - wonRevenue);
-    const onPace     = wonRevenue >= weeklyTarget;
-
-    // Auto mode from real utilization + lookahead
-    let autoMode = "hungry";
-    const effectivePct = Math.max(utilizationPct, lookaheadPct * 0.6); // weight next week 60%
-    if(effectivePct >= 100) autoMode = "paused";
-    else if(effectivePct >= 75) autoMode = "selective";
-    else if(effectivePct >= 45) autoMode = "normal";
-
-    setCapacity(c=>({
-      ...c,
-      activeJobs: wonJobs.length,
-      wonRevenue, pipeValue,
-      weeklyRevenue: wonRevenue,
-      revenueGap, onPace,
-      utilizationPct,
-      committedDays, availDays,
-      thisWeekJobs: thisWeekJobs.length,
-      nextWeekJobs: nextWeekJobs.length,
-      lookaheadPct,
-      weeksBooked: thisWeekJobs.length > 0 ? Math.ceil(thisWeekJobs.length / maxJobs) : 0,
-      mode: c.manualOverride || autoMode,
-      autoMode,
-    }));
-  },[pipeline, jobBoardJobs, contractor, isDemoMode]);
-
-
-  // CAPACITY_MODES moved to module scope
-
-  // Lead scoring (1-100)
-  const scoreLead = (lead) => {
-    let score = 50;
-    // Value score (up to +30)
-    if(lead.value > 3000) score += 30;
-    else if(lead.value > 1500) score += 20;
-    else if(lead.value > 500) score += 10;
-    // Stage score (further = higher)
-    if(lead.stage === "called") score += 15;
-    else if(lead.stage === "sent") score += 5;
-    // Recency (older spotted = lower)
-    if(lead.spotted) {
-      const days = Math.floor((Date.now() - new Date(lead.spotted)) / 86400000);
-      if(days > 14) score -= 20;
-      else if(days > 7) score -= 10;
-    }
-    // Capacity adjustment
-    if(capacity.mode === "selective") { if(lead.value < 2000) score -= 25; }
-    if(capacity.mode === "paused") score = Math.min(score, 20);
-    return Math.max(0, Math.min(100, score));
-  };
-
-  const getRadiusForMode = () => {
-    if(capacity.mode === "hungry") return 1.0;
-    if(capacity.mode === "normal") return 0.5;
-    if(capacity.mode === "selective") return 0.25;
-    return 0;
-  };
-
-  const getBidMultiplierForMode = () => {
-    if(capacity.mode === "selective") return 1.15;
-    if(capacity.mode === "paused") return 1.25;
-    return 1.0;
-  };
   const[showRadiusModal,setShowRadiusModal]=useState(false);
 
   // ── FIELD MAP STATE ──
@@ -2521,6 +2518,11 @@ export default function App(){
   // Send radius mailer via Lob
   const sendRadiusMailer=async()=>{
     if(!radiusMailer||radiusSending)return;
+    const limitCheck = await checkPlanLimit(50); // radius mailer estimates ~50 homes
+    if(!limitCheck.allowed){
+      showToast(`Plan limit reached — upgrade in Settings to send radius mailers.`,"info");
+      return;
+    }
     const confirmed=window.confirm(
       `Send radius mailer to neighbors within ${radiusForm.radius} miles of ${radiusMailer.address}?\n\nThis will trigger physical mail printing. Cannot be undone.`
     );
@@ -2584,7 +2586,9 @@ export default function App(){
       });
       const lobData=await lobRes.json();
       if(lobData.id){
-        track('radius_sent', {center: radiusMailer.address, radius_miles: radiusMiles, est_homes: Math.round(radiusMiles*5280/66)});
+        const estHomes = Math.round(radiusMiles*5280/66);
+        track('radius_sent', {center: radiusMailer.address, radius_miles: radiusMiles, est_homes: estHomes});
+        recordMailerUsage({ mailerType:"radius", homesCount:estHomes, lobId:lobData.id, costCents:Math.round(estHomes*62) });
         showToast(`Radius mailer sent to neighbors within ${radiusMiles}mi!`,"success");
         setRadiusStep(3);
         // Add to job tracker
@@ -2774,71 +2778,100 @@ export default function App(){
   },[aiLeads]);
 
   // ── LEAFLET FIELD MAP INIT ──
-  // Key insight: init ONLY when tab is visible (display:none = zero size = blank map on Chrome)
+  // ── FIELD MAP: COMPLETE REWRITE FOR MOBILE RELIABILITY ──
+  // Root cause: display:none → flex toggle means container has 0 dimensions when
+  // Leaflet first runs. On mobile Safari/Chrome the flex reflow is async.
+  // Fix: use visibility+position instead of display:none, watch actual size with
+  // MutationObserver + polling, and only init once container has real pixels.
   const leafletMapRef = React.useRef(null);
   const leafletInitialized = React.useRef(false);
+  const leafletInitInProgress = React.useRef(false);
+
+  const ensureLeafletSize = React.useCallback(()=>{
+    if(leafletMapRef.current){
+      try { leafletMapRef.current.invalidateSize(true); } catch(e){}
+    }
+  },[]);
 
   React.useEffect(()=>{
     if(tab !== "fieldmap") return;
 
-    // If already initialized, just force a redraw
+    // Already running — just force redraw
     if(leafletInitialized.current && leafletMapRef.current) {
-      [100, 400, 800].forEach(ms => {
-        setTimeout(()=>{ try { leafletMapRef.current.invalidateSize(true); } catch(e){} }, ms);
-      });
+      // Multiple attempts over 3 seconds
+      [50, 150, 300, 600, 1200, 2500].forEach(ms =>
+        setTimeout(ensureLeafletSize, ms)
+      );
       return;
     }
 
+    // Prevent double-init
+    if(leafletInitInProgress.current) return;
+    leafletInitInProgress.current = true;
+
     const initLeaflet = async () => {
-      // Load CSS
+      // 1. Load CSS
       if(!document.getElementById("leaflet-css")){
         const css = document.createElement("link");
-        css.id = "leaflet-css";
-        css.rel = "stylesheet";
-        css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        css.id="leaflet-css"; css.rel="stylesheet";
+        css.href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
         document.head.appendChild(css);
       }
-      // Load JS
+      // 2. Load JS
       if(!window.L){
         await new Promise((resolve, reject)=>{
-          const script = document.createElement("script");
-          script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
+          const s = document.createElement("script");
+          s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
         });
       }
 
-      // Wait for container to be visible and have real dimensions
-      const container = document.getElementById("pavemail-fieldmap");
-      if(!container) return;
+      // 3. Wait for container with REAL dimensions — poll until non-zero
+      const waitForSize = ()=> new Promise(resolve=>{
+        const check = ()=>{
+          const el = document.getElementById("pavemail-fieldmap");
+          if(el && el.offsetWidth > 0 && el.offsetHeight > 0){
+            resolve(el);
+          } else {
+            requestAnimationFrame(check);
+          }
+        };
+        // Start after a short delay to let the flex reflow happen
+        setTimeout(check, 100);
+        // Hard timeout fallback at 4s
+        setTimeout(()=>resolve(document.getElementById("pavemail-fieldmap")), 4000);
+      });
 
-      // Clean any stale Leaflet state
-      if(container._leaflet_id) {
+      const container = await waitForSize();
+      if(!container){ leafletInitInProgress.current=false; return; }
+
+      // 4. Clean stale Leaflet state
+      if(container._leaflet_id){
         delete container._leaflet_id;
         container.innerHTML = "";
       }
 
-      // Wait for the browser to paint the container with real dimensions
-      // Double rAF alone is not reliable on mobile Safari/Chrome — use a timeout too
-      await new Promise(r => requestAnimationFrame(()=>requestAnimationFrame(r)));
-      await new Promise(r => setTimeout(r, 150));
-
-      // If container still has no size, wait longer (mobile paint can be slow)
-      if(container.offsetWidth === 0 || container.offsetHeight === 0) {
-        await new Promise(r => setTimeout(r, 400));
+      // 5. Force explicit pixel height on container — critical for mobile Safari
+      const parentH = container.parentElement?.offsetHeight || window.innerHeight - 160;
+      if(container.offsetHeight === 0){
+        container.style.height = parentH + "px";
       }
 
+      // 6. Init map
       const L = window.L;
       const map = L.map("pavemail-fieldmap", {
         center: [fieldMapCenter.lat, fieldMapCenter.lng],
         zoom: 16,
         zoomControl: false,
         preferCanvas: true,
+        tap: true,           // required for iOS tap events
+        tapTolerance: 15,    // more forgiving tap radius on mobile
       });
 
       leafletMapRef.current = map;
       leafletInitialized.current = true;
+      leafletInitInProgress.current = false;
 
       // Satellite tiles
       L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
@@ -2854,7 +2887,7 @@ export default function App(){
         const gpsDot = L.divIcon({
           className:"",
           html:`<div style="width:14px;height:14px;border-radius:50%;background:#3a8fd4;border:3px solid white;box-shadow:0 0 0 3px rgba(58,143,212,0.4)"></div>`,
-          iconSize:[14,14],iconAnchor:[7,7]
+          iconSize:[14,14], iconAnchor:[7,7]
         });
         L.marker([fieldMapGps.lat,fieldMapGps.lng],{icon:gpsDot}).addTo(map).bindPopup("<b>Your Location</b>");
       }
@@ -2866,7 +2899,7 @@ export default function App(){
         const icon = L.divIcon({
           className:"",
           html:`<div style="width:10px;height:10px;border-radius:50%;background:${st};border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.5)"></div>`,
-          iconSize:[10,10],iconAnchor:[5,5]
+          iconSize:[10,10], iconAnchor:[5,5]
         });
         L.marker([lead.lat,lead.lng],{icon}).addTo(map).bindPopup(`<b>${lead.address}</b><br/>${lead.stage}`);
       });
@@ -2876,42 +2909,52 @@ export default function App(){
         const icon = L.divIcon({
           className:"",
           html:`<div style="width:12px;height:12px;border-radius:50%;background:#e8560a;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.5)"></div>`,
-          iconSize:[12,12],iconAnchor:[6,6]
+          iconSize:[12,12], iconAnchor:[6,6]
         });
         L.marker([tag.lat,tag.lng],{icon}).addTo(map).bindPopup(`<b>${tag.address}</b><br/>${tag.notes||""}`);
       });
 
       // Tap to tag
       map.on("click", async(e)=>{
-        const {lat, lng} = e.latlng;
+        const {lat,lng} = e.latlng;
         setTagModal({lat, lng, address:"Looking up address...", notes:""});
         try {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
           const data = await res.json();
           const addr = data.address;
-          const street = (addr.house_number ? addr.house_number + " " : "") + (addr.road || addr.pedestrian || "");
-          const city = addr.city || addr.town || addr.village || "Tulsa";
-          setTagModal(m=>({...m, address:`${street}, ${city}, OK`, city}));
+          const street = (addr.house_number ? addr.house_number+" " : "") + (addr.road || addr.pedestrian || "");
+          const city = addr.city || addr.town || addr.village || "";
+          setTagModal(m=>({...m, address:`${street}, ${city}`, city}));
         } catch(err) {
           setTagModal(m=>({...m, address:`${lat.toFixed(5)}, ${lng.toFixed(5)}`}));
         }
       });
 
-      // Aggressive invalidateSize — mobile Safari/Chrome need multiple attempts
-      [100, 400, 800, 1500, 3000].forEach(ms => {
-        setTimeout(()=>{ try { map.invalidateSize(true); } catch(e){} }, ms);
-      });
+      // 7. Invalidate size — many passes over several seconds
+      [50, 150, 300, 600, 1200, 2500].forEach(ms =>
+        setTimeout(()=>{ try { map.invalidateSize(true); } catch(e){} }, ms)
+      );
 
-      // ResizeObserver: auto-fix whenever the container actually resizes
-      if(window.ResizeObserver) {
+      // 8. ResizeObserver for whenever the container actually changes size
+      if(window.ResizeObserver){
         const ro = new ResizeObserver(()=>{ try { map.invalidateSize(true); } catch(e){} });
         ro.observe(container);
+      }
+
+      // 9. Also observe the parent display style changes (catches CSS show/hide)
+      if(window.MutationObserver){
+        const mo = new MutationObserver(()=>{ setTimeout(()=>{ try { map.invalidateSize(true); } catch(e){} }, 50); });
+        const parent = container.closest('[style*="display"]');
+        if(parent) mo.observe(parent, {attributes:true, attributeFilter:["style"]});
       }
 
       setFieldMapReady(true);
     };
 
-    initLeaflet().catch(err => console.warn("Leaflet init failed:", err));
+    initLeaflet().catch(err=>{
+      console.warn("Leaflet init failed:", err);
+      leafletInitInProgress.current = false;
+    });
   },[tab]);
 
   // ── OFFLINE-FIRST FIELD TAGS ──
@@ -2963,6 +3006,7 @@ export default function App(){
     const token=getAuthToken();
     if(!token)return;
     const payload=fieldTags.map(t=>({
+      user_id:(function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
       contractor_id:ACTIVE_COMPANY.contractorId,
       lat:t.lat,lng:t.lng,
       address:t.address||"",city:t.city||"",notes:t.notes||"",
@@ -2980,7 +3024,7 @@ export default function App(){
       if(!token||isDemoMode)return;
       const cached=await idbGetAll();
       if(cached.length===0)return;
-      const payload=cached.map(t=>({contractor_id:ACTIVE_COMPANY.contractorId,lat:t.lat,lng:t.lng,address:t.address||"",city:t.city||"",notes:t.notes||""}));
+      const payload=cached.map(t=>({user_id:(function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),contractor_id:ACTIVE_COMPANY.contractorId,lat:t.lat,lng:t.lng,address:t.address||"",city:t.city||"",notes:t.notes||""}));
       sbFetch("field_tags",{method:"POST",headers:{"Prefer":"resolution=merge-duplicates,return=minimal"},body:JSON.stringify(payload)})
         .then(()=>{ showToast("📡 Field tags synced","success"); })
         .catch(()=>{});
@@ -3003,6 +3047,7 @@ export default function App(){
     if(!token||isDemoMode||jobBoardJobs.length===0) return;
     const payload = jobBoardJobs.map(j=>({
       id: j.id,
+      user_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
       contractor_id: ACTIVE_COMPANY.contractorId,
       address: j.address||"", service: j.service||"", value: j.value||0,
       crew: j.crew||"", date: j.date||"", notes: j.notes||"",
@@ -3015,7 +3060,7 @@ export default function App(){
   React.useEffect(()=>{
     const sqft = spotForm.customSqft ? parseInt(spotForm.customSqft) : spotForm.sqft;
     if(sqft && spotForm.service && spotForm.damageLevel && !spotForm.overridePrice){
-      const mult = getBidMultiplierForMode();
+      const mult = 1.0;
       const raw  = calcPrice(sqft,spotForm.service,spotForm.damageLevel);
       const{lo,hi}={lo:Math.round(raw.lo*mult/50)*50, hi:Math.round(raw.hi*mult/50)*50};
       setAutoPrice({lo,hi});
@@ -3069,9 +3114,16 @@ export default function App(){
 
   const sendToPress=async()=>{
     if(!mailer||sending)return;
-    // Duplicate-send guard: confirm before spending money on physical mail
     const homes=parseInt(form.homes)||0;
     const cost=((homes)*0.62).toFixed(2);
+
+    // Check plan limit before confirming
+    const limitCheck = await checkPlanLimit(homes);
+    if(!limitCheck.allowed){
+      showToast(`Plan limit reached — ${limitCheck.used.toLocaleString()} of ${limitCheck.limit.toLocaleString()} mailers used this month. Upgrade your plan in Settings.`,"info");
+      return;
+    }
+
     const confirmed=window.confirm(
       `Send ${homes.toLocaleString()} mailers to ${form.neighborhood}?\n\nEstimated cost: $${cost}\n\nThis will trigger physical mail printing. Cannot be undone.`
     );
@@ -3101,6 +3153,8 @@ export default function App(){
       setJobs(p=>[newJob,...p]);
       setSelectedJob(newJob);
       setLobResult(result);
+      // Record usage after confirmed send
+      recordMailerUsage({ mailerType:"eddm", homesCount:homes, lobId:result.id||"", costCents:Math.round(homes*62) });
       showToast(`✅ Mailer confirmed! Printing now.`,"success");
       setTimeout(()=>setTab("tracker"),1200);
     }catch(e){
@@ -3126,9 +3180,26 @@ export default function App(){
 
   const totalHomes=selectedRoutes.reduce((s,id)=>s+(liveRoutes.find(r=>r.id===id)?.homes||0),0);
   const estCost=((parseInt(form.homes)||0)*0.62).toFixed(2);
-  const totalMailed=jobs.reduce((s,j)=>s+parseInt(j.homes),0);
-  const totalSpend=jobs.reduce((s,j)=>s+parseFloat(j.cost),0).toFixed(2);
-  const totalCalls=jobs.reduce((s,j)=>s+j.calls,0);
+
+  // ── MEMOIZED CALCULATIONS — only recompute when deps change ──
+  const pipelineStats = React.useMemo(()=>{
+    const wonLeads    = pipeline.filter(l=>l.stage==="won");
+    const activeLeads = pipeline.filter(l=>l.stage!=="won");
+    const wonRevenue  = wonLeads.reduce((s,l)=>s+(l.value||0),0);
+    const pipeValue   = activeLeads.reduce((s,l)=>s+(l.value||0),0);
+    const sentLeads   = pipeline.filter(l=>["sent","called","won"].includes(l.stage));
+    const calledLeads = pipeline.filter(l=>["called","won"].includes(l.stage));
+    const winRate     = sentLeads.length > 0 ? Math.round((wonLeads.length/sentLeads.length)*100) : 0;
+    return { wonLeads, activeLeads, wonRevenue, pipeValue, sentLeads, calledLeads, winRate };
+  },[pipeline]);
+
+  const jobTotals = React.useMemo(()=>({
+    totalMailed: jobs.reduce((s,j)=>s+(parseInt(j.homes)||0),0),
+    totalSpend:  jobs.reduce((s,j)=>s+(parseFloat(j.cost)||0),0).toFixed(2),
+    totalCalls:  jobs.reduce((s,j)=>s+(j.calls||0),0),
+  }),[jobs]);
+
+  const { totalMailed, totalSpend, totalCalls } = jobTotals;
 
   const generateSpot=async()=>{
     if(!spotForm.address)return;
@@ -3218,7 +3289,7 @@ export default function App(){
 
     const demoMailer={
       headline:"WE NOTICED YOUR PROJECT",
-      personalNote:`We were working in your neighborhood recently and noticed your concrete at ${spotForm.address} has ${damageList}. As local Tulsa concrete specialists, we would love to help you get ahead of this before it gets worse - and we can usually start within a week.`,
+      personalNote:`We were working in your neighborhood recently and noticed your concrete at ${spotForm.address} has ${damageList}. As local concrete specialists, we would love to help you get ahead of this before it gets worse - and we can usually start within a week.`,
       urgencyLine:"Oklahoma winters do not wait - neither should your concrete.",
       address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,
       damage:detectedDemo,
@@ -3237,6 +3308,11 @@ export default function App(){
 
   const sendSpot=async()=>{
     if(!spotMailer||spotSending)return;
+    const limitCheck = await checkPlanLimit(1);
+    if(!limitCheck.allowed){
+      showToast(`Plan limit reached — upgrade in Settings to send spot bids.`,"info");
+      return;
+    }
     const confirmed=window.confirm(
       `Send spot bid mailer to ${spotMailer.address}?\n\nThis will print and mail a physical postcard. Cannot be undone.`
     );
@@ -3331,6 +3407,7 @@ export default function App(){
       setPipeline(p=>[newPipelineLead,...p]);
       db.upsertLead(newPipelineLead).catch(e=>console.error("Save pipeline lead failed:",e));
       track('spot_sent', {address:spotMailer.address, bid:spotMailer.bidLo, hasPhoto:!!capturedPhotoUrl});
+      recordMailerUsage({ mailerType:"spot_bid", homesCount:1, lobId:lobData?.id||"", costCents:62 });
       showToast("✅ Spot bid sent + saved to database!","success");
       setSpotMailer(null);
       setSpotForm({address:"",city:"",state:"",zip:"",sqft:400,customSqft:"",service:"Crack Repair",damageLevel:"Moderate",bidLow:"",bidHigh:"",overridePrice:false,includes:"",damage:[],notes:""});
@@ -3465,9 +3542,6 @@ export default function App(){
     lobFromId:     contractor.lob_from_id || ACTIVE_COMPANY.lobFromId,
     transferPhone: contractor.bland_transfer || ACTIVE_COMPANY.transferPhone,
     contractorId:  authUser?.user?.id || ACTIVE_COMPANY.contractorId,
-    crewSize:      contractor.crew_size || ACTIVE_COMPANY.crewSize,
-    maxJobsWeek:   contractor.max_jobs_week || ACTIVE_COMPANY.maxJobsWeek,
-    weeklyTarget:  contractor.weekly_target || ACTIVE_COMPANY.weeklyTarget,
     accentColor:   contractor.accent_color || ACTIVE_COMPANY.accentColor,
     logoUrl:       contractor.logo_url || "",
     promo:         contractor.promo || "SAVE10",
@@ -4043,31 +4117,21 @@ export default function App(){
             {(()=>{
               const todayStr = new Date().toISOString().split("T")[0];
               const todayJobs = jobBoardJobs.filter(j=>j.date===todayStr);
-              const crewDaysAvail = (ACTIVE_COMPANY.crewSize||12)*5;
-              const crewDaysBooked = jobBoardJobs.filter(j=>j.status!=="complete"&&j.status!=="collected").length*2;
-              const utilPct = Math.min(100,Math.round((crewDaysBooked/crewDaysAvail)*100));
               const followUpsDue = pipeline.filter(l=>{
                 if(l.stage==="won"||l.stage==="spotted"||!l.mailerSent) return false;
                 return Math.floor((Date.now()-new Date(l.mailerSent))/86400000)>=5&&!l.calledBack;
               }).length;
               return(<>
-                {/* Crew utilization - clicks to Command */}
-                <div className="topbar-stat" onClick={()=>switchTab("command")} style={{cursor:"pointer",borderColor:CAPACITY_MODES[capacity.mode].color+"40",color:CAPACITY_MODES[capacity.mode].color}}>
-                  <span style={{width:6,height:6,borderRadius:"50%",background:CAPACITY_MODES[capacity.mode].color,flexShrink:0,display:"inline-block"}}/>
-                  <span style={{fontFamily:"'DM Mono',monospace",fontWeight:700}}>{utilPct}%</span>
-                  <span style={{opacity:0.6,color:"var(--stone)"}}>crew</span>
-                </div>
-                <span style={{width:1,height:14,background:"rgba(184,180,172,0.12)",flexShrink:0}}/>
                 {/* Won revenue */}
                 <div className="topbar-stat" onClick={()=>switchTab("pipeline")} style={{cursor:"pointer"}}>
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1L6.2 4H9L6.8 5.8L7.6 8.5L5 7L2.4 8.5L3.2 5.8L1 4H3.8L5 1Z" fill="currentColor" opacity="0.8"/></svg>
-                  <span style={{fontFamily:"'DM Mono',monospace",color:"var(--green2)"}}>${pipeline.filter(l=>l.stage==="won").reduce((s,l)=>s+(l.value||0),0).toLocaleString()}</span>
+                  <span style={{fontFamily:"'DM Mono',monospace",color:"var(--green2)"}}>${pipelineStats.wonRevenue.toLocaleString()}</span>
                   <span style={{opacity:0.5,color:"var(--stone)"}}>won</span>
                 </div>
                 {/* Active leads */}
                 <div className="topbar-stat" onClick={()=>switchTab("pipeline")} style={{cursor:"pointer"}}>
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" opacity="0.6"/><circle cx="5" cy="5" r="1.5" fill="currentColor"/></svg>
-                  <span style={{fontFamily:"'DM Mono',monospace"}}>{pipeline.filter(l=>l.stage!=="won").length}</span>
+                  <span style={{fontFamily:"'DM Mono',monospace"}}>{pipelineStats.activeLeads.length}</span>
                   <span style={{opacity:0.5}}>leads</span>
                 </div>
                 {/* Today's jobs */}
@@ -4168,49 +4232,13 @@ export default function App(){
           <div className="nav-divider"/>
           <div className="nav-label">Account</div>
           <button className={`nav-item${tab==="settings"?" active":""}`} onClick={()=>setTab("settings")}><NavIcon id="settings"/>Settings</button>
-          <div className="nav-mini">
-            {/* CAPACITY WIDGET */}
-            <div className="capacity-widget" style={{marginBottom:8}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)"}}>Crew Capacity</div>
-                <div style={{fontSize:10,fontWeight:700,color:CAPACITY_MODES[capacity.mode].color}}>{CAPACITY_MODES[capacity.mode].svgIcon} {CAPACITY_MODES[capacity.mode].label}</div>
-              </div>
-              <div className="capacity-bar-wrap">
-                <div className="capacity-bar" style={{
-                  width:`${Math.min(100,Math.round(capacity.activeJobs/CAPACITY_CONFIG.maxJobs*100))}%`,
-                  background:capacity.mode==="hungry"?"#b83232":capacity.mode==="normal"?"#c4a020":capacity.mode==="selective"?"#1a6fa8":"#6a6662"
-                }}/>
-              </div>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"var(--gravel)",marginTop:4}}>
-                <span>{capacity.activeJobs} active jobs</span>
-                <span>{CAPACITY_CONFIG.maxJobs} max</span>
-              </div>
-              <div style={{display:"flex",gap:4,marginTop:8,flexWrap:"wrap"}}>
-                {Object.entries(CAPACITY_MODES).map(([mode,cfg])=>(
-                  <button key={mode} className={`mode-pill${capacity.manualOverride===mode?" active":""}`}
-                    style={{background:capacity.manualOverride===mode?cfg.bg:"transparent",color:cfg.color,fontSize:8}}
-                    onClick={()=>setCapacity(c=>({...c,manualOverride:c.manualOverride===mode?null:mode,mode:c.manualOverride===mode?(()=>{const pct=c.activeJobs/CAPACITY_CONFIG.maxJobs;return pct>=1?"paused":pct>=0.8?"selective":pct>=0.5?"normal":"hungry";})():mode}))}>
-                    {cfg.svgIcon} {cfg.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="nav-mini">
-            <div className="mini-card">
-              <div className="mini-label">This Month</div>
-              <div className="mini-row"><span>Homes Mailed</span><strong style={{color:"var(--cream)"}}>{totalMailed.toLocaleString()}</strong></div>
-              <div className="mini-row"><span>Spend</span><strong style={{color:"var(--orange2)",fontFamily:"DM Mono"}}>${totalSpend}</strong></div>
-              <div className="mini-row"><span>Calls</span><strong style={{color:"var(--green2)"}}>{totalCalls}</strong></div>
-            </div>
-          </div>
         </nav>
 
         {/* CONTENT */}
         <div className="content">
         <ErrorBoundary label="Tab crashed — try switching tabs or refreshing">
 
-          {/* MAP */}
+          {/* MAP / NEIGHBORHOOD SCAN */}
           {tab==="map"&&(
             <div className="map-layout">
               <div className="map-sidebar"><div className="map-sidebar-inner">
@@ -4224,32 +4252,7 @@ export default function App(){
                     {routesLoading?<span className="spin"/>:"Search"}
                   </button>
                 </div>
-                <div style={{marginBottom:14}}>
-                  <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--gravel)",marginBottom:6}}>Quick - Tulsa Area</div>
-                  <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                    {[["74105","S Tulsa"],["74011","Broken Arrow"],["74037","Jenks"],["74055","Owasso"],["74008","Bixby"],["74063","Sand Springs"],["74112","E Tulsa"],["74107","W Tulsa"]].map(([z,label])=>(
-                      <button key={z} className={`chip${searchedZips.includes(z)?" on":""}`} onClick={()=>{setZipSearch(z);searchZip(z);}} style={{fontSize:10}} disabled={routesLoading}>{label}</button>
-                    ))}
-                  </div>
-                </div>
-                {routeError&&<div style={{background:"rgba(184,50,50,0.1)",border:"1px solid rgba(184,50,50,0.25)",borderRadius:6,padding:"8px 12px",fontSize:11,color:"#f08080",marginBottom:10}}>{routeError}</div>}
-                <div className="section-head" style={{marginTop:4}}>
-                  {liveRoutes.length>0?`${liveRoutes.length} Live USPS Routes`:"Available Routes"}
-                  {liveRoutes.length>0&&<button onClick={clearRoutes} style={{marginLeft:"auto",fontSize:10,color:"var(--stone)",background:"none",border:"none",cursor:"pointer",textDecoration:"underline",fontFamily:"'Syne',sans-serif"}}>Clear all</button>}
-                </div>
-                {liveRoutes.length===0&&!routesLoading&&(
-                  <div style={{padding:"12px 0 4px"}}>
-                    <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--stone)",marginBottom:8}}>Quick Select</div>
-                    <div style={{display:"flex",flexDirection:"column",gap:5}}>
-                      {[{zip:"74105",name:"South Tulsa"},{zip:"74011",name:"Broken Arrow"},{zip:"74037",name:"Jenks"},{zip:"74055",name:"Owasso"},{zip:"74008",name:"Bixby"},{zip:"74063",name:"Sand Springs"}].map(r=>(
-                        <button key={r.zip} onClick={()=>{setZipSearch(r.zip); setTimeout(()=>searchZip(r.zip),50);}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(232,86,10,0.05)",border:"1px solid rgba(232,86,10,0.12)",borderRadius:7,padding:"8px 12px",cursor:"pointer",transition:"all 0.12s",width:"100%",textAlign:"left"}}>
-                          <span style={{fontSize:12,color:"var(--concrete)",fontWeight:500}}>{r.name}</span>
-                          <span style={{fontSize:11,color:"var(--orange2)",fontFamily:"'DM Mono',monospace"}}>{r.zip}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+              
                 {routesLoading&&(
                   <div style={{display:"flex",alignItems:"center",gap:8,padding:"16px 0",color:"var(--stone)",fontSize:12}}>
                     <span className="spin"/><span>Fetching USPS routes...</span>
@@ -4322,7 +4325,7 @@ export default function App(){
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>BUILD MAILER</div>
                 <p style={{fontSize:12,color:"var(--stone)",marginBottom:16,lineHeight:1.6}}>AI writes your mailer. Hit Send to print and mail it to real addresses.</p>
                 <div className="section-head">Target Area</div>
-                <div className="field"><label>Neighborhood *</label><input placeholder="e.g. South Tulsa, Broken Arrow, Jenks..." value={form.neighborhood} onChange={e=>set("neighborhood",e.target.value)}/></div>
+                <div className="field"><label>Neighborhood *</label><input placeholder="e.g. Midtown, Southside, Broken Arrow..." value={form.neighborhood} onChange={e=>set("neighborhood",e.target.value)}/></div>
                 <div className="row2">
                   <div className="field"><label>Homes to Mail</label><input type="number" placeholder="200" value={form.homes} onChange={e=>set("homes",e.target.value)}/></div>
                   <div className="field"><label>Promo Code</label><input placeholder={ACTIVE_COMPANY.promo||"SAVE10"} value={form.promoCode} onChange={e=>set("promoCode",e.target.value)}/></div>
@@ -4361,7 +4364,7 @@ export default function App(){
                 )}
                 {mailer&&!loading&&(
                   <button className="send-btn" onClick={sendToPress} disabled={sending}>
-                    {sending?<><span className="spin"/>SENDING TO LOB.COM...</>:`📬 SEND TO ${parseInt(form.homes)||0} TULSA HOMES - $${estCost}`}
+                    {sending?<><span className="spin"/>SENDING TO LOB.COM...</>:`📬 SEND TO ${parseInt(form.homes)||0} HOMES — $${estCost}`}
                   </button>
                 )}
                 {lobResult&&(
@@ -4391,7 +4394,7 @@ export default function App(){
           {tab==="tracker"&&(
             <div className="tracker-layout">
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>JOB TRACKER</div>
-              <p style={{fontSize:13,color:"var(--stone)",marginBottom:20}}>{ACTIVE_COMPANY.name} campaign - from print queue to Tulsa doorstep.</p>
+              <p style={{fontSize:13,color:"var(--stone)",marginBottom:20}}>{ACTIVE_COMPANY.name} campaign — from print queue to your neighborhood.</p>
               <div className="stats-row">
                 {[
                   {label:"Total Campaigns",value:jobs.length,color:"var(--cream)",trend:"↑ growing",up:true},
@@ -4937,7 +4940,7 @@ export default function App(){
               </div>
 
               {/* Map container - Leaflet loads here */}
-              <div id="pavemail-fieldmap" style={{flex:"1 1 0",minHeight:0,background:"#1a1a16",position:"relative",overflow:"hidden",width:"100%"}}>
+              <div id="pavemail-fieldmap" style={{flex:"1 1 0",minHeight:"300px",height:"100%",background:"#1a1a16",position:"relative",overflow:"hidden",width:"100%"}}>
                 {!fieldMapReady&&(
                   <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,color:"var(--stone)"}}>
                     <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="2" y="2" width="44" height="44" rx="6" fill="currentColor" fillOpacity="0.05" stroke="currentColor" strokeWidth="1.5" opacity="0.3"/><path d="M8 18L18 14L28 20L40 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.4"/><path d="M8 28L18 24L28 30L40 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.25"/><circle cx="30" cy="23" r="6" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="1.5" opacity="0.5"/><circle cx="30" cy="23" r="2.5" fill="currentColor" opacity="0.5"/></svg>
@@ -5197,7 +5200,6 @@ export default function App(){
                 {/* Live revenue pulse */}
                 {(()=>{
                   const wonRev = pipeline.filter(l=>l.stage==="won").reduce((s,l)=>s+(l.value||0),0);
-                  const target = ACTIVE_COMPANY.weeklyTarget||40000;
                   const pct = Math.min(100,Math.round((wonRev/target)*100));
                   const followDue = pipeline.filter(l=>{
                     if(l.stage==="won"||l.stage==="spotted"||!l.mailerSent) return false;
@@ -5324,8 +5326,6 @@ export default function App(){
                 const jobRevenue = jobBoardJobs.reduce((s,j)=>s+(j.value||0),0);
                 const spotRevenue = spotJobs.filter(j=>j.status==="delivered"||j.status==="sent").length * 1200; // avg est
                 const totalRevenue = jobRevenue;
-                const weeklyTarget = ACTIVE_COMPANY.weeklyTarget||40000;
-                const onPace = totalRevenue >= weeklyTarget;
                 const roi = campaignSpend > 0 ? (totalRevenue/campaignSpend).toFixed(1) : null;
                 const fromMailers = jobBoardJobs.filter(j=>j.fromPipeline).reduce((s,j)=>s+(j.value||0),0);
                 const pct = totalRevenue > 0 ? Math.round((fromMailers/totalRevenue)*100) : 0;
@@ -5333,9 +5333,6 @@ export default function App(){
                   <div style={{marginBottom:20}}>
                     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
                       <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1.5,color:"var(--concrete)"}}>MAIL ROI</div>
-                      <div style={{fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:10,background:onPace?"rgba(42,122,82,0.15)":"rgba(212,160,23,0.15)",color:onPace?"var(--green2)":"var(--gold2)",border:`1px solid ${onPace?"rgba(42,122,82,0.3)":"rgba(212,160,23,0.3)"}`}}>
-                        {onPace?"✓ ON TARGET":"⚑ BEHIND"} · {"$"}{weeklyTarget.toLocaleString()} target
-                      </div>
                     </div>
                     <div style={{background:"rgba(42,122,82,0.08)",border:"1px solid rgba(42,122,82,0.2)",borderRadius:12,padding:"20px"}}>
                       <div className="cmd-roi-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16,marginBottom:16}}>
@@ -5366,7 +5363,7 @@ export default function App(){
               {(()=>{
                 const topLeads = pipeline
                   .filter(l=>l.stage!=="won"&&l.stage!=="spotted")
-                  .map(l=>({...l,score:scoreLead(l)}))
+                  .map(l=>({...l,score:50}))
                   .sort((a,b)=>b.score-a.score)
                   .slice(0,4);
                 if(topLeads.length===0) return null;
@@ -5531,10 +5528,10 @@ export default function App(){
               {/* PIPELINE STATS */}
               <div className="pipeline-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,padding:"16px 20px 0"}}>
                 {(()=>{
-                  const won=pipeline.filter(l=>l.stage==="won").length;
+                  const won=pipelineStats.wonLeads.length;
                   const total=pipeline.length;
                   const winRate=total>0?Math.round((won/total)*100):0;
-                  return [{label:"In Play",value:pipeline.filter(l=>l.stage!=="won").length,color:"var(--cream)"},{label:"Win Rate",value:winRate+"%",color:won>0?"var(--green2)":"var(--stone)"},{label:"Jobs Won",value:won,color:"var(--green2)"},{label:"Pipeline Value",value:"$"+pipeline.reduce((s,l)=>s+(l.value||0),0).toLocaleString(),color:"var(--orange2)"}];
+                  return [{label:"In Play",value:pipelineStats.activeLeads.length,color:"var(--cream)"},{label:"Win Rate",value:winRate+"%",color:won>0?"var(--green2)":"var(--stone)"},{label:"Jobs Won",value:won,color:"var(--green2)"},{label:"Pipeline Value",value:"$"+pipeline.reduce((s,l)=>s+(l.value||0),0).toLocaleString(),color:"var(--orange2)"}];
                 })().map((s,i)=>(
                   <div key={i} style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,padding:"12px 14px"}}>
                     <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,color:s.color,lineHeight:1}}>{s.value}</div>
@@ -5568,7 +5565,7 @@ export default function App(){
                   {label:"Total Leads",value:pipeline.length,color:"var(--cream)",sub:"addresses tracked"},
                   {label:"Mailers Sent",value:pipeline.filter(l=>["sent","called","won"].includes(l.stage)).length,color:"var(--blue2)",sub:"postcards out"},
                   {label:"Called Back",value:pipeline.filter(l=>["called","won"].includes(l.stage)).length,color:"var(--yellow)",sub:`${Math.round(pipeline.filter(l=>["called","won"].includes(l.stage)).length/Math.max(pipeline.filter(l=>["sent","called","won"].includes(l.stage)).length,1)*100)}% response rate`},
-                  {label:"Jobs Won",value:pipeline.filter(l=>l.stage==="won").length,color:"var(--green2)",sub:`$${pipeline.filter(l=>l.stage==="won").reduce((s,l)=>s+l.value,0).toLocaleString()} revenue`},
+                  {label:"Jobs Won",value:pipelineStats.wonLeads.length,color:"var(--green2)",sub:`$${pipeline.filter(l=>l.stage==="won").reduce((s,l)=>s+l.value,0).toLocaleString()} revenue`},
                 ].map((s,i)=>(
                   <div className="pl-stat" key={i}>
                     <div className="pl-stat-label">{s.label}</div>
@@ -6643,4 +6640,3 @@ export default function App(){
     </div>
   );
 }
-
