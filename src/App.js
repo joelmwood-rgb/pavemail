@@ -2452,7 +2452,7 @@ export default function App(){
     }
   };
   const[showAddLead,setShowAddLead]=useState(false);
-  const[newLead,setNewLead]=useState("address":"",city:"",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
+  const[newLead,setNewLead]=useState({address:"",city:"",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
 
   const LEAD_FLAGS = [
     {id:"no_pay",    label:"No Pay",        color:"#c0392b", bg:"rgba(192,57,43,0.15)",  icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="4.5" fill="#c0392b" fillOpacity="0.2" stroke="#c0392b" strokeWidth="1.3"/><line x1="3" y1="3" x2="8" y2="8" stroke="#c0392b" strokeWidth="1.4" strokeLinecap="round"/><line x1="8" y1="3" x2="3" y2="8" stroke="#c0392b" strokeWidth="1.4" strokeLinecap="round"/></svg>, desc:"Did not pay or disputed invoice"},
@@ -3189,7 +3189,7 @@ export default function App(){
       const damageList=detectedDamage.length>0?detectedDamage.join(", "):"general concrete wear";
       const photoContext=capturedPhoto?" We photographed the damage for reference.":"";
       const sqftDesc=`${spotForm.customSqft||spotForm.sqft} sq ft ${spotForm.service} job`;
-      const prompt=`Write a personal note for a direct mail postcard from ${ACTIVE_COMPANY.name} (concrete contractor, ${spotForm.city} OK, ${ACTIVE_COMPANY.phone}) to a homeowner at ${spotForm.address}, ${spotForm.city} OK. The contractor noticed: ${damageList}.${photoContext} This is a ${sqftDesc} with ${spotForm.damageLevel} damage. Bid range: ${bidRange}. Notes: ${spotForm.notes||"none"}. Write a warm, personal 2-3 sentence note that mentions we drove past their home, noticed the specific damage, and want to help. Sound like a neighbor, not a corporation. Do NOT be salesy. Return ONLY JSON: {"personalNote":"string","headline":"string","urgencyLine":"string"}`;
+      const prompt=`Write a personal note for a direct mail postcard from ${ACTIVE_COMPANY.name} (concrete contractor, ${spotForm.city}${ACTIVE_COMPANY.state?`, ${ACTIVE_COMPANY.state}`:""}, ${ACTIVE_COMPANY.phone}) to a homeowner at ${spotForm.address}, ${spotForm.city}. The contractor noticed: ${damageList}.${photoContext} This is a ${sqftDesc} with ${spotForm.damageLevel} damage. Bid range: ${bidRange}. Notes: ${spotForm.notes||"none"}. Write a warm, personal 2-3 sentence note that mentions we drove past their home, noticed the specific damage, and want to help. Sound like a neighbor, not a corporation. Do NOT be salesy. Return ONLY JSON: {"personalNote":"string","headline":"string","urgencyLine":"string"}`;
 
       const res=await fetch(ANTHROPIC_PROXY,{
         method:"POST",
@@ -5171,7 +5171,7 @@ export default function App(){
                   <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                     {pipeline.filter(l=>l.stage==="won"&&!jobBoardJobs.find(j=>j.fromPipeline===l.id)).map(lead=>(
                       <button key={lead.id} onClick={()=>{
-                        setNewJob({address:lead.address,city:lead.city||"Tulsa",service:"Concrete Work",value:lead.value||0,crew:"",date:new Date().toISOString().split("T")[0],notes:"Converted from Pipeline",status:"scheduled",fromPipeline:lead.id});
+                        setNewJob({address:lead.address,city:lead.city||"",service:"Concrete Work",value:lead.value||0,crew:"",date:new Date().toISOString().split("T")[0],notes:"Converted from Pipeline",status:"scheduled",fromPipeline:lead.id});
                         setNewJobModal(true);
                       }} style={{background:"rgba(42,122,82,0.12)",border:"1px solid rgba(42,122,82,0.25)",borderRadius:7,padding:"6px 10px",color:"var(--green2)",fontSize:11,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontWeight:600}}>
                         + {lead.address}
@@ -5663,7 +5663,7 @@ export default function App(){
                                     </button>
                                     {!jobBoardJobs.find(j=>j.fromPipeline===lead.id)&&(
                                       <button className="pl-action-btn" style={{background:"rgba(58,143,212,0.15)",color:"var(--blue2)"}} onClick={()=>{
-                                        setNewJob({address:lead.address,city:lead.city||"Tulsa",service:"Concrete Work",value:lead.value||0,crew:"",date:new Date().toISOString().split("T")[0],notes:"",status:"scheduled",fromPipeline:lead.id});
+                                        setNewJob({address:lead.address,city:lead.city||"",service:"Concrete Work",value:lead.value||0,crew:"",date:new Date().toISOString().split("T")[0],notes:"",status:"scheduled",fromPipeline:lead.id});
                                         setNewJobModal(true);
                                       }}>
                                         📋 Schedule Job
