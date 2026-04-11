@@ -1,4 +1,164 @@
-import React, { useState } from "react";
+import React,
+
+          {/* JOB BOARD */}
+          {tab==="jobboard"&&(
+            <div style={{height:"100%",overflowY:"auto",padding:"20px 24px"}}>
+              {/* Header */}
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)"}}>JOB BOARD</div>
+                  <div style={{fontSize:11,color:"var(--stone)"}}>Production schedule · crew assignments · revenue tracking</div>
+                </div>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  {/* View toggle */}
+                  {[{id:"week",label:"Week View"},{id:"list",label:"All Jobs"}].map(v=>(
+                    <button key={v.id} onClick={()=>setJobBoardView(v.id)}
+                      style={{background:jobBoardView===v.id?"rgba(232,86,10,0.15)":"rgba(184,180,172,0.06)",border:`1px solid ${jobBoardView===v.id?"rgba(232,86,10,0.3)":"rgba(184,180,172,0.12)"}`,borderRadius:7,padding:"6px 12px",color:jobBoardView===v.id?"var(--orange2)":"var(--stone)",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>
+                      {v.label}
+                    </button>
+                  ))}
+                  <button onClick={()=>setNewJobModal(true)}
+                    style={{background:"var(--orange)",border:"none",borderRadius:8,padding:"7px 14px",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Syne',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><line x1="5.5" y1="1" x2="5.5" y2="10" stroke="white" strokeWidth="1.8" strokeLinecap="round"/><line x1="1" y1="5.5" x2="10" y2="5.5" stroke="white" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                    Add Job
+                  </button>
+                </div>
+              </div>
+
+              {/* Revenue summary strip */}
+              {(()=>{
+                const thisWeek = jobBoardJobs;
+                const totalVal = thisWeek.reduce((s,j)=>s+(j.value||0),0);
+                const collected = thisWeek.filter(j=>j.status==="collected").reduce((s,j)=>s+(j.value||0),0);
+                const invoiced = thisWeek.filter(j=>j.status==="invoiced").reduce((s,j)=>s+(j.value||0),0);
+                const outstanding = invoiced;
+                return(
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
+                    {[
+                      {label:"Scheduled Value",val:`$${totalVal.toLocaleString()}`,color:"var(--cream)"},
+                      {label:"Collected",val:`$${collected.toLocaleString()}`,color:"var(--green2)"},
+                      {label:"Outstanding",val:`$${outstanding.toLocaleString()}`,color:outstanding>0?"var(--gold2)":"var(--stone)"},
+                      {label:"Jobs This Week",val:thisWeek.length,color:"var(--orange2)"},
+                    ].map((s,i)=>(
+                      <div key={i} style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:9,padding:"12px 14px"}}>
+                        <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",marginBottom:4}}>{s.label}</div>
+                        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,color:s.color,lineHeight:1}}>{s.val}</div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
+              {/* WEEK VIEW — day columns */}
+              {jobBoardView==="week"&&(()=>{
+                const today = new Date();
+                const days = Array.from({length:6},(_,i)=>{
+                  const d = new Date(today);
+                  d.setDate(today.getDate() - today.getDay() + 1 + i); // Mon-Sat
+                  return {
+                    label:d.toLocaleDateString("en-US",{weekday:"short"}),
+                    date:d.toISOString().split("T")[0],
+                    isToday:d.toDateString()===today.toDateString(),
+                  };
+                });
+                return(
+                  <div className="jobboard-week-grid" style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:8,minHeight:300}}>
+                    {days.map(day=>{
+                      const dayJobs = jobBoardJobs.filter(j=>j.date===day.date);
+                      return(
+                        <div key={day.date} style={{background:day.isToday?"rgba(232,86,10,0.05)":"rgba(0,0,0,0.15)",border:`1px solid ${day.isToday?"rgba(232,86,10,0.25)":"rgba(184,180,172,0.07)"}`,borderRadius:10,overflow:"hidden",minHeight:200}}>
+                          {/* Day header */}
+                          <div style={{padding:"8px 10px",borderBottom:"1px solid rgba(184,180,172,0.07)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:1,color:day.isToday?"var(--orange2)":"var(--stone)"}}>{day.label}</div>
+                            {day.isToday&&<div style={{width:6,height:6,borderRadius:"50%",background:"var(--orange)"}}/>}
+                          </div>
+                          {/* Jobs for this day */}
+                          <div style={{padding:"6px",display:"flex",flexDirection:"column",gap:5}}>
+                            {dayJobs.length===0&&(
+                              <div style={{fontSize:10,color:"var(--gravel)",textAlign:"center",padding:"20px 8px",opacity:0.5}}>Open</div>
+                            )}
+                            {dayJobs.map(job=>{
+                              const st = JOB_STATUSES.find(s=>s.id===job.status)||JOB_STATUSES[0];
+                              return(
+                                <div key={job.id} onClick={()=>setSelectedJobDetail(job)}
+                                  style={{background:st.bg,border:`1px solid ${st.color}30`,borderRadius:7,padding:"7px 8px",cursor:"pointer",transition:"all 0.12s"}}>
+                                  <div style={{fontSize:10,fontWeight:700,color:st.color,marginBottom:2}}>{st.label}</div>
+                                  <div style={{fontSize:10,color:"var(--cream)",fontWeight:600,lineHeight:1.3,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{job.address}</div>
+                                  <div style={{fontSize:9,color:"var(--stone)",marginTop:3}}>{job.service}</div>
+                                  {job.value>0&&<div style={{fontSize:10,color:"var(--orange2)",fontFamily:"'DM Mono',monospace",marginTop:2,fontWeight:600}}>${job.value.toLocaleString()}</div>}
+                                  {job.crew&&<div style={{fontSize:9,color:"var(--gravel)",marginTop:2}}>{job.crew}</div>}
+                                </div>
+                              );
+                            })}
+                            {/* Add job to this day quick button */}
+                            <button onClick={()=>{setNewJob(j=>({...j,date:day.date}));setNewJobModal(true);}}
+                              style={{background:"rgba(184,180,172,0.04)",border:"1px dashed rgba(184,180,172,0.12)",borderRadius:7,padding:"6px 0",color:"var(--gravel)",fontSize:10,cursor:"pointer",fontFamily:"'Syne',sans-serif",width:"100%"}}>
+                              + Add
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
+              {/* LIST VIEW */}
+              {jobBoardView==="list"&&(
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {JOB_STATUSES.map(status=>{
+                    const statusJobs = jobBoardJobs.filter(j=>j.status===status.id);
+                    if(statusJobs.length===0) return null;
+                    return(
+                      <div key={status.id}>
+                        <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:status.color,marginBottom:8,paddingLeft:4}}>{status.label} ({statusJobs.length})</div>
+                        {statusJobs.map(job=>(
+                          <div key={job.id} onClick={()=>setSelectedJobDetail(job)}
+                            style={{background:"var(--ink)",border:`1px solid ${status.color}25`,borderRadius:10,padding:"12px 16px",marginBottom:6,cursor:"pointer",display:"flex",alignItems:"center",gap:12,transition:"all 0.12s"}}>
+                            <div style={{width:10,height:10,borderRadius:"50%",background:status.color,flexShrink:0}}/>
+                            <div style={{flex:1,minWidth:0}}>
+                              <div style={{fontSize:13,fontWeight:600,color:"var(--cream)",marginBottom:2}}>{job.address}</div>
+                              <div style={{fontSize:11,color:"var(--stone)"}}>{job.service} · {job.crew||"No crew"} · {job.date}</div>
+                            </div>
+                            {job.value>0&&<div style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"var(--orange2)",fontWeight:600,flexShrink:0}}>${job.value.toLocaleString()}</div>}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                  {jobBoardJobs.length===0&&(
+                    <div style={{textAlign:"center",padding:"40px 20px",color:"var(--stone)"}}>
+                      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style={{opacity:0.3,marginBottom:12}}><rect x="2" y="5" width="36" height="32" rx="3" stroke="currentColor" strokeWidth="1.5"/><line x1="2" y1="13" x2="38" y2="13" stroke="currentColor" strokeWidth="1.5"/><line x1="12" y1="2" x2="12" y2="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="28" y1="2" x2="28" y2="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                      <div style={{fontSize:14,fontWeight:600,color:"var(--concrete)",marginBottom:6}}>No jobs scheduled</div>
+                      <div style={{fontSize:12,color:"var(--gravel)",marginBottom:16}}>Convert a won Pipeline lead or add a job manually</div>
+                      <button onClick={()=>setNewJobModal(true)} style={{background:"var(--orange)",border:"none",borderRadius:8,padding:"10px 20px",color:"white",fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>+ Add First Job</button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Convert Won Pipeline leads CTA */}
+              {pipeline.filter(l=>l.stage==="won"&&!jobBoardJobs.find(j=>j.fromPipeline===l.id)).length>0&&(
+                <div style={{marginTop:20,background:"rgba(42,122,82,0.08)",border:"1px solid rgba(42,122,82,0.2)",borderRadius:10,padding:"14px 16px"}}>
+                  <div style={{fontSize:12,fontWeight:700,color:"var(--green2)",marginBottom:8}}>
+                    {pipeline.filter(l=>l.stage==="won"&&!jobBoardJobs.find(j=>j.fromPipeline===l.id)).length} Won Pipeline leads ready to schedule
+                  </div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                    {pipeline.filter(l=>l.stage==="won"&&!jobBoardJobs.find(j=>j.fromPipeline===l.id)).map(lead=>(
+                      <button key={lead.id} onClick={()=>{
+                        setNewJob({address:lead.address,city:lead.city||"Tulsa",service:"Concrete Work",value:lead.value||0,crew:"",date:new Date().toISOString().split("T")[0],notes:"Converted from Pipeline",status:"scheduled",fromPipeline:lead.id});
+                        setNewJobModal(true);
+                      }} style={{background:"rgba(42,122,82,0.12)",border:"1px solid rgba(42,122,82,0.25)",borderRadius:7,padding:"6px 10px",color:"var(--green2)",fontSize:11,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontWeight:600}}>
+                        + {lead.address}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+ { useState } from "react";
 
 // ─────────────────────────────────────────────
 // ANALYTICS + ERROR MONITORING
@@ -1220,6 +1380,18 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
   input,select,textarea{font-size:16px !important;}
   .field input,.field select,.field textarea{font-size:16px !important;}
 }
+@media(max-width:600px){
+  /* Job Board week grid — 3 cols on mobile */
+  .jobboard-week-grid{grid-template-columns:repeat(3,1fr) !important;gap:6px !important;}
+  /* Revenue summary — 2x2 on mobile */
+  .jobboard-revenue-grid{grid-template-columns:1fr 1fr !important;}
+  /* ROI grid — stack on mobile */
+  .cmd-roi-grid{grid-template-columns:1fr 1fr !important;}
+  /* Command center capacity — stack */
+  .cmd-capacity{flex-direction:column !important;align-items:flex-start !important;}
+  /* Field map tag sidebar — full width bottom */
+  .fieldmap-tag-panel{width:100% !important;right:0 !important;top:auto !important;bottom:0 !important;max-height:40% !important;border-radius:12px 12px 0 0 !important;}
+}
 
 /* ── LOGIN SCREEN ── */
 .login-screen{position:fixed;inset:0;inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:var(--black);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0;min-height:100dvh;overflow-y:auto;}
@@ -1509,6 +1681,29 @@ const DEMO_JOBS = [
   {id:"demo-j3",lobId:"lob_9e5f3a",name:"Owasso / Collinsville",homes:198,sent:"Apr 01",status:"sent",cost:"122.76",calls:4},
 ];
 
+const DEMO_JOB_BOARD = [
+  {id:"jb-1",address:"4821 Oak Ridge Dr",city:"Broken Arrow",service:"Full Replacement",value:1600,crew:"Crew A",date:"2024-04-08",status:"complete",notes:"Completed. Invoice sent.",fromPipeline:"demo-1"},
+  {id:"jb-2",address:"5512 S Harvard Ave",city:"Tulsa",service:"Full Replacement",value:3800,crew:"Crew B",date:"2024-04-09",status:"invoiced",notes:"Invoiced $3,800. Waiting on check.",fromPipeline:"demo-7"},
+  {id:"jb-3",address:"3341 S Peoria Ave",city:"Tulsa",service:"Crack Repair",value:750,crew:"Crew A",date:"2024-04-10",status:"complete",notes:"Done. Cash collected.",fromPipeline:"demo-4"},
+  {id:"jb-4",address:"7234 S Memorial Dr",city:"Tulsa",service:"Crack Repair",value:950,crew:"Crew B",date:"2024-04-11",status:"scheduled",notes:"HOA approval pending.",fromPipeline:"demo-2"},
+  {id:"jb-5",address:"1892 E 91st St",city:"Tulsa",service:"Root Repair + Replacement",value:2800,crew:"Crew A",date:"2024-04-12",status:"scheduled",notes:"Big job, extra equipment needed.",fromPipeline:"demo-3"},
+  {id:"jb-6",address:"902 N Elgin Ave",city:"Tulsa",service:"Sealing",value:420,crew:"Crew C",date:"2024-04-10",status:"in_progress",notes:"Started this morning.",fromPipeline:null},
+];
+
+const DEMO_FIELD_TAGS = [
+  {id:"ft-1",lat:36.1562,lng:-95.9928,address:"1204 S Peoria Ave, Tulsa, OK",notes:"Severe cracking visible from road",status:"pending",created:"Apr 9"},
+  {id:"ft-2",lat:36.1489,lng:-95.9811,address:"4401 E 51st St, Tulsa, OK",notes:"Sunken driveway, drainage issue",status:"pending",created:"Apr 9"},
+  {id:"ft-3",lat:36.1634,lng:-96.0012,address:"7722 S Yale Ave, Tulsa, OK",notes:"Edge crumbling, old concrete",status:"queued",created:"Apr 8"},
+];
+
+const JOB_STATUSES = [
+  {id:"scheduled", label:"Scheduled",  color:"#3a8fd4", bg:"rgba(58,143,212,0.12)"},
+  {id:"in_progress",label:"In Progress",color:"#d4a017", bg:"rgba(212,160,23,0.12)"},
+  {id:"complete",  label:"Complete",   color:"#2a7a52", bg:"rgba(42,122,82,0.12)"},
+  {id:"invoiced",  label:"Invoiced",   color:"#8b2fc9", bg:"rgba(139,47,201,0.12)"},
+  {id:"collected", label:"Collected",  color:"#e8560a", bg:"rgba(232,86,10,0.12)"},
+];
+
 const TRACK_STEPS = [
   {label:"Approved",  icon:"✓"},
   {label:"Printing",  icon:"▣"},
@@ -1786,6 +1981,34 @@ function NavIcon({id}) {
       <path d="M9 1.5L10.2 4.2C10.8 4.4 11.3 4.7 11.8 5.1L14.7 4.5L16.5 7.5L14.4 9.3C14.5 9.5 14.5 9.8 14.5 10C14.5 10.2 14.5 10.5 14.4 10.7L16.5 12.5L14.7 15.5L11.8 14.9C11.3 15.3 10.8 15.6 10.2 15.8L9 18.5L7.8 15.8C7.2 15.6 6.7 15.3 6.2 14.9L3.3 15.5L1.5 12.5L3.6 10.7C3.5 10.5 3.5 10.2 3.5 10C3.5 9.8 3.5 9.5 3.6 9.3L1.5 7.5L3.3 4.5L6.2 5.1C6.7 4.7 7.2 4.4 7.8 4.2L9 1.5Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
       <circle cx="9" cy="10" r="2.5" fill="currentColor"/>
     </svg>,
+    // Field Map — satellite with GPS pin
+    fieldmap: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="1.5" y="1.5" width="15" height="15" rx="2" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M1.5 6.5L6 5L10.5 7.5L16.5 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"/>
+      <path d="M1.5 11L6 9.5L10.5 12L16.5 9.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3"/>
+      <circle cx="11" cy="9" r="2.5" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.4"/>
+      <circle cx="11" cy="9" r="1" fill="currentColor"/>
+    </svg>,
+    // Job Board — calendar grid with status dots
+    jobboard: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="1.5" y="3.5" width="15" height="13" rx="2" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="1.5"/>
+      <line x1="1.5" y1="7" x2="16.5" y2="7" stroke="currentColor" strokeWidth="1.2" opacity="0.5"/>
+      <line x1="7" y1="3.5" x2="7" y2="16.5" stroke="currentColor" strokeWidth="1" opacity="0.3"/>
+      <line x1="12" y1="3.5" x2="12" y2="16.5" stroke="currentColor" strokeWidth="1" opacity="0.3"/>
+      <circle cx="4" cy="1.5" r="1.2" fill="currentColor" opacity="0.6"/>
+      <circle cx="14" cy="1.5" r="1.2" fill="currentColor" opacity="0.6"/>
+      <rect x="2.5" y="8.5" width="3" height="2.5" rx="0.5" fill="currentColor" opacity="0.7"/>
+      <rect x="8" y="8.5" width="3" height="2.5" rx="0.5" fill="currentColor" opacity="0.4"/>
+      <rect x="2.5" y="12.5" width="3" height="2.5" rx="0.5" fill="currentColor" opacity="0.5"/>
+    </svg>,
+    // Command Center — speedometer/dashboard
+    command: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M2.5 12.5C2.5 8.1 5.8 4.5 10 4.5C14.2 4.5 17.5 8.1 17.5 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+      <path d="M2.5 12.5C2.5 9.5 4.8 7 7.5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="10" cy="12.5" r="1.8" fill="currentColor"/>
+      <line x1="10" y1="12.5" x2="6.5" y2="7.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      <circle cx="10" cy="12.5" r="3.5" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.3"/>
+    </svg>,
   };
   return <span className="nav-icon">{icons[id]||<span style={{color:"currentColor"}}>●</span>}</span>;
 }
@@ -1917,6 +2140,8 @@ export default function App(){
     setSpotJobs(DEMO_SPOT_JOBS);
     setAiLeads(DEMO_AI_CALLS);
     setJobs(DEMO_JOBS);
+    setJobBoardJobs(DEMO_JOB_BOARD);
+    setFieldTags(DEMO_FIELD_TAGS);
     try{ localStorage.setItem("pm_session",JSON.stringify({token:"demo",refresh_token:"demo",expires_at:9999999999,user:{id:"demo-user",email:"demo@pavemail.io"}})); }catch{}
     await new Promise(r=>setTimeout(r,300));
     showToast("🎯 Demo loaded — explore PaveMail","success");
@@ -2081,6 +2306,24 @@ export default function App(){
     return 1.0;
   };
   const[showRadiusModal,setShowRadiusModal]=useState(false);
+
+  // ── JOB BOARD STATE ──
+  const[jobBoardJobs,setJobBoardJobs]=useState([]);
+  const[jobBoardView,setJobBoardView]=useState("week"); // week | list
+  const[newJobModal,setNewJobModal]=useState(false);
+  const[newJob,setNewJob]=useState({address:"",service:"Crack Repair",value:"",crew:"",date:"",notes:"",status:"scheduled"});
+  const[selectedJobDetail,setSelectedJobDetail]=useState(null);
+
+  // ── FIELD MAP STATE ──
+  const[fieldMapReady,setFieldMapReady]=useState(false);
+  const[fieldTags,setFieldTags]=useState([]); // addresses tagged on the map
+  const[fieldMapCenter,setFieldMapCenter]=useState({lat:36.154,lng:-95.993}); // Tulsa default
+  const[fieldMapGps,setFieldMapGps]=useState(null);
+  const[tagModal,setTagModal]=useState(null); // {lat,lng,address} for confirm dialog
+  const[fieldMapLoading,setFieldMapLoading]=useState(false);
+
+  // ── COMMAND CENTER STATE ──
+  const[commandView,setCommandView]=useState("today");
   const[showAIPhone,setShowAIPhone]=useState(false);
   const[showUserMenu,setShowUserMenu]=useState(false);
   const[aiLeads,setAiLeads]=useState([]);
@@ -2356,6 +2599,107 @@ export default function App(){
     };
     loadAll();
   },[isDemoMode]);
+
+  // ── LEAFLET FIELD MAP INIT ──
+  React.useEffect(()=>{
+    if(tab !== "fieldmap") return;
+    if(fieldMapReady) return;
+
+    // Load Leaflet CSS + JS from CDN
+    const loadLeaflet = async () => {
+      if(!document.getElementById("leaflet-css")){
+        const css = document.createElement("link");
+        css.id = "leaflet-css";
+        css.rel = "stylesheet";
+        css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        document.head.appendChild(css);
+      }
+      if(!window.L){
+        await new Promise(resolve=>{
+          const script = document.createElement("script");
+          script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+          script.onload = resolve;
+          document.head.appendChild(script);
+        });
+      }
+
+      const container = document.getElementById("pavemail-fieldmap");
+      if(!container || container._leaflet_id) return;
+
+      const L = window.L;
+      const map = L.map("pavemail-fieldmap", {
+        center: [fieldMapCenter.lat, fieldMapCenter.lng],
+        zoom: 16,
+        zoomControl: false,
+      });
+
+      // Satellite tiles via Esri (free, no API key)
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        attribution: "Tiles © Esri",
+        maxZoom: 20,
+      }).addTo(map);
+
+      // Zoom control top-left
+      L.control.zoom({position:"topright"}).addTo(map);
+
+      // GPS marker if available
+      if(fieldMapGps){
+        const gpsDot = L.divIcon({
+          className:"",
+          html:`<div style="width:14px;height:14px;border-radius:50%;background:#3a8fd4;border:3px solid white;box-shadow:0 0 0 3px rgba(58,143,212,0.4)"></div>`,
+          iconSize:[14,14],iconAnchor:[7,7]
+        });
+        L.marker([fieldMapGps.lat,fieldMapGps.lng],{icon:gpsDot}).addTo(map)
+          .bindPopup("<b>Your Location</b>");
+      }
+
+      // Pipeline pins
+      pipeline.forEach(lead=>{
+        if(!lead.lat&&!lead.lng) return;
+        const st = lead.stage==="won" ? "#2a7a52" : "#1a6fa8";
+        const icon = L.divIcon({
+          className:"",
+          html:`<div style="width:10px;height:10px;border-radius:50%;background:${st};border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.5)"></div>`,
+          iconSize:[10,10],iconAnchor:[5,5]
+        });
+        L.marker([lead.lat,lead.lng],{icon}).addTo(map)
+          .bindPopup(`<b>${lead.address}</b><br/>${lead.stage}`);
+      });
+
+      // Existing field tags
+      fieldTags.forEach(tag=>{
+        const icon = L.divIcon({
+          className:"",
+          html:`<div style="width:12px;height:12px;border-radius:50%;background:#e8560a;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.5)"></div>`,
+          iconSize:[12,12],iconAnchor:[6,6]
+        });
+        L.marker([tag.lat,tag.lng],{icon}).addTo(map)
+          .bindPopup(`<b>${tag.address}</b><br/>${tag.notes||""}`);
+      });
+
+      // Click handler — tap to tag
+      map.on("click", async(e)=>{
+        const {lat, lng} = e.latlng;
+        // Show loading modal
+        setTagModal({lat, lng, address:"Looking up address...", notes:""});
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+          const data = await res.json();
+          const addr = data.address;
+          const street = (addr.house_number ? addr.house_number + " " : "") + (addr.road || addr.pedestrian || "");
+          const city = addr.city || addr.town || addr.village || "Tulsa";
+          const full = `${street}, ${city}, OK`;
+          setTagModal(m=>({...m, address:full, city}));
+        } catch(e) {
+          setTagModal(m=>({...m, address:`${lat.toFixed(5)}, ${lng.toFixed(5)}`}));
+        }
+      });
+
+      setFieldMapReady(true);
+    };
+
+    loadLeaflet();
+  },[tab, fieldMapReady]);
 
   // Auto-recalculate price whenever inputs change
   React.useEffect(()=>{
@@ -3071,7 +3415,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         {/* NAV */}
         <nav className="nav">
           <div className="nav-label">Campaigns</div>
-          {[{id:"map",label:"Neighborhood Scan",badge:null},{id:"create",label:"Create Mailer",badge:null},{id:"tracker",label:"Job Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length||null},{id:"spotbid",label:"Spot Bid",badge:null},{id:"pipeline",label:"Pipeline",badge:null},{id:"capacity",label:"Capacity",badge:null},{id:"aiphone",label:"AI Phone",badge:aiLeads.filter(l=>l.status==="pending").length||null}].map(item=>(
+          {[{id:"map",label:"Neighborhood Scan",badge:null},{id:"create",label:"Create Mailer",badge:null},{id:"spotbid",label:"Spot Bid",badge:null},{id:"pipeline",label:"Pipeline",badge:null},{id:"fieldmap",label:"Field Map",badge:null},{id:"jobboard",label:"Job Board",badge:null},{id:"command",label:"Command",badge:null},{id:"tracker",label:"Mail Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length||null},{id:"aiphone",label:"AI Phone",badge:aiLeads.filter(l=>l.status==="pending").length||null}].map(item=>(
             <button key={item.id} className={`nav-item${tab===item.id?" active":""}`} onClick={()=>switchTab(item.id)}>
               <NavIcon id={item.id}/>{item.label}
               {item.badge?<span className="nav-badge">{item.badge}</span>:null}
@@ -3782,7 +4126,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                             </div>
                             <div style={{textAlign:"right"}}>
                               <div style={{fontSize:9,color:"rgba(184,180,172,0.4)",marginBottom:4}}>Scan to call</div>
-                              <QRCode value={`tel:${ACTIVE_ACTIVE_COMPANY.phoneRaw}`} size={50} fgColor="#f5f0e6" bgColor="#1c1a17"/>
+                              <QRCode value={`tel:${ACTIVE_COMPANY.phoneRaw}`} size={50} fgColor="#f5f0e6" bgColor="#1c1a17"/>
                             </div>
                           </div>
                           {/* CTA */}
@@ -3808,321 +4152,278 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           )}
 
 
-          {/* CAPACITY */}
-          {tab==="capacity"&&(
-            <div style={{padding:"24px 28px"}}>
-              <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",flexWrap:"wrap",gap:8,marginBottom:4}}>
-                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)"}}>CAPACITY ENGINE</div>
-                {capacity.manualOverride&&(
-                  <button onClick={()=>setCapacity(c=>({...c,manualOverride:null}))}
-                    style={{fontSize:10,color:"var(--stone)",background:"rgba(184,180,172,0.08)",border:"1px solid rgba(184,180,172,0.15)",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>
-                    ↺ Back to Auto
+          {/* FIELD MAP */}
+          {tab==="fieldmap"&&(
+            <div style={{position:"relative",height:"100%",display:"flex",flexDirection:"column"}}>
+              {/* Header bar */}
+              <div style={{padding:"14px 20px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,borderBottom:"1px solid rgba(184,180,172,0.08)"}}>
+                <div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:"var(--cream)"}}>FIELD MAP</div>
+                  <div style={{fontSize:11,color:"var(--stone)"}}>Tap the map to tag properties · {fieldTags.length} tagged · {pipeline.length} pipeline leads</div>
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>{
+                    setFieldMapLoading(true);
+                    navigator.geolocation.getCurrentPosition(pos=>{
+                      setFieldMapGps({lat:pos.coords.latitude,lng:pos.coords.longitude});
+                      setFieldMapCenter({lat:pos.coords.latitude,lng:pos.coords.longitude});
+                      setFieldMapLoading(false);
+                      showToast("📍 Centered on your location","info");
+                    },()=>{setFieldMapLoading(false);showToast("GPS unavailable","info");},{enableHighAccuracy:true,timeout:8000});
+                  }} style={{background:"rgba(232,86,10,0.12)",border:"1px solid rgba(232,86,10,0.3)",borderRadius:8,padding:"7px 12px",color:"var(--orange2)",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Syne',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+                    {fieldMapLoading?<span className="spin"/>:<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.3"/><circle cx="6" cy="6" r="1.5" fill="currentColor"/><line x1="6" y1="1" x2="6" y2="2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><line x1="6" y1="9.5" x2="6" y2="11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><line x1="1" y1="6" x2="2.5" y2="6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><line x1="9.5" y1="6" x2="11" y2="6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>}
+                    My Location
                   </button>
-                )}
-              </div>
-              <div style={{fontSize:12,color:"var(--stone)",marginBottom:20}}>
-                {ACTIVE_COMPANY.crewSize||12}-man crew · {ACTIVE_COMPANY.maxJobsWeek||6} jobs/week max · ${(ACTIVE_COMPANY.weeklyTarget||40000).toLocaleString()} weekly target
-                {capacity.autoMode&&!capacity.manualOverride&&<span style={{marginLeft:8,color:"var(--green2)",fontSize:10}}>● Auto mode active</span>}
-                {capacity.manualOverride&&<span style={{marginLeft:8,color:"var(--gold2)",fontSize:10}}>⚑ Manual override</span>}
+                </div>
               </div>
 
-              {/* Current mode banner */}
-              <div style={{background:CAPACITY_MODES[capacity.mode].bg,border:`1px solid ${CAPACITY_MODES[capacity.mode].color}40`,borderRadius:12,padding:"20px 24px",marginBottom:20,display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
-                <div style={{position:"relative",width:80,height:80,margin:"0 auto 8px"}}>
-                  <svg width="80" height="80" viewBox="0 0 80 80" style={{transform:"rotate(-90deg)"}}>
-                    <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(184,180,172,0.1)" strokeWidth="8"/>
-                    <circle cx="40" cy="40" r="32" fill="none"
-                      stroke={CAPACITY_MODES[capacity.mode].color}
-                      strokeWidth="8"
-                      strokeDasharray={`${2*Math.PI*32}`}
-                      strokeDashoffset={`${2*Math.PI*32*(1-Math.min(1,(capacity.utilizationPct||0)/100))}`}
-                      strokeLinecap="round"
-                      style={{transition:"stroke-dashoffset 0.6s ease,stroke 0.3s ease"}}
-                    />
-                  </svg>
-                  <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:0}}>
-                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:CAPACITY_MODES[capacity.mode].color,lineHeight:1}}>{capacity.utilizationPct||0}%</div>
-                    <div style={{fontSize:8,color:"var(--stone)",letterSpacing:1,textTransform:"uppercase"}}>used</div>
+              {/* Map container — Leaflet loads here */}
+              <div id="pavemail-fieldmap" style={{flex:1,minHeight:0,height:"100%",background:"#1a1a16",position:"relative",overflow:"hidden"}}>
+                {!fieldMapReady&&(
+                  <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,color:"var(--stone)"}}>
+                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="2" y="2" width="44" height="44" rx="6" fill="currentColor" fillOpacity="0.05" stroke="currentColor" strokeWidth="1.5" opacity="0.3"/><path d="M8 18L18 14L28 20L40 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.4"/><path d="M8 28L18 24L28 30L40 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.25"/><circle cx="30" cy="23" r="6" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="1.5" opacity="0.5"/><circle cx="30" cy="23" r="2.5" fill="currentColor" opacity="0.5"/></svg>
+                    <div style={{fontSize:13,fontWeight:600,color:"var(--concrete)"}}>Initializing Field Map...</div>
+                    <div style={{fontSize:11,color:"var(--gravel)"}}>Tap anywhere on the map to tag a property</div>
                   </div>
-                </div>
-                <div style={{flex:1}}>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2,color:CAPACITY_MODES[capacity.mode].color}}>{CAPACITY_MODES[capacity.mode].label.toUpperCase()} MODE</div>
-                  <div style={{fontSize:12,color:"var(--concrete)",marginTop:4}}>{CAPACITY_MODES[capacity.mode].desc}</div>
-                  <div style={{fontSize:11,color:"var(--stone)",marginTop:6}}>
-                    Auto radius: <strong style={{color:"var(--cream)"}}>{getRadiusForMode()}mi</strong> ·
-                    Bid multiplier: <strong style={{color:"var(--cream)"}}>{getBidMultiplierForMode()}x</strong> ·
-                    AI agent: <strong style={{color:"var(--cream)"}}>{capacity.mode==="paused"?"Booking 3 weeks out":capacity.mode==="selective"?"High value only":"Normal"}</strong>
-                  </div>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                  {Object.entries(CAPACITY_MODES).map(([mode,cfg])=>(
-                    <button key={mode} className={`mode-pill${capacity.mode===mode?" active":""}`}
-                      style={{background:capacity.mode===mode?cfg.bg:"transparent",color:cfg.color}}
-                      onClick={()=>setCapacity(c=>({...c,mode,manualOverride:mode}))}>
-                      {cfg.svgIcon} {cfg.label}
+                )}
+              </div>
+
+              {/* Legend */}
+              <div style={{padding:"8px 16px",display:"flex",alignItems:"center",gap:14,flexShrink:0,borderTop:"1px solid rgba(184,180,172,0.06)",flexWrap:"wrap"}}>
+                <div style={{fontSize:10,color:"var(--stone)",display:"flex",alignItems:"center",gap:5}}><span style={{width:10,height:10,borderRadius:"50%",background:"#e8560a",display:"inline-block",flexShrink:0}}/> Tagged</div>
+                <div style={{fontSize:10,color:"var(--stone)",display:"flex",alignItems:"center",gap:5}}><span style={{width:10,height:10,borderRadius:"50%",background:"#1a6fa8",display:"inline-block",flexShrink:0}}/> Pipeline</div>
+                <div style={{fontSize:10,color:"var(--stone)",display:"flex",alignItems:"center",gap:5}}><span style={{width:10,height:10,borderRadius:"50%",background:"#2a7a52",display:"inline-block",flexShrink:0}}/> Won Job</div>
+                <div style={{fontSize:10,color:"var(--stone)",display:"flex",alignItems:"center",gap:5}}><span style={{width:10,height:10,borderRadius:2,background:"#3a8fd4",display:"inline-block",flexShrink:0,opacity:0.5}}/> EDDM Zone</div>
+                <div style={{marginLeft:"auto",fontSize:10,color:"var(--gravel)"}}>Tap map → tag property · Tap pin → view details</div>
+              </div>
+
+              {/* Tagged properties sidebar panel */}
+              {fieldTags.length>0&&(
+                <div className="fieldmap-tag-panel" style={{position:"absolute",top:60,right:12,width:220,maxHeight:"50%",background:"var(--ink)",border:"1px solid rgba(184,180,172,0.12)",borderRadius:12,overflow:"hidden",zIndex:1000,boxShadow:"0 8px 24px rgba(0,0,0,0.4)"}}>
+                  <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(184,180,172,0.08)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    <div style={{fontSize:11,fontWeight:700,color:"var(--cream)",letterSpacing:1}}>TAGGED ({fieldTags.length})</div>
+                    <button onClick={()=>{
+                      fieldTags.forEach(t=>{
+                        const newLead={id:`lead-${Date.now()}-${Math.random()}`,address:t.address,city:"Tulsa",neighborhood:"",stage:"spotted",bidLo:"",bidHi:"",value:0,notes:t.notes,spotted:new Date().toLocaleDateString(),flags:[]};
+                        setPipeline(p=>[newLead,...p]);
+                      });
+                      setFieldTags([]);
+                      showToast(`✅ ${fieldTags.length} leads added to Pipeline`,"success");
+                    }} style={{fontSize:9,fontWeight:700,color:"var(--orange2)",background:"rgba(232,86,10,0.1)",border:"1px solid rgba(232,86,10,0.2)",borderRadius:5,padding:"3px 7px",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>
+                      Add All to Pipeline
                     </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Stats grid — real data */}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
-                {[
-                  {label:"Won Jobs",         value:capacity.activeJobs||0,      suffix:`/${ACTIVE_COMPANY.maxJobsWeek||6}`, color:"var(--orange2)", bar:true, barPct:Math.min(100,((capacity.activeJobs||0)/(ACTIVE_COMPANY.maxJobsWeek||6))*100)},
-                  {label:"Crew Days Booked", value:capacity.committedDays||0,    suffix:`/${capacity.availDays||60} days`,   color:CAPACITY_MODES[capacity.mode].color, bar:true, barPct:capacity.utilizationPct||0},
-                  {label:"Revenue Won",      value:`$${(capacity.wonRevenue||0).toLocaleString()}`, suffix:"", color:"var(--green2)", bar:false},
-                  {label:"To Target",        value:`$${(capacity.revenueGap||0).toLocaleString()}`, suffix:"", color:capacity.onPace?"var(--green2)":"var(--gold2)", bar:false},
-                ].map((s,i)=>(
-                  <div key={i} style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:9,padding:"14px 16px"}}>
-                    <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",marginBottom:6}}>{s.label}</div>
-                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:s.bar?28:24,color:s.color,letterSpacing:1,lineHeight:1}}>{s.value}<span style={{fontSize:11,opacity:0.5,fontFamily:"'Syne',sans-serif"}}>{s.suffix}</span></div>
-                    {s.bar&&<div style={{marginTop:6}}><div className="capacity-bar-wrap"><div className="capacity-bar" style={{width:`${s.barPct}%`,background:s.color,transition:"width 0.5s ease"}}/></div></div>}
                   </div>
-                ))}
-              </div>
-              {/* Pipeline intelligence row */}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:20}}>
-                <div style={{background:"rgba(42,122,82,0.08)",border:"1px solid rgba(42,122,82,0.15)",borderRadius:9,padding:"12px 16px"}}>
-                  <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--green2)",marginBottom:4}}>Pipeline Value</div>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:"var(--green2)"}}>${(capacity.pipeValue||0).toLocaleString()}</div>
-                  <div style={{fontSize:10,color:"var(--stone)",marginTop:2}}>{pipeline.filter(l=>l.stage!=="won").length} leads in play</div>
-                </div>
-                <div style={{background:"rgba(26,111,168,0.08)",border:"1px solid rgba(26,111,168,0.15)",borderRadius:9,padding:"12px 16px"}}>
-                  <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--blue2)",marginBottom:4}}>Win Rate</div>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:"var(--blue2)"}}>
-                    {pipeline.length > 0 ? Math.round((pipeline.filter(l=>l.stage==="won").length / pipeline.length) * 100) : 0}%
-                  </div>
-                  <div style={{fontSize:10,color:"var(--stone)",marginTop:2}}>{pipeline.filter(l=>l.stage==="won").length} of {pipeline.length} leads won</div>
-                </div>
-                <div style={{background:capacity.onPace?"rgba(42,122,82,0.08)":"rgba(212,160,23,0.08)",border:`1px solid ${capacity.onPace?"rgba(42,122,82,0.15)":"rgba(212,160,23,0.15)"}`,borderRadius:9,padding:"12px 16px"}}>
-                  <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:capacity.onPace?"var(--green2)":"var(--gold2)",marginBottom:4}}>Weekly Pace</div>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:capacity.onPace?"var(--green2)":"var(--gold2)"}}>
-                    {capacity.onPace?"ON TARGET":"BEHIND"}
-                  </div>
-                  <div style={{fontSize:10,color:"var(--stone)",marginTop:2}}>${(ACTIVE_COMPANY.weeklyTarget||40000).toLocaleString()} target</div>
-                </div>
-              </div>
-
-              {/* Smart suggestions */}
-              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>SMART SUGGESTIONS</div>
-              {capacity.mode==="hungry"&&(
-                <div className="smart-suggest">
-                  <div className="smart-suggest-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1L11 7.5H17.5L12.2 11L14.2 17.5L9 14L3.8 17.5L5.8 11L0.5 7.5H7L9 1Z" fill="#e05252"/></svg></div>
-                  <div className="smart-suggest-text">
-                    <strong>You have open capacity.</strong> Consider sending a radius mailer from your most recent Won job, or running a new neighborhood campaign in a high-income ZIP. Radius auto-set to <strong>1.0 miles</strong> in Hungry mode.
-                    <div style={{marginTop:8}}>
-                      <button className="btn btn-primary btn-sm" onClick={()=>{const won=pipeline.find(l=>l.stage==="won");if(won){setRadiusLead(won);setRadiusForm(f=>({...f,radius:1.0}));setRadiusStep(1);setRadiusMailer(null);setShowRadiusModal(true);}else showToast("Mark a job as Won first","info");}}>
-                        📬 Send Radius Mailer
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {capacity.mode==="paused"&&(
-                <div className="smart-suggest">
-                  <div className="smart-suggest-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="12" height="12" rx="2" fill="#8a8682" fillOpacity="0.3" stroke="#8a8682" strokeWidth="1.5"/><rect x="6" y="5.5" width="2.2" height="7" rx="1" fill="#8a8682"/><rect x="9.8" y="5.5" width="2.2" height="7" rx="1" fill="#8a8682"/></svg></div>
-                  <div className="smart-suggest-text">
-                    <strong>You are fully booked.</strong> Outbound campaigns are paused. The AI phone agent is telling callers you are booking 3 weeks out. When a job completes and is removed from Won, capacity will auto-resume.
-                  </div>
-                </div>
-              )}
-              {capacity.mode==="selective"&&(
-                <div className="smart-suggest">
-                  <div className="smart-suggest-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" fill="#3a8fd4" fillOpacity="0.15" stroke="#3a8fd4" strokeWidth="1.5"/><circle cx="9" cy="9" r="4" fill="#3a8fd4" fillOpacity="0.3" stroke="#3a8fd4" strokeWidth="1"/><circle cx="9" cy="9" r="1.8" fill="#3a8fd4"/></svg></div>
-                  <div className="smart-suggest-text">
-                    <strong>Nearly full — focus on high-value leads only.</strong> Pipeline leads with a score below 50 are deprioritized. Bids are automatically increased by 15% to maximize margin on remaining capacity.
-                    {pipeline.filter(l=>scoreLead(l)<50&&l.stage!=="won").length>0&&(
-                      <div style={{marginTop:6}}>⚠️ {pipeline.filter(l=>scoreLead(l)<50&&l.stage!=="won").length} low-score leads in pipeline — consider deprioritizing</div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Lead scores */}
-              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginTop:20,marginBottom:12}}>LEAD PRIORITY SCORES</div>
-              <div style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,overflow:"hidden"}}>
-                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",padding:"10px 16px",background:"rgba(0,0,0,0.2)",fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",borderBottom:"1px solid rgba(184,180,172,0.07)"}}>
-                  <div>Address</div><div>Stage</div><div>Value</div><div>Score</div>
-                </div>
-                {[...pipeline].filter(l=>l.stage!=="won").sort((a,b)=>scoreLead(b)-scoreLead(a)).slice(0,10).map(lead=>{
-                  const score=scoreLead(lead);
-                  return(
-                    <div key={lead.id} style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",padding:"11px 16px",borderBottom:"1px solid rgba(184,180,172,0.05)",alignItems:"center",cursor:"pointer"}} onClick={()=>setTab("pipeline")}>
-                      <div style={{fontSize:12,fontWeight:600,color:"var(--cream)"}}>{lead.address}<div style={{fontSize:10,color:"var(--stone)"}}>{lead.city}</div></div>
-                      <div style={{fontSize:11,color:"var(--concrete)"}}>{STAGE_ICONS[lead.stage]} {STAGES.find(s=>s.id===lead.stage)?.label}</div>
-                      <div style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"var(--orange2)"}}>{lead.value?`$${lead.value.toLocaleString()}`:"—"}</div>
-                      <div>
-                        <span className={`score-pill ${score>=70?"score-high":score>=40?"score-mid":"score-low"}`}>{score}</span>
+                  <div style={{overflowY:"auto",maxHeight:200}}>
+                    {fieldTags.map((t,i)=>(
+                      <div key={t.id||i} style={{padding:"8px 14px",borderBottom:"1px solid rgba(184,180,172,0.05)",display:"flex",alignItems:"flex-start",gap:8}}>
+                        <span style={{width:8,height:8,borderRadius:"50%",background:"#e8560a",flexShrink:0,marginTop:4}}/>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:11,color:"var(--cream)",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.address}</div>
+                          {t.notes&&<div style={{fontSize:9,color:"var(--stone)",marginTop:2}}>{t.notes}</div>}
+                        </div>
+                        <button onClick={()=>{
+                          setSpotForm(f=>({...f,address:t.address,city:"Tulsa"}));
+                          switchTab("spotbid");
+                        }} style={{fontSize:8,color:"var(--orange2)",background:"none",border:"none",cursor:"pointer",fontFamily:"'Syne',sans-serif",flexShrink:0,fontWeight:700}}>BID</button>
                       </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tag confirm modal */}
+              {tagModal&&(
+                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:2000,display:"flex",alignItems:"flex-end",justifyContent:"center",paddingBottom:"env(safe-area-inset-bottom)"}}>
+                  <div style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.15)",borderRadius:"16px 16px 0 0",padding:"20px 20px 24px",width:"100%",maxWidth:480}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:1,color:"var(--cream)",marginBottom:4}}>TAG THIS PROPERTY</div>
+                    <div style={{fontSize:13,color:"var(--orange2)",fontFamily:"'DM Mono',monospace",marginBottom:14,fontWeight:600}}>{tagModal.address||"Locating address..."}</div>
+                    <textarea value={tagModal.notes||""} onChange={e=>setTagModal(m=>({...m,notes:e.target.value}))}
+                      placeholder="Quick note (optional) — e.g. severe cracking, tree roots..."
+                      style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(184,180,172,0.12)",borderRadius:8,padding:"10px 12px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:16,resize:"none",height:70,outline:"none",boxSizing:"border-box",marginBottom:14}}
+                    ></textarea>
+                    <div style={{display:"flex",gap:8}}>
+                      <button onClick={()=>{
+                        const tag={id:`ft-${Date.now()}`,lat:tagModal.lat,lng:tagModal.lng,address:tagModal.address,notes:tagModal.notes||"",status:"pending",created:new Date().toLocaleDateString()};
+                        setFieldTags(t=>[...t,tag]);
+                        setTagModal(null);
+                        showToast("📍 Property tagged","success");
+                      }} style={{flex:1,background:"var(--orange)",border:"none",borderRadius:9,padding:"14px 0",minHeight:48,color:"white",fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                        📍 Tag Property
+                      </button>
+                      <button onClick={()=>{
+                        const tag={id:`ft-${Date.now()}`,lat:tagModal.lat,lng:tagModal.lng,address:tagModal.address,notes:tagModal.notes||"",status:"pending",created:new Date().toLocaleDateString()};
+                        setFieldTags(t=>[...t,tag]);
+                        setSpotForm(f=>({...f,address:tagModal.address,city:"Tulsa"}));
+                        setTagModal(null);
+                        switchTab("spotbid");
+                      }} style={{flex:1,background:"rgba(232,86,10,0.15)",border:"1px solid rgba(232,86,10,0.3)",borderRadius:9,padding:"12px 0",color:"var(--orange2)",fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                        ◎ Spot Bid Now
+                      </button>
+                      <button onClick={()=>setTagModal(null)} style={{background:"rgba(184,180,172,0.08)",border:"1px solid rgba(184,180,172,0.12)",borderRadius:9,padding:"12px 14px",color:"var(--stone)",fontFamily:"'Syne',sans-serif",fontSize:13,cursor:"pointer"}}>✕</button>
                     </div>
-                  );
-                })}
-                {pipeline.filter(l=>l.stage!=="won").length===0&&(
-                  <div style={{padding:"20px",textAlign:"center",fontSize:12,color:"var(--gravel)"}}>No active pipeline leads</div>
-                )}
-              </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
-
-          {/* ADMIN */}
-          {tab==="admin"&&isAdmin&&(
-            <div className="admin-layout">
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:10}}>
-                <div>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)",lineHeight:1}}>ADMIN DASHBOARD</div>
-                  <div style={{fontSize:12,color:"var(--stone)",marginTop:3}}>${ACTIVE_COMPANY.email} · Full access</div>
-                </div>
-                <button className="btn btn-primary btn-sm" onClick={loadAdminData} disabled={adminLoading}>
-                  {adminLoading?<span className="spin"/>:"↺ Refresh Data"}
-                </button>
+          {/* COMMAND CENTER */}
+          {tab==="command"&&(
+            <div style={{height:"100%",overflowY:"auto",padding:"20px 24px"}}>
+              <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:4}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)"}}>COMMAND CENTER</div>
+                <div style={{fontSize:11,color:"var(--stone)"}}>{new Date().toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"})}</div>
               </div>
+              <div style={{fontSize:11,color:"var(--stone)",marginBottom:20}}>Daily dashboard · follow-ups · mail ROI</div>
 
-              {/* Nav */}
-              <div className="admin-nav">
-                {["overview","contractors","pipeline","bids"].map(v=>(
-                  <button key={v} className={`admin-nav-btn${adminView===v?" active":""}`} onClick={()=>{ setAdminView(v); if(!adminData.loaded) loadAdminData(); }}>
-                    {v==="overview"?"📊 Overview":v==="contractors"?"👷 Contractors":v==="pipeline"?"📍 Pipeline":"🎯 Spot Bids"}
-                  </button>
-                ))}
-              </div>
-
-              {!adminData.loaded&&(
-                <div style={{textAlign:"center",padding:"40px 0",color:"var(--gravel)"}}>
-                  <div style={{fontSize:32,marginBottom:12}}>⚙️</div>
-                  <div style={{fontSize:13,marginBottom:16}}>Click Refresh Data to load all contractor data</div>
-                  <button className="btn btn-primary" onClick={loadAdminData} disabled={adminLoading}>
-                    {adminLoading?<><span className="spin"/> Loading...</>:"Load All Data"}
-                  </button>
-                </div>
-              )}
-
-              {/* OVERVIEW */}
-              {adminView==="overview"&&adminData.loaded&&(
-                <>
-                  <div className="admin-stat-grid">
-                    {[
-                      {label:"Contractors",val:adminData.contractors.length,color:"var(--cream)"},
-                      {label:"Total Leads",val:adminData.pipeline.length,color:"var(--blue2)"},
-                      {label:"Spot Bids Sent",val:adminData.bids.length,color:"var(--orange2)"},
-                      {label:"Campaigns",val:adminData.campaigns.length,color:"var(--green2)"},
-                    ].map((s,i)=>(
-                      <div key={i} className="admin-stat">
-                        <div className="admin-stat-val" style={{color:s.color}}>{s.val}</div>
-                        <div className="admin-stat-label">{s.label}</div>
+              {/* TODAY'S JOBS */}
+              {(()=>{
+                const today = new Date().toISOString().split("T")[0];
+                const todayJobs = jobBoardJobs.filter(j=>j.date===today);
+                return(
+                  <div style={{marginBottom:20}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1.5,color:"var(--concrete)",marginBottom:10}}>TODAY'S SCHEDULE</div>
+                    {todayJobs.length===0?(
+                      <div style={{background:"rgba(184,180,172,0.04)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,padding:"16px",fontSize:12,color:"var(--gravel)",textAlign:"center"}}>
+                        No jobs scheduled today — <button onClick={()=>switchTab("jobboard")} style={{background:"none",border:"none",color:"var(--orange2)",cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:600}}>open Job Board →</button>
                       </div>
-                    ))}
+                    ):(
+                      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                        {todayJobs.map(job=>{
+                          const st=JOB_STATUSES.find(s=>s.id===job.status)||JOB_STATUSES[0];
+                          return(
+                            <div key={job.id} style={{background:st.bg,border:`1px solid ${st.color}30`,borderRadius:10,padding:"12px 16px",display:"flex",alignItems:"center",gap:12}}>
+                              <div style={{width:10,height:10,borderRadius:"50%",background:st.color,flexShrink:0}}/>
+                              <div style={{flex:1}}>
+                                <div style={{fontSize:13,fontWeight:600,color:"var(--cream)"}}>{job.address}</div>
+                                <div style={{fontSize:11,color:"var(--stone)"}}>{job.service} · {job.crew}</div>
+                              </div>
+                              <div style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:st.color,fontWeight:600}}>${(job.value||0).toLocaleString()}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
+                );
+              })()}
 
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>CONTRACTOR ACTIVITY</div>
-                  {adminData.contractors.map((c,i)=>{
-                    const cLeads = adminData.pipeline.filter(l=>l.user_id===c.id).length;
-                    const cBids = adminData.bids.filter(b=>b.user_id===c.id).length;
-                    const cWon = adminData.pipeline.filter(l=>l.user_id===c.id&&l.stage==="won").length;
-                    const colors=["#e8560a","#2a7a52","#1a6fa8","#8b5e3c","#6a3a8a"];
-                    return(
-                      <div key={c.id} className="contractor-card">
-                        <div className="contractor-avatar" style={{background:colors[i%colors.length]}}>
-                          {(c.owner_name||c.company_name||"?")[0].toUpperCase()}
+              {/* FOLLOW-UPS DUE */}
+              {(()=>{
+                const followUps = pipeline.filter(l=>{
+                  if(l.stage==="won"||l.stage==="spotted") return false;
+                  if(!l.mailerSent) return false;
+                  const sent = new Date(l.mailerSent);
+                  const days = Math.floor((Date.now()-sent)/86400000);
+                  return days >= 5 && !l.calledBack;
+                }).sort((a,b)=>(b.value||0)-(a.value||0));
+                if(followUps.length===0) return null;
+                return(
+                  <div style={{marginBottom:20}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1.5,color:"#e05252",marginBottom:10}}>
+                      FOLLOW-UPS DUE ({followUps.length})
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {followUps.slice(0,5).map(lead=>{
+                        const days = Math.floor((Date.now()-new Date(lead.mailerSent))/86400000);
+                        return(
+                          <div key={lead.id} style={{background:"rgba(224,82,82,0.06)",border:"1px solid rgba(224,82,82,0.2)",borderRadius:10,padding:"12px 16px",display:"flex",alignItems:"center",gap:12}}>
+                            <div style={{flex:1}}>
+                              <div style={{fontSize:12,fontWeight:600,color:"var(--cream)"}}>{lead.address}</div>
+                              <div style={{fontSize:10,color:"var(--stone)"}}>Mailer sent {days} days ago · No callback yet</div>
+                            </div>
+                            {lead.value>0&&<div style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:"var(--orange2)",fontWeight:600,flexShrink:0}}>${(lead.value).toLocaleString()}</div>}
+                            <button onClick={()=>{
+                              setPipeline(p=>p.map(l=>l.id===lead.id?{...l,calledBack:new Date().toLocaleDateString()}:l));
+                              showToast("✅ Marked as called","success");
+                            }} style={{background:"rgba(42,122,82,0.15)",border:"1px solid rgba(42,122,82,0.3)",borderRadius:7,padding:"5px 10px",color:"var(--green2)",fontSize:10,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontWeight:700,flexShrink:0}}>
+                              ✓ Called
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* MAIL ROI — the investor number */}
+              {(()=>{
+                const campaignSpend = jobs.reduce((s,j)=>s+parseFloat(j.cost||0),0);
+                const jobRevenue = jobBoardJobs.reduce((s,j)=>s+(j.value||0),0);
+                const spotRevenue = spotJobs.filter(j=>j.status==="delivered"||j.status==="sent").length * 1200; // avg est
+                const totalRevenue = jobRevenue;
+                const weeklyTarget = ACTIVE_COMPANY.weeklyTarget||40000;
+                const onPace = totalRevenue >= weeklyTarget;
+                const roi = campaignSpend > 0 ? (totalRevenue/campaignSpend).toFixed(1) : null;
+                const fromMailers = jobBoardJobs.filter(j=>j.fromPipeline).reduce((s,j)=>s+(j.value||0),0);
+                const pct = totalRevenue > 0 ? Math.round((fromMailers/totalRevenue)*100) : 0;
+                return(
+                  <div style={{marginBottom:20}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1.5,color:"var(--concrete)"}}>MAIL ROI</div>
+                      <div style={{fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:10,background:onPace?"rgba(42,122,82,0.15)":"rgba(212,160,23,0.15)",color:onPace?"var(--green2)":"var(--gold2)",border:`1px solid ${onPace?"rgba(42,122,82,0.3)":"rgba(212,160,23,0.3)"}`}}>
+                        {onPace?"✓ ON TARGET":"⚑ BEHIND"} · ${weeklyTarget.toLocaleString()} target
+                      </div>
+                    </div>
+                    <div style={{background:"rgba(42,122,82,0.08)",border:"1px solid rgba(42,122,82,0.2)",borderRadius:12,padding:"20px"}}>
+                      <div className="cmd-roi-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16,marginBottom:16}}>
+                        <div>
+                          <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",marginBottom:4}}>Spent on Mail</div>
+                          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:"var(--cream)"}}>${campaignSpend.toFixed(0)}</div>
                         </div>
                         <div>
-                          <div className="contractor-name">{c.company_name||"Unnamed"}</div>
-                          <div className="contractor-meta">{c.owner_name} · {c.city}, {c.state} · {c.email}</div>
-                          <div className="contractor-meta" style={{marginTop:4}}>
-                            <span style={{color:"var(--concrete)"}}>Plan: </span>
-                            <span style={{fontWeight:700,color:"var(--orange2)"}}>{(c.plan||"starter").toUpperCase()}</span>
-                            <span style={{marginLeft:8}}>Joined: {new Date(c.created_at).toLocaleDateString()}</span>
-                          </div>
+                          <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",marginBottom:4}}>Revenue Won</div>
+                          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:"var(--green2)"}}>${totalRevenue.toLocaleString()}</div>
                         </div>
-                        <div className="contractor-stats">
-                          <div><div className="contractor-stat-val">{cLeads}</div><div className="contractor-stat-lbl">Leads</div></div>
-                          <div><div className="contractor-stat-val">{cWon}</div><div className="contractor-stat-lbl">Won</div></div>
-                          <div><div className="contractor-stat-val">{cBids}</div><div className="contractor-stat-lbl">Bids Sent</div></div>
+                        <div>
+                          <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",marginBottom:4}}>Return</div>
+                          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:roi&&parseFloat(roi)>=5?"var(--orange2)":"var(--gold2)"}}>{roi?`${roi}x`:"—"}</div>
                         </div>
                       </div>
-                    );
-                  })}
-                  {adminData.contractors.length===0&&(
-                    <div style={{textAlign:"center",padding:"32px 20px"}}>
-                      <div style={{fontSize:32,marginBottom:12,opacity:0.3}}>◈</div>
-                      <div style={{fontSize:13,fontWeight:600,color:"var(--concrete)",marginBottom:6}}>No contractors yet</div>
-                      <div style={{fontSize:11,color:"var(--stone)",marginBottom:16}}>Share invite code <strong style={{color:"var(--orange2)",fontFamily:"'DM Mono',monospace"}}>PAVE2026</strong> to onboard your first contractor</div>
-                      <div style={{background:"rgba(232,86,10,0.08)",border:"1px solid rgba(232,86,10,0.2)",borderRadius:8,padding:"10px 16px",fontSize:12,color:"var(--orange2)",fontFamily:"'DM Mono',monospace",letterSpacing:2}}>PAVE2026</div>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* CONTRACTORS */}
-              {adminView==="contractors"&&adminData.loaded&&(
-                <>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>ALL CONTRACTORS ({adminData.contractors.length})</div>
-                  <div className="admin-table">
-                    <div className="admin-thead" style={{gridTemplateColumns:"2fr 1.5fr 1fr 1fr 1fr"}}>
-                      <div>Company</div><div>Email</div><div>City</div><div>Plan</div><div>Joined</div>
-                    </div>
-                    {adminData.contractors.map(c=>(
-                      <div key={c.id} className="admin-row" style={{gridTemplateColumns:"2fr 1.5fr 1fr 1fr 1fr"}}>
-                        <div><div style={{fontWeight:600,color:"var(--cream)"}}>{c.company_name}</div><div style={{fontSize:10,color:"var(--stone)"}}>{c.owner_name}</div></div>
-                        <div style={{fontSize:11,fontFamily:"'DM Mono',monospace",color:"var(--stone)"}}>{c.email}</div>
-                        <div>{c.city}, {c.state}</div>
-                        <div><span style={{background:"rgba(232,86,10,0.15)",color:"var(--orange2)",padding:"2px 8px",borderRadius:4,fontSize:10,fontWeight:700}}>{(c.plan||"starter").toUpperCase()}</span></div>
-                        <div style={{fontSize:11}}>{new Date(c.created_at).toLocaleDateString()}</div>
+                      <div style={{background:"rgba(0,0,0,0.2)",borderRadius:8,padding:"10px 14px",fontSize:11,color:"var(--concrete)",lineHeight:1.7}}>
+                        {roi?(
+                          <>Spent <strong style={{color:"var(--cream)"}}>${campaignSpend.toFixed(0)}</strong> on mailers → <strong style={{color:"var(--green2)"}}>${totalRevenue.toLocaleString()}</strong> in jobs → <strong style={{color:"var(--orange2)"}}>{roi}x return</strong>. {pct>0?`${pct}% of revenue traced to direct mail campaigns.`:""}</>
+                        ):"Add job values to Pipeline and Job Board to calculate your mail ROI."}
                       </div>
-                    ))}
-                    {adminData.contractors.length===0&&<div style={{padding:"20px",textAlign:"center",color:"var(--gravel)",fontSize:12}}>No contractors yet</div>}
-                  </div>
-                </>
-              )}
-
-              {/* PIPELINE */}
-              {adminView==="pipeline"&&adminData.loaded&&(
-                <>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>ALL PIPELINE LEADS ({adminData.pipeline.length})</div>
-                  <div className="admin-table">
-                    <div className="admin-thead" style={{gridTemplateColumns:"2fr 1.5fr 1fr 1fr 1fr"}}>
-                      <div>Address</div><div>Contractor</div><div>Stage</div><div>Bid</div><div>Date</div>
                     </div>
-                    {adminData.pipeline.slice(0,100).map(l=>{
-                      const stage=STAGES.find(s=>s.id===l.stage);
-                      const contractor=adminData.contractors.find(c=>c.id===l.user_id);
-                      return(
-                        <div key={l.id} className="admin-row" style={{gridTemplateColumns:"2fr 1.5fr 1fr 1fr 1fr"}}>
-                          <div><div style={{fontWeight:600,color:"var(--cream)"}}>{l.address}</div><div style={{fontSize:10,color:"var(--stone)"}}>{l.city}</div></div>
-                          <div style={{fontSize:11,color:"var(--stone)"}}>{contractor?.company_name||"Unknown"}</div>
-                          <div><span style={{background:stage?.bg,color:stage?.color,padding:"2px 6px",borderRadius:4,fontSize:10,fontWeight:700}}>{stage?.icon} {stage?.label}</span></div>
-                          <div style={{fontFamily:"'DM Mono',monospace",color:"var(--orange2)"}}>{l.bid_lo||"—"}</div>
-                          <div style={{fontSize:11}}>{l.spotted||new Date(l.created_at).toLocaleDateString()}</div>
-                        </div>
-                      );
-                    })}
-                    {adminData.pipeline.length===0&&<div style={{padding:"20px",textAlign:"center",color:"var(--gravel)",fontSize:12}}>No pipeline leads yet</div>}
                   </div>
-                </>
-              )}
+                );
+              })()}
 
-              {/* SPOT BIDS */}
-              {adminView==="bids"&&adminData.loaded&&(
-                <>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>ALL SPOT BIDS ({adminData.bids.length})</div>
-                  <div className="admin-table">
-                    <div className="admin-thead" style={{gridTemplateColumns:"2fr 1.5fr 1fr 1fr"}}>
-                      <div>Address</div><div>Contractor</div><div>Bid</div><div>Date</div>
-                    </div>
-                    {adminData.bids.slice(0,100).map(b=>{
-                      const contractor=adminData.contractors.find(c=>c.id===b.user_id);
-                      return(
-                        <div key={b.id} className="admin-row" style={{gridTemplateColumns:"2fr 1.5fr 1fr 1fr"}}>
-                          <div><div style={{fontWeight:600,color:"var(--cream)"}}>{b.address}</div><div style={{fontSize:10,color:"var(--stone)"}}>{b.city}</div></div>
-                          <div style={{fontSize:11,color:"var(--stone)"}}>{contractor?.company_name||"Unknown"}</div>
-                          <div style={{fontFamily:"'DM Mono',monospace",color:"var(--orange2)"}}>{b.bid||"—"}</div>
-                          <div style={{fontSize:11}}>{b.sent_date||new Date(b.created_at).toLocaleDateString()}</div>
+              {/* CAPACITY STATUS */}
+              {(()=>{
+                const C = ACTIVE_COMPANY;
+                const maxJobs = C.maxJobsWeek||6;
+                const crewDaysAvail = (C.crewSize||12)*5;
+                const crewDaysBooked = jobBoardJobs.filter(j=>j.status!=="complete"&&j.status!=="collected").length * 2;
+                const utilPct = Math.min(100,Math.round((crewDaysBooked/crewDaysAvail)*100));
+                const autoMode = utilPct>=100?"paused":utilPct>=75?"selective":utilPct>=45?"normal":"hungry";
+                const cfg = CAPACITY_MODES[autoMode];
+                return(
+                  <div>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1.5,color:"var(--concrete)",marginBottom:10}}>CAPACITY STATUS</div>
+                    <div className="cmd-capacity" style={{background:cfg.bg,border:`1px solid ${cfg.color}40`,borderRadius:12,padding:"16px 20px",display:"flex",alignItems:"center",gap:16}}>
+                      <div style={{position:"relative",width:64,height:64,flexShrink:0}}>
+                        <svg width="64" height="64" viewBox="0 0 64 64" style={{transform:"rotate(-90deg)"}}>
+                          <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(184,180,172,0.1)" strokeWidth="6"/>
+                          <circle cx="32" cy="32" r="26" fill="none" stroke={cfg.color} strokeWidth="6"
+                            strokeDasharray={`${2*Math.PI*26}`}
+                            strokeDashoffset={`${2*Math.PI*26*(1-utilPct/100)}`}
+                            strokeLinecap="round"/>
+                        </svg>
+                        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:cfg.color}}>{utilPct}%</div>
+                      </div>
+                      <div style={{flex:1}}>
+                        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:cfg.color,letterSpacing:1}}>{cfg.label.toUpperCase()} MODE</div>
+                        <div style={{fontSize:11,color:"var(--concrete)",marginTop:2}}>{cfg.desc}</div>
+                        <div style={{fontSize:10,color:"var(--stone)",marginTop:4}}>
+                          {crewDaysBooked} of {crewDaysAvail} crew-days booked · Auto-calculated from Job Board
                         </div>
-                      );
-                    })}
-                    {adminData.bids.length===0&&<div style={{padding:"20px",textAlign:"center",color:"var(--gravel)",fontSize:12}}>No spot bids yet</div>}
+                      </div>
+                    </div>
                   </div>
-                </>
-              )}
+                );
+              })()}
             </div>
           )}
 
@@ -4382,9 +4683,19 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                   ⋯ Detail
                                 </button>
                                 {stage.id==="won"&&(
-                                  <button className="pl-action-btn" style={{background:"rgba(42,122,82,0.15)",color:"var(--green2)"}} onClick={()=>{setRadiusLead(lead);setRadiusStep(1);setRadiusMailer(null);setShowRadiusModal(true);}}>
-                                    📬 Radius Mailer
-                                  </button>
+                                  <>
+                                    <button className="pl-action-btn" style={{background:"rgba(42,122,82,0.15)",color:"var(--green2)"}} onClick={()=>{setRadiusLead(lead);setRadiusStep(1);setRadiusMailer(null);setShowRadiusModal(true);}}>
+                                      ◫ Radius Mailer
+                                    </button>
+                                    {!jobBoardJobs.find(j=>j.fromPipeline===lead.id)&&(
+                                      <button className="pl-action-btn" style={{background:"rgba(58,143,212,0.15)",color:"var(--blue2)"}} onClick={()=>{
+                                        setNewJob({address:lead.address,city:lead.city||"Tulsa",service:"Concrete Work",value:lead.value||0,crew:"",date:new Date().toISOString().split("T")[0],notes:"",status:"scheduled",fromPipeline:lead.id});
+                                        setNewJobModal(true);
+                                      }}>
+                                        📋 Schedule Job
+                                      </button>
+                                    )}
+                                  </>
                                 )}
                                 <button
                                   className={`permit-btn${permitLoading===lead.id?" loading":""}`}
@@ -4581,7 +4892,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <div>📍 <strong style={{color:"var(--cream)"}}>{ACTIVE_COMPANY.city}, {ACTIVE_COMPANY.state}</strong></div>
                   {ACTIVE_COMPANY.promo&&<div>🏷️ Promo Code: <strong style={{color:"var(--orange2)",fontFamily:"'DM Mono',monospace"}}>{ACTIVE_COMPANY.promo}</strong></div>}
                   <div style={{marginTop:12,display:"flex",alignItems:"center",gap:12}}>
-                    <QRCode value={`tel:${ACTIVE_ACTIVE_COMPANY.phoneRaw}`} size={72}/>
+                    <QRCode value={`tel:${ACTIVE_COMPANY.phoneRaw}`} size={72}/>
                     <div style={{fontSize:11,color:"var(--stone)",lineHeight:1.8}}>Your QR code appears on every mailer<br/>Homeowners scan to call you instantly<br/>Works on all smartphones</div>
                   </div>
                 </div>
@@ -4853,7 +5164,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       <div style={{fontSize:8,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"rgba(232,86,10,0.7)"}}>Your Estimate</div>
                       <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,color:"#f5f0e6"}}>{previewJob.bid}</div>
                     </div>
-                    <QRCode value={`tel:${ACTIVE_ACTIVE_COMPANY.phoneRaw}`} size={44} fgColor="#f5f0e6" bgColor="#1a1814"/>
+                    <QRCode value={`tel:${ACTIVE_COMPANY.phoneRaw}`} size={44} fgColor="#f5f0e6" bgColor="#1a1814"/>
                   </div>
                   <div style={{background:"rgba(232,86,10,0.1)",border:"1px solid rgba(232,86,10,0.2)",borderLeft:"3px solid rgba(232,86,10,0.6)",borderRadius:6,padding:"10px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                     <div>
@@ -5023,6 +5334,85 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           </div>
         );
       })()}
+
+      {/* NEW JOB MODAL */}
+      {newJobModal&&(
+        <div className="modal-overlay" onClick={e=>{if(e.target.className==="modal-overlay")setNewJobModal(false);}}>
+          <div className="modal-box">
+            <div className="modal-title">SCHEDULE JOB</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
+              <div className="field"><label>Address *</label><input placeholder="e.g. 4821 Oak Ridge Dr" value={newJob.address} onChange={e=>setNewJob(j=>({...j,address:e.target.value}))}/></div>
+              <div className="row2">
+                <div className="field"><label>Service Type</label>
+                  <select value={newJob.service} onChange={e=>setNewJob(j=>({...j,service:e.target.value}))} style={{touchAction:"manipulation"}}>
+                    {["Crack Repair","Full Replacement","New Installation","Sealing","Root Repair","Resurfacing","Drainage Fix"].map(s=><option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="field"><label>Job Value ($)</label><input type="number" placeholder="1500" value={newJob.value} onChange={e=>setNewJob(j=>({...j,value:e.target.value}))}/></div>
+              </div>
+              <div className="row2">
+                <div className="field"><label>Crew</label><input placeholder="Crew A" value={newJob.crew} onChange={e=>setNewJob(j=>({...j,crew:e.target.value}))}/></div>
+                <div className="field"><label>Date</label><input type="date" value={newJob.date} onChange={e=>setNewJob(j=>({...j,date:e.target.value}))}/></div>
+              </div>
+              <div className="field"><label>Status</label>
+                <select value={newJob.status} onChange={e=>setNewJob(j=>({...j,status:e.target.value}))} style={{touchAction:"manipulation"}}>
+                  {JOB_STATUSES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
+                </select>
+              </div>
+              <div className="field"><label>Notes</label><textarea placeholder="Any notes about this job..." value={newJob.notes} onChange={e=>setNewJob(j=>({...j,notes:e.target.value}))} style={{minHeight:60}}></textarea></div>
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              <button className="btn btn-primary" style={{flex:1}} onClick={()=>{
+                if(!newJob.address){showToast("Enter an address","info");return;}
+                const job={...newJob,id:`jb-${Date.now()}`,value:Number(newJob.value)||0,city:"Tulsa"};
+                setJobBoardJobs(j=>[...j,job]);
+                setNewJobModal(false);
+                setNewJob({address:"",service:"Crack Repair",value:"",crew:"",date:"",notes:"",status:"scheduled"});
+                showToast("✅ Job added to board","success");
+              }}>📋 Schedule Job</button>
+              <button className="btn btn-ghost" onClick={()=>setNewJobModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* JOB DETAIL MODAL */}
+      {selectedJobDetail&&(
+        <div className="modal-overlay" onClick={e=>{if(e.target.className==="modal-overlay")setSelectedJobDetail(null);}}>
+          <div className="modal-box">
+            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:12}}>
+              <div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:1,color:"var(--cream)"}}>{selectedJobDetail.address}</div>
+                <div style={{fontSize:11,color:"var(--stone)",marginTop:2}}>{selectedJobDetail.service} · {selectedJobDetail.crew||"No crew"} · {selectedJobDetail.date}</div>
+              </div>
+              <button onClick={()=>setSelectedJobDetail(null)} style={{background:"none",border:"none",color:"var(--stone)",fontSize:18,cursor:"pointer"}}>✕</button>
+            </div>
+            {selectedJobDetail.value>0&&<div style={{fontFamily:"'DM Mono',monospace",fontSize:22,color:"var(--orange2)",fontWeight:600,marginBottom:12}}>${selectedJobDetail.value.toLocaleString()}</div>}
+            {/* Status selector */}
+            <div style={{marginBottom:12}}>
+              <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--stone)",marginBottom:8}}>Update Status</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {JOB_STATUSES.map(s=>(
+                  <button key={s.id} onClick={()=>{
+                    setJobBoardJobs(j=>j.map(j=>j.id===selectedJobDetail.id?{...j,status:s.id}:j));
+                    setSelectedJobDetail(j=>({...j,status:s.id}));
+                  }} style={{background:selectedJobDetail.status===s.id?s.bg:"transparent",border:`1px solid ${s.color}${selectedJobDetail.status===s.id?"":"30"}`,borderRadius:7,padding:"8px 12px",minHeight:36,color:s.color,fontSize:11,cursor:"pointer",fontWeight:600,fontFamily:"'Syne',sans-serif",touchAction:"manipulation"}}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {selectedJobDetail.notes&&<div style={{background:"rgba(184,180,172,0.05)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:8,padding:"10px 12px",fontSize:12,color:"var(--concrete)",marginBottom:12,lineHeight:1.6}}>{selectedJobDetail.notes}</div>}
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              {selectedJobDetail.fromPipeline&&<button className="btn btn-ghost btn-sm" onClick={()=>{switchTab("pipeline");setSelectedJobDetail(null);}}>→ View Pipeline Lead</button>}
+              <button className="btn btn-ghost btn-sm" style={{color:"var(--red)"}} onClick={()=>{
+                if(window.confirm("Delete this job?"))setJobBoardJobs(j=>j.filter(j=>j.id!==selectedJobDetail.id));
+                setSelectedJobDetail(null);
+              }}>✕ Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ADD LEAD MODAL */}
       {showAddLead&&(
