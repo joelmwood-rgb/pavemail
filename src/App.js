@@ -5200,7 +5200,8 @@ function showToast(msg,type="success") {setToast({msg,type});setTimeout(()=>setT
                 {/* Live revenue pulse */}
                 {(()=>{
                   const wonRev = pipeline.filter(l=>l.stage==="won").reduce((s,l)=>s+(l.value||0),0);
-                  const pct = Math.min(100,Math.round((wonRev/target)*100));
+                  const weeklyGoal = 30000; // default weekly revenue target
+                  const pct = Math.min(100,Math.round((wonRev/weeklyGoal)*100));
                   const followDue = pipeline.filter(l=>{
                     if(l.stage==="won"||l.stage==="spotted"||!l.mailerSent) return false;
                     return Math.floor((Date.now()-new Date(l.mailerSent))/86400000)>=5&&!l.calledBack;
@@ -5209,7 +5210,7 @@ function showToast(msg,type="success") {setToast({msg,type});setTimeout(()=>setT
                     <div style={{marginTop:14,background:"rgba(0,0,0,0.2)",borderRadius:12,padding:"14px 16px"}}>
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
                         <span style={{fontSize:10,color:"var(--stone)",letterSpacing:1,textTransform:"uppercase"}}>Weekly revenue pace</span>
-                        <span style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:pct>=100?"var(--green2)":"var(--orange2)"}}>${wonRev.toLocaleString()} / ${target.toLocaleString()}</span>
+                        <span style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:pct>=100?"var(--green2)":"var(--orange2)"}}>${wonRev.toLocaleString()} / ${weeklyGoal.toLocaleString()}</span>
                       </div>
                       <div style={{height:6,background:"rgba(184,180,172,0.1)",borderRadius:3,overflow:"hidden",marginBottom:10}}>
                         <div style={{height:"100%",width:`${pct}%`,background:pct>=100?"var(--green2)":"var(--orange)",borderRadius:3,transition:"width 0.8s ease"}}/>
