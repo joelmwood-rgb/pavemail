@@ -3073,7 +3073,11 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {/* ── SIGN UP ── */}
           {authScreen==="signup"&&(
             <>
-              <div className="login-label" style={{marginTop:20}}>Create Account</div>
+              <button onClick={()=>{setAuthScreen("login");setAuthError("");}} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:12,fontFamily:"'Syne',sans-serif",display:"flex",alignItems:"center",gap:4,padding:"4px 0",marginBottom:8,opacity:0.8}}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Back to Sign In
+              </button>
+              <div className="login-label" style={{marginTop:4}}>Create Account</div>
               <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
                 {[
                   {ph:"Invite Code *",key:"inviteCode",type:"text",ac:"off"},
@@ -3100,7 +3104,11 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {/* ── FORGOT PASSWORD ── */}
           {authScreen==="forgot"&&(
             <>
-              <div className="login-label" style={{marginTop:24}}>Reset Password</div>
+              <button onClick={()=>{setAuthScreen("login");setAuthError("");setAuthSuccess("");}} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:12,fontFamily:"'Syne',sans-serif",display:"flex",alignItems:"center",gap:4,padding:"4px 0",marginBottom:8,opacity:0.8}}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Back to Sign In
+              </button>
+              <div className="login-label" style={{marginTop:4}}>Reset Password</div>
               <div style={{fontSize:12,color:"var(--stone)",marginBottom:12,textAlign:"center",lineHeight:1.6}}>Enter your email and we'll send a reset link</div>
               <input type="email" placeholder="your@email.com" autoComplete="email"
                 value={authForm.email} onChange={e=>setAuthForm(f=>({...f,email:e.target.value}))}
@@ -3125,7 +3133,11 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {/* ── DEMO ACCESS CODE ── */}
           {authScreen==="demo-code"&&(
             <>
-              <div style={{textAlign:"center",marginTop:16,marginBottom:4}}>
+              <button onClick={()=>{setAuthScreen("login");setDemoCode("");}} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:12,fontFamily:"'Syne',sans-serif",display:"flex",alignItems:"center",gap:4,padding:"4px 0",marginBottom:8,opacity:0.8}}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Back to Sign In
+              </button>
+              <div style={{textAlign:"center",marginTop:8,marginBottom:4}}>
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:3,color:"var(--cream)"}}>DEMO ACCESS</div>
                 <div style={{fontSize:11,color:"var(--stone)",marginTop:4}}>Enter the 4-digit demo code</div>
               </div>
@@ -3169,6 +3181,10 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {/* ── ROI CALCULATOR ── */}
           {authScreen==="roi-calc"&&(
             <div className="onboard-step">
+              <button onClick={()=>setAuthScreen("login")} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:12,fontFamily:"'Syne',sans-serif",display:"flex",alignItems:"center",gap:4,padding:"4px 0",marginBottom:16,opacity:0.8}}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Back to Sign In
+              </button>
               <div style={{textAlign:"center",marginBottom:20}}>
                 <div style={{fontSize:10,fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:"var(--orange2)",marginBottom:8}}>Your potential ROI</div>
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:"var(--cream)"}}>HOW MUCH COULD YOU MAKE?</div>
@@ -3256,6 +3272,10 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {/* ── ONBOARDING STEPS (after profile setup) ── */}
           {authScreen==="onboard"&&(
             <div className="onboard-step">
+              <button onClick={()=>setAuthScreen("login")} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:12,fontFamily:"'Syne',sans-serif",display:"flex",alignItems:"center",gap:4,padding:"4px 0",marginBottom:8,opacity:0.8}}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Back to Sign In
+              </button>
               <div className="step-dots">
                 {[0,1,2].map(i=>(
                   <div key={i} className={`step-dot${onboardStep===i?" active":onboardStep>i?" done":""}`}/>
