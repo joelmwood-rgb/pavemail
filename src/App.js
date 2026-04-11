@@ -1516,11 +1516,11 @@ const ROUTES = [
 const MOCK_JOBS = [];
 
 // ─────────────────────────────────────────────
-// DEMO MODE DATA — realistic Tulsa contractor data
+// DEMO MODE DATA - realistic Tulsa contractor data
 // ─────────────────────────────────────────────
 const DEMO_PIPELINE = [
   {id:"demo-1",address:"4821 Oak Ridge Dr",city:"Broken Arrow",neighborhood:"Broken Arrow",stage:"won",bidLo:"$1,200",bidHi:"$1,800",spotted:"Mar 12",mailerSent:"Mar 18",calledBack:"Mar 22",jobWon:"Mar 28",notes:"Full driveway replacement. Easy job, great customer.",value:1600,flags:["repeat"]},
-  {id:"demo-2",address:"7234 S Memorial Dr",city:"Tulsa",neighborhood:"South Tulsa",stage:"called",bidLo:"$800",bidHi:"$1,100",spotted:"Apr 01",mailerSent:"Apr 06",calledBack:"Apr 09",jobWon:null,notes:"Interested — getting HOA approval first.",value:950,flags:["hoa"]},
+  {id:"demo-2",address:"7234 S Memorial Dr",city:"Tulsa",neighborhood:"South Tulsa",stage:"called",bidLo:"$800",bidHi:"$1,100",spotted:"Apr 01",mailerSent:"Apr 06",calledBack:"Apr 09",jobWon:null,notes:"Interested - getting HOA approval first.",value:950,flags:["hoa"]},
   {id:"demo-3",address:"1892 E 91st St",city:"Tulsa",neighborhood:"South Tulsa",stage:"sent",bidLo:"$2,400",bidHi:"$3,200",spotted:"Apr 03",mailerSent:"Apr 07",calledBack:null,jobWon:null,notes:"Large 3-car garage, significant cracking.",value:2800,flags:[]},
   {id:"demo-4",address:"3341 S Peoria Ave",city:"Tulsa",neighborhood:"Midtown",stage:"won",bidLo:"$600",bidHi:"$900",spotted:"Mar 20",mailerSent:"Mar 25",calledBack:"Mar 28",jobWon:"Apr 02",notes:"Crack repair only. Paid same day.",value:750,flags:["repeat"]},
   {id:"demo-5",address:"9102 N 129th E Ave",city:"Owasso",neighborhood:"Owasso",stage:"spotted",bidLo:"$1,800",bidHi:"$2,600",spotted:"Apr 06",mailerSent:null,calledBack:null,jobWon:null,notes:"Saw severe cracking from road. Large property.",value:2200,flags:[]},
@@ -1530,9 +1530,9 @@ const DEMO_PIPELINE = [
 ];
 
 const DEMO_SPOT_JOBS = [
-  {id:"demo-sb-1",address:"4821 Oak Ridge Dr",city:"Broken Arrow",bid:"$1,200–$1,800",damage:["Freeze-thaw cracking across slab","Spalling near garage apron"],sent:"Mar 18",status:"delivered",mailerContent:{headline:"WE NOTICED YOUR CONCRETE NEEDS ATTENTION",personalNote:"We were in your neighborhood and noticed some significant cracking that's only going to get worse through Oklahoma's freeze-thaw cycles. We can fix this before it becomes a full replacement.",bidLo:"$1,200",bidHi:"$1,800",bid:"$1,200–$1,800",urgencyLine:"Oklahoma winters don't wait — neither should your concrete.",address:"4821 Oak Ridge Dr",city:"Broken Arrow",damage:["Freeze-thaw cracking across slab","Spalling near garage apron"]}},
+  {id:"demo-sb-1",address:"4821 Oak Ridge Dr",city:"Broken Arrow",bid:"$1,200–$1,800",damage:["Freeze-thaw cracking across slab","Spalling near garage apron"],sent:"Mar 18",status:"delivered",mailerContent:{headline:"WE NOTICED YOUR CONCRETE NEEDS ATTENTION",personalNote:"We were in your neighborhood and noticed some significant cracking that's only going to get worse through Oklahoma's freeze-thaw cycles. We can fix this before it becomes a full replacement.",bidLo:"$1,200",bidHi:"$1,800",bid:"$1,200–$1,800",urgencyLine:"Oklahoma winters don't wait - neither should your concrete.",address:"4821 Oak Ridge Dr",city:"Broken Arrow",damage:["Freeze-thaw cracking across slab","Spalling near garage apron"]}},
   {id:"demo-sb-2",address:"7234 S Memorial Dr",city:"Tulsa",bid:"$800–$1,100",damage:["Surface cracks running NE-SW","Minor drainage issue at base"],sent:"Apr 06",status:"sent",mailerContent:{headline:"YOUR CONCRETE HAS CRACKS WE CAN FIX",personalNote:"Spotted two crack patterns that suggest settling under your pad. Catching this now is a fraction of replacement cost.",bidLo:"$800",bidHi:"$1,100",bid:"$800–$1,100",urgencyLine:"Small cracks become big problems fast in Tulsa summers.",address:"7234 S Memorial Dr",city:"Tulsa",damage:["Surface cracks running NE-SW","Minor drainage issue at base"]}},
-  {id:"demo-sb-3",address:"1892 E 91st St",city:"Tulsa",bid:"$2,400–$3,200",damage:["Severe cracking across 3 panels","Root damage from oak tree","Surface deterioration"],sent:"Apr 07",status:"queued",mailerContent:{headline:"THREE ISSUES SPOTTED ON YOUR CONCRETE",personalNote:"Your property has some of the worst tree root damage I've seen this season. The oak roots have lifted two panels and cracked a third. This needs to be addressed before the summer heat.",bidLo:"$2,400",bidHi:"$3,200",bid:"$2,400–$3,200",urgencyLine:"Root damage gets exponentially worse — act before summer.",address:"1892 E 91st St",city:"Tulsa",damage:["Severe cracking across 3 panels","Root damage from oak tree","Surface deterioration"]}},
+  {id:"demo-sb-3",address:"1892 E 91st St",city:"Tulsa",bid:"$2,400–$3,200",damage:["Severe cracking across 3 panels","Root damage from oak tree","Surface deterioration"],sent:"Apr 07",status:"queued",mailerContent:{headline:"THREE ISSUES SPOTTED ON YOUR CONCRETE",personalNote:"Your property has some of the worst tree root damage I've seen this season. The oak roots have lifted two panels and cracked a third. This needs to be addressed before the summer heat.",bidLo:"$2,400",bidHi:"$3,200",bid:"$2,400–$3,200",urgencyLine:"Root damage gets exponentially worse - act before summer.",address:"1892 E 91st St",city:"Tulsa",damage:["Severe cracking across 3 panels","Root damage from oak tree","Surface deterioration"]}},
   {id:"demo-sb-4",address:"5512 S Harvard Ave",city:"Tulsa",bid:"$3,100–$4,200",damage:["Full slab replacement needed","Edge crumbling on 3 sides","Oil staining throughout"],sent:"Mar 14",status:"delivered",mailerContent:{headline:"YOUR CONCRETE IS PAST THE POINT OF REPAIR",personalNote:"After 20+ years, this slab has reached end of life. A full replacement will increase your curb appeal and home value immediately.",bidLo:"$3,100",bidHi:"$4,200",bid:"$3,100–$4,200",urgencyLine:"Replacement now costs less than waiting another year.",address:"5512 S Harvard Ave",city:"Tulsa",damage:["Full slab replacement needed","Edge crumbling on 3 sides","Oil staining throughout"]}},
 ];
 
@@ -1603,7 +1603,7 @@ function MailerPreview({mailer,form}){
   const{page1:p1,page2:p2,page3:p3,page4:p4}=mailer;
   return(
     <div className="mailer-stack">
-      <div><div className="page-tag">Page 1 — Cover</div>
+      <div><div className="page-tag">Page 1 - Cover</div>
         <div className="mailer-page"><div className="mp-cover">
           <div className="mp-texture"/>
           <div className="mp-eyebrow">{p1?.eyebrow}</div>
@@ -1618,14 +1618,14 @@ function MailerPreview({mailer,form}){
           <div className="mp-bar"/>
         </div></div>
       </div>
-      <div><div className="page-tag">Page 2 — Benefits</div>
+      <div><div className="page-tag">Page 2 - Benefits</div>
         <div className="mailer-page"><div className="mp-ben">
           <h2>{p2?.headline}</h2><p className="intro">{p2?.intro}</p>
           <div className="ben-grid">{p2?.benefits?.map((b,i)=><div className="ben-card" key={i}><div className="ben-icon">{b.icon}</div><h3>{b.title}</h3><p>{b.desc}</p></div>)}</div>
           <div className="why-box"><h3>{p2?.whyTitle}</h3><p>{p2?.whyText}</p></div>
         </div></div>
       </div>
-      <div><div className="page-tag">Page 3 — Process & Offer</div>
+      <div><div className="page-tag">Page 3 - Process & Offer</div>
         <div className="mailer-page"><div className="mp-proc">
           <h2>{p3?.headline}</h2><p className="intro">{p3?.intro}</p>
           <div className="steps-list">{p3?.steps?.map((s,i)=><div className="step-row" key={i}><div className="step-num">{i+1}</div><div><h4>{s.title}</h4><p>{s.desc}</p></div></div>)}</div>
@@ -1634,7 +1634,7 @@ function MailerPreview({mailer,form}){
           </div>
         </div></div>
       </div>
-      <div><div className="page-tag">Page 4 — Call to Action</div>
+      <div><div className="page-tag">Page 4 - Call to Action</div>
         <div className="mailer-page"><div className="mp-cta">
           <div className="ey">{p4?.eyebrow}</div>
           <h2>{p4?.headline}</h2>
@@ -1659,10 +1659,10 @@ function MailerPreview({mailer,form}){
 const CAPACITY_CONFIG = { crewSize:12, maxJobs:6, weeklyTarget:40000 };
 
 const CAPACITY_MODES = {
-    hungry:   { label:"Hungry",   color:"#e05252", bg:"rgba(224,82,82,0.12)",   icon:"🔴", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L10 6.5H15.5L11 9.8L13 15.5L8 12.2L3 15.5L5 9.8L0.5 6.5H6L8 1Z" fill="#e05252"/></svg>, desc:"Aggressive outbound — large radius, fast follow-up, low bid threshold" },
-    normal:   { label:"Normal",   color:"#d4a017", bg:"rgba(212,160,23,0.12)",  icon:"🟡", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L9.5 6H14.5L10.5 9L12 13.5L8 10.8L4 13.5L5.5 9L1.5 6H6.5L8 1.5Z" fill="#d4a017"/></svg>, desc:"Standard outbound — normal radius, normal pricing" },
-    selective:{ label:"Selective",color:"#3a8fd4", bg:"rgba(58,143,212,0.12)",  icon:"🔵", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" fill="#3a8fd4" fillOpacity="0.2" stroke="#3a8fd4" strokeWidth="1.5"/><circle cx="8" cy="8" r="3.5" fill="#3a8fd4" fillOpacity="0.4" stroke="#3a8fd4" strokeWidth="1"/><circle cx="8" cy="8" r="1.5" fill="#3a8fd4"/></svg>, desc:"High-value leads only — bids +15%, radius reduced" },
-    paused:   { label:"Paused",   color:"#8a8682", bg:"rgba(138,134,130,0.12)", icon:"⚫", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" fill="#8a8682" fillOpacity="0.3" stroke="#8a8682" strokeWidth="1.5"/><rect x="5" y="4.5" width="2.2" height="7" rx="1" fill="#8a8682"/><rect x="8.8" y="4.5" width="2.2" height="7" rx="1" fill="#8a8682"/></svg>, desc:"Fully booked — campaigns paused, AI agent books 3 weeks out" },
+    hungry:   { label:"Hungry",   color:"#e05252", bg:"rgba(224,82,82,0.12)",   icon:"🔴", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L10 6.5H15.5L11 9.8L13 15.5L8 12.2L3 15.5L5 9.8L0.5 6.5H6L8 1Z" fill="#e05252"/></svg>, desc:"Aggressive outbound - large radius, fast follow-up, low bid threshold" },
+    normal:   { label:"Normal",   color:"#d4a017", bg:"rgba(212,160,23,0.12)",  icon:"🟡", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L9.5 6H14.5L10.5 9L12 13.5L8 10.8L4 13.5L5.5 9L1.5 6H6.5L8 1.5Z" fill="#d4a017"/></svg>, desc:"Standard outbound - normal radius, normal pricing" },
+    selective:{ label:"Selective",color:"#3a8fd4", bg:"rgba(58,143,212,0.12)",  icon:"🔵", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" fill="#3a8fd4" fillOpacity="0.2" stroke="#3a8fd4" strokeWidth="1.5"/><circle cx="8" cy="8" r="3.5" fill="#3a8fd4" fillOpacity="0.4" stroke="#3a8fd4" strokeWidth="1"/><circle cx="8" cy="8" r="1.5" fill="#3a8fd4"/></svg>, desc:"High-value leads only - bids +15%, radius reduced" },
+    paused:   { label:"Paused",   color:"#8a8682", bg:"rgba(138,134,130,0.12)", icon:"⚫", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" fill="#8a8682" fillOpacity="0.3" stroke="#8a8682" strokeWidth="1.5"/><rect x="5" y="4.5" width="2.2" height="7" rx="1" fill="#8a8682"/><rect x="8.8" y="4.5" width="2.2" height="7" rx="1" fill="#8a8682"/></svg>, desc:"Fully booked - campaigns paused, AI agent books 3 weeks out" },
   };
 
 function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
@@ -1687,7 +1687,7 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
     g.addColorStop(0.45,'rgba(10,9,8,0.65)');
     g.addColorStop(1,'rgba(10,9,8,0.97)');
     ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    // Dynamic badge — based on primary damage type
+    // Dynamic badge - based on primary damage type
     if(img){
       var dmg=(mailer.damage&&mailer.damage[0])||'';
       var dmgL=dmg.toLowerCase();
@@ -1723,7 +1723,7 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
       else hl=t;
     }
     if(hl&&hlines<2)ctx.fillText(hl.trim(),18,hy);
-    // Personal note max 2 lines — kept above footer
+    // Personal note max 2 lines - kept above footer
     ctx.fillStyle='rgba(200,196,188,0.9)'; ctx.font='11px Arial';
     var nw=(mailer.personalNote||'').slice(0,120).split(' '),nl='',ny=hy+20,nc=0;
     for(var k=0;k<nw.length;k++){
@@ -1752,7 +1752,7 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
     try {
       setDataUrl(canvas.toDataURL('image/jpeg',0.92));
     } catch(e) {
-      // Canvas tainted by cross-origin image — show raw photo instead
+      // Canvas tainted by cross-origin image - show raw photo instead
 
       setDataUrl(null);
     }
@@ -1768,7 +1768,7 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
         // Test if canvas is tainted by trying toDataURL
         canvas.toDataURL('image/jpeg',0.1);
       } catch(e) {
-        // Canvas tainted — retry without crossOrigin
+        // Canvas tainted - retry without crossOrigin
         // Safari blocks cross-origin canvas reads
         var img2=new Image();
         img2.onload=function(){ draw(img2); };
@@ -1777,7 +1777,7 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
       }
     };
     img.onerror=function(){
-      // crossOrigin failed to load — try without it
+      // crossOrigin failed to load - try without it
       var img2=new Image();
       img2.onload=function(){ 
         try { draw(img2); } catch(e){ draw(null); }
@@ -1793,62 +1793,62 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
 }
 
 // ─────────────────────────────────────────────
-// NAV ICON COMPONENT — SVG icons for sidebar
+// NAV ICON COMPONENT - SVG icons for sidebar
 // ─────────────────────────────────────────────
 function NavIcon({id}) {
   const icons = {
-    // Neighborhood Scan — bold filled pin with radiating signal rings
+    // Neighborhood Scan - bold filled pin with radiating signal rings
     map: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M9 1C6.24 1 4 3.24 4 6C4 9.75 9 17 9 17C9 17 14 9.75 14 6C14 3.24 11.76 1 9 1Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
       <circle cx="9" cy="6" r="2.2" fill="currentColor"/>
     </svg>,
-    // Create Mailer — envelope with a spark/star on it
+    // Create Mailer - envelope with a spark/star on it
     create: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <rect x="1.5" y="4.5" width="15" height="11" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.6"/>
       <path d="M1.5 6.5L9 11L16.5 6.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
       <path d="M11.5 1.5L12.2 3.3L14 4L12.2 4.7L11.5 6.5L10.8 4.7L9 4L10.8 3.3L11.5 1.5Z" fill="currentColor"/>
     </svg>,
-    // Job Tracker — three rising bars, tallest filled solid
+    // Job Tracker - three rising bars, tallest filled solid
     tracker: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <rect x="1.5" y="10" width="4" height="6.5" rx="1.2" fill="currentColor" fillOpacity="0.4"/>
       <rect x="7" y="6.5" width="4" height="10" rx="1.2" fill="currentColor" fillOpacity="0.7"/>
       <rect x="12.5" y="2" width="4" height="14.5" rx="1.2" fill="currentColor"/>
     </svg>,
-    // Spot Bid — camera with viewfinder crosshair
+    // Spot Bid - camera with viewfinder crosshair
     spotbid: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <rect x="1.5" y="5" width="15" height="11" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.6"/>
       <path d="M6 5V4C6 3.45 6.45 3 7 3H11C11.55 3 12 3.45 12 4V5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
       <circle cx="9" cy="10.5" r="3" stroke="currentColor" strokeWidth="1.5"/>
       <circle cx="9" cy="10.5" r="1.2" fill="currentColor"/>
     </svg>,
-    // Pipeline — flowing funnel with stages
+    // Pipeline - flowing funnel with stages
     pipeline: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M2 3H16L11 9V15L7 13V9L2 3Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
       <line x1="9" y1="9" x2="9" y2="14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
     </svg>,
-    // Capacity — lightning bolt, bold and filled
+    // Capacity - lightning bolt, bold and filled
     capacity: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M10.5 1.5L4 10H8.5L7.5 16.5L14 7.5H9.5L10.5 1.5Z" fill="currentColor" stroke="currentColor" strokeWidth="0.5" strokeLinejoin="round"/>
     </svg>,
-    // AI Phone — handset with sound waves, bold
+    // AI Phone - handset with sound waves, bold
     aiphone: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M4 3.5C4 3.5 5.2 2 7 2C8 2 8.8 3 9.5 4.5L10 6C10.3 6.8 10 7.8 9.2 8.3L8 9C8.8 10.3 10 11.5 11.2 12.2L12.3 11C13 10.4 14 10.2 14.8 10.5L16.5 11.5C17.5 12 18 13 18 14C18 16 16 17.5 16 17.5C13 20 2 10 4 3.5Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
       <path d="M13 1.5C14.5 2 16.2 3.2 17.2 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
       <path d="M12.5 4.5C13.5 5 14.5 5.8 15.2 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>,
-    // Admin — grid of 4 squares, top-right filled solid
+    // Admin - grid of 4 squares, top-right filled solid
     admin: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <rect x="1.5" y="1.5" width="6.5" height="6.5" rx="1.5" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.5"/>
       <rect x="10" y="1.5" width="6.5" height="6.5" rx="1.5" fill="currentColor"/>
       <rect x="1.5" y="10" width="6.5" height="6.5" rx="1.5" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.5"/>
       <rect x="10" y="10" width="6.5" height="6.5" rx="1.5" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="1.5"/>
     </svg>,
-    // Settings — gear with solid center dot
+    // Settings - gear with solid center dot
     settings: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M9 1.5L10.2 4.2C10.8 4.4 11.3 4.7 11.8 5.1L14.7 4.5L16.5 7.5L14.4 9.3C14.5 9.5 14.5 9.8 14.5 10C14.5 10.2 14.5 10.5 14.4 10.7L16.5 12.5L14.7 15.5L11.8 14.9C11.3 15.3 10.8 15.6 10.2 15.8L9 18.5L7.8 15.8C7.2 15.6 6.7 15.3 6.2 14.9L3.3 15.5L1.5 12.5L3.6 10.7C3.5 10.5 3.5 10.2 3.5 10C3.5 9.8 3.5 9.5 3.6 9.3L1.5 7.5L3.3 4.5L6.2 5.1C6.7 4.7 7.2 4.4 7.8 4.2L9 1.5Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
       <circle cx="9" cy="10" r="2.5" fill="currentColor"/>
     </svg>,
-    // Field Map — satellite with GPS pin
+    // Field Map - satellite with GPS pin
     fieldmap: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <rect x="1.5" y="1.5" width="15" height="15" rx="2" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="1.5"/>
       <path d="M1.5 6.5L6 5L10.5 7.5L16.5 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"/>
@@ -1856,7 +1856,7 @@ function NavIcon({id}) {
       <circle cx="11" cy="9" r="2.5" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.4"/>
       <circle cx="11" cy="9" r="1" fill="currentColor"/>
     </svg>,
-    // Job Board — calendar grid with status dots
+    // Job Board - calendar grid with status dots
     jobboard: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <rect x="1.5" y="3.5" width="15" height="13" rx="2" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="1.5"/>
       <line x1="1.5" y1="7" x2="16.5" y2="7" stroke="currentColor" strokeWidth="1.2" opacity="0.5"/>
@@ -1868,7 +1868,7 @@ function NavIcon({id}) {
       <rect x="8" y="8.5" width="3" height="2.5" rx="0.5" fill="currentColor" opacity="0.4"/>
       <rect x="2.5" y="12.5" width="3" height="2.5" rx="0.5" fill="currentColor" opacity="0.5"/>
     </svg>,
-    // Command Center — speedometer/dashboard
+    // Command Center - speedometer/dashboard
     command: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M2.5 12.5C2.5 8.1 5.8 4.5 10 4.5C14.2 4.5 17.5 8.1 17.5 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
       <path d="M2.5 12.5C2.5 9.5 4.8 7 7.5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -1928,14 +1928,14 @@ export default function App(){
       }
       track("login", { email: authForm.email });
     } else {
-      setAuthError(data.error_description || data.msg || "Login failed — check your email and password");
+      setAuthError(data.error_description || data.msg || "Login failed - check your email and password");
     }
     setAuthLoading(false);
   }
 
   // Signup handler
   async function handleSignup() {
-    if(authForm.inviteCode.trim().toUpperCase() !== "PAVE2026") { setAuthError("Invalid invite code — contact Joel for access"); return; }
+    if(authForm.inviteCode.trim().toUpperCase() !== "PAVE2026") { setAuthError("Invalid invite code - contact Joel for access"); return; }
     if(!authForm.email||!authForm.password) { setAuthError("Enter your email and password"); return; }
     if(authForm.password !== authForm.confirmPassword) { setAuthError("Passwords don't match"); return; }
     if(authForm.password.length < 6) { setAuthError("Password must be at least 6 characters"); return; }
@@ -1961,7 +1961,7 @@ export default function App(){
         track("signup", { email: authForm.email, company: authForm.companyName });
       }
     } else {
-      setAuthError(data.error_description || data.msg || "Signup failed — try again");
+      setAuthError(data.error_description || data.msg || "Signup failed - try again");
     }
     setAuthLoading(false);
   }
@@ -2006,7 +2006,7 @@ export default function App(){
       lob_from_id:"",bland_transfer:"",accent_color:"#e8560a",
       crew_size:8,max_jobs_week:5,weekly_target:35000,
     });
-    // Load all demo data immediately — no Supabase needed
+    // Load all demo data immediately - no Supabase needed
     setPipeline(DEMO_PIPELINE);
     setSpotJobs(DEMO_SPOT_JOBS);
     setAiLeads(DEMO_AI_CALLS);
@@ -2015,7 +2015,7 @@ export default function App(){
     setFieldTags(DEMO_FIELD_TAGS);
     try{ localStorage.setItem("pm_session",JSON.stringify({token:"demo",refresh_token:"demo",expires_at:9999999999,user:{id:"demo-user",email:"demo@pavemail.io"}})); }catch{}
     await new Promise(r=>setTimeout(r,300));
-    showToast("🎯 Demo loaded — explore PaveMail","success");
+    showToast("🎯 Demo loaded - explore PaveMail","success");
   }
 
 
@@ -2095,7 +2095,7 @@ export default function App(){
 
   const[pipeline,setPipeline]=useState([]);
 
-  // Real capacity engine — data-driven, auto-sets mode
+  // Real capacity engine - data-driven, auto-sets mode
   React.useEffect(()=>{
     const C = ACTIVE_COMPANY;
     const maxJobs = C.maxJobsWeek || 6;
@@ -2221,7 +2221,7 @@ export default function App(){
     if(result.permits?.length > 0) {
       showToast(`Found ${result.permits.length} permit${result.permits.length!==1?"s":""} for ${lead.address}`, "success");
     } else {
-      showToast(`No permits found — check manually`, "info");
+      showToast(`No permits found - check manually`, "info");
     }
   };
   const[showAddLead,setShowAddLead]=useState(false);
@@ -2229,9 +2229,9 @@ export default function App(){
 
   const LEAD_FLAGS = [
     {id:"no_pay",    label:"No Pay",        color:"#c0392b", bg:"rgba(192,57,43,0.15)",  icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="4.5" fill="#c0392b" fillOpacity="0.2" stroke="#c0392b" strokeWidth="1.3"/><line x1="3" y1="3" x2="8" y2="8" stroke="#c0392b" strokeWidth="1.4" strokeLinecap="round"/><line x1="8" y1="3" x2="3" y2="8" stroke="#c0392b" strokeWidth="1.4" strokeLinecap="round"/></svg>, desc:"Did not pay or disputed invoice"},
-    {id:"repeat",    label:"Repeat Client", color:"#2a7a52", bg:"rgba(42,122,82,0.15)",  icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1L6.7 4.2H10.2L7.45 6.1L8.55 9.2L5.5 7.4L2.45 9.2L3.55 6.1L0.8 4.2H4.3L5.5 1Z" fill="#2a7a52"/></svg>, desc:"Returning customer — priority service"},
+    {id:"repeat",    label:"Repeat Client", color:"#2a7a52", bg:"rgba(42,122,82,0.15)",  icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1L6.7 4.2H10.2L7.45 6.1L8.55 9.2L5.5 7.4L2.45 9.2L3.55 6.1L0.8 4.2H4.3L5.5 1Z" fill="#2a7a52"/></svg>, desc:"Returning customer - priority service"},
     {id:"hoa",       label:"HOA Issues",    color:"#d4a017", bg:"rgba(212,160,23,0.15)", icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1L10 9.5H1L5.5 1Z" fill="#d4a017" fillOpacity="0.2" stroke="#d4a017" strokeWidth="1.3" strokeLinejoin="round"/><line x1="5.5" y1="4" x2="5.5" y2="6.5" stroke="#d4a017" strokeWidth="1.3" strokeLinecap="round"/><circle cx="5.5" cy="8" r="0.6" fill="#d4a017"/></svg>, desc:"HOA approval required before work"},
-    {id:"negotiator",label:"Negotiator",    color:"#c47a1a", bg:"rgba(196,122,26,0.15)", icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 7.5L4 4.5L6.5 7L10 2" stroke="#c47a1a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, desc:"Haggles on price — stick to estimate"},
+    {id:"negotiator",label:"Negotiator",    color:"#c47a1a", bg:"rgba(196,122,26,0.15)", icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 7.5L4 4.5L6.5 7L10 2" stroke="#c47a1a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, desc:"Haggles on price - stick to estimate"},
     {id:"referral",  label:"Referral",      color:"#1a6fa8", bg:"rgba(26,111,168,0.15)", icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="3" r="2" fill="#1a6fa8" fillOpacity="0.3" stroke="#1a6fa8" strokeWidth="1.2"/><path d="M2 10C2 8.3 3.6 7 5.5 7C7.4 7 9 8.3 9 10" stroke="#1a6fa8" strokeWidth="1.2" strokeLinecap="round"/><path d="M8 4.5L10 5.5L8 6.5" stroke="#1a6fa8" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>, desc:"Referred by existing customer"},
     {id:"lien_risk", label:"Lien Risk",     color:"#8b2fc9", bg:"rgba(139,47,201,0.15)", icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1L9.5 3V6C9.5 8.5 7.5 10.2 5.5 11C3.5 10.2 1.5 8.5 1.5 6V3L5.5 1Z" fill="#8b2fc9" fillOpacity="0.2" stroke="#8b2fc9" strokeWidth="1.2" strokeLinejoin="round"/><line x1="5.5" y1="4" x2="5.5" y2="6.5" stroke="#8b2fc9" strokeWidth="1.3" strokeLinecap="round"/><circle cx="5.5" cy="8" r="0.6" fill="#8b2fc9"/></svg>, desc:"Property has financial complications"},
   ];
@@ -2288,7 +2288,7 @@ export default function App(){
         setRadiusStep(2);
         showToast("Radius mailer generated!","success");
       }
-    }catch(e){ showToast("Generation failed — try again","info"); }
+    }catch(e){ showToast("Generation failed - try again","info"); }
     setRadiusLoading(false);
   };
 
@@ -2298,7 +2298,7 @@ export default function App(){
     setRadiusSending(true);
     showToast("Sending radius mailer...","info");
     try{
-      // Lob radius mail — uses center address + distance
+      // Lob radius mail - uses center address + distance
       const radiusMiles=radiusForm.radius;
       const radiusFt=Math.round(radiusMiles*5280);
       const front=`<html><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#1c1a17;color:#f5f0e6;position:relative;">
@@ -2338,7 +2338,7 @@ export default function App(){
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({
-          description:`Radius mailer — ${radiusMiles}mi from ${radiusMailer.address}`,
+          description:`Radius mailer - ${radiusMiles}mi from ${radiusMailer.address}`,
           to:{
             address_line1:radiusLead.address,
             address_city:radiusLead.city||"Tulsa",
@@ -2358,9 +2358,9 @@ export default function App(){
         showToast(`Radius mailer sent to neighbors within ${radiusMiles}mi!`,"success");
         setRadiusStep(3);
         // Add to job tracker
-        setJobs(j=>[{id:`RM-${Date.now()}`,name:`Radius — ${radiusMailer.address}`,area:`${radiusMiles}mi radius`,homes:"~"+(Math.round(radiusMiles*5280/66)).toString(),sent:new Date().toLocaleDateString(),status:"queued",cost:(Math.round(radiusMiles*5280/66)*0.62).toFixed(2),calls:0,lob:lobData.id},...j]);
+        setJobs(j=>[{id:`RM-${Date.now()}`,name:`Radius - ${radiusMailer.address}`,area:`${radiusMiles}mi radius`,homes:"~"+(Math.round(radiusMiles*5280/66)).toString(),sent:new Date().toLocaleDateString(),status:"queued",cost:(Math.round(radiusMiles*5280/66)*0.62).toFixed(2),calls:0,lob:lobData.id},...j]);
       } else {
-        showToast("Send failed — try again","info");
+        showToast("Send failed - try again","info");
       }
     }catch(e){ showToast("Send failed: "+e.message,"info"); }
     setRadiusSending(false);
@@ -2409,7 +2409,7 @@ export default function App(){
 
   React.useEffect(()=>{
     initAnalytics();
-    // Demo mode — data already loaded, skip Supabase entirely
+    // Demo mode - data already loaded, skip Supabase entirely
     if(isDemoMode) {
       track('app_open',{tab:'map',demo:true});
       return;
@@ -2589,7 +2589,7 @@ export default function App(){
         }
       });
 
-      // Final size check — critical for Chrome mobile
+      // Final size check - critical for Chrome mobile
       setTimeout(()=>{ map.invalidateSize(true); }, 100);
       setTimeout(()=>{ map.invalidateSize(true); }, 500);
       setFieldMapReady(true);
@@ -2636,9 +2636,9 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     await new Promise(r=>setTimeout(r,1600));
     const demo=getDemoMailer(form.season,form.angle,form.offer);
 
-    setMailer({...demo,page1:{...demo.page1,eyebrow:`${form.neighborhood} — ${demo.page1.eyebrow}`}});
+    setMailer({...demo,page1:{...demo.page1,eyebrow:`${form.neighborhood} - ${demo.page1.eyebrow}`}});
     setLoading(false);
-    showToast(`✨ Demo mailer loaded — ${ACTIVE_COMPANY.name} branded & ready`,"info");
+    showToast(`✨ Demo mailer loaded - ${ACTIVE_COMPANY.name} branded & ready`,"info");
   };
 
   const sendToPress=async()=>{
@@ -2671,7 +2671,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       showToast(`✅ Mailer confirmed! Printing now.`,"success");
       setTimeout(()=>setTab("tracker"),1200);
     }catch(e){
-      // Graceful fallback — still add to tracker as queued
+      // Graceful fallback - still add to tracker as queued
       const newJob={
         id:`JW-00${jobs.length+1}`,
         lobId:"",
@@ -2684,7 +2684,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       };
       setJobs(p=>[newJob,...p]);
       setSelectedJob(newJob);
-      showToast("Campaign queued! (Lob test mode — enable CORS proxy for full integration)","info");
+      showToast("Campaign queued! (Lob test mode - enable CORS proxy for full integration)","info");
       setTimeout(()=>setTab("tracker"),1200);
     }finally{
       setSending(false);
@@ -2708,7 +2708,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     const lo = spotForm.bidLow ? `$${parseInt(spotForm.bidLow).toLocaleString()}` : null;
     const hi = spotForm.bidHigh ? `$${parseInt(spotForm.bidHigh).toLocaleString()}` : null;
     const bidRange = lo && hi
-      ? `Starting at ${lo} — Up to ${hi}`
+      ? `Starting at ${lo} - Up to ${hi}`
       : lo ? `Starting at ${lo}` : hi ? `Up to ${hi}` : "Call for Free Estimate";
     const bidStarting = lo || "Call for estimate";
     const bidUpTo = hi || "";
@@ -2785,8 +2785,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
     const demoMailer={
       headline:"WE NOTICED YOUR PROJECT",
-      personalNote:`We were working in your neighborhood recently and noticed your concrete at ${spotForm.address} has ${damageList}. As local Tulsa concrete specialists, we would love to help you get ahead of this before it gets worse — and we can usually start within a week.`,
-      urgencyLine:"Oklahoma winters do not wait — neither should your concrete.",
+      personalNote:`We were working in your neighborhood recently and noticed your concrete at ${spotForm.address} has ${damageList}. As local Tulsa concrete specialists, we would love to help you get ahead of this before it gets worse - and we can usually start within a week.`,
+      urgencyLine:"Oklahoma winters do not wait - neither should your concrete.",
       address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,
       damage:detectedDemo,
       photoUsed:!!capturedPhoto,
@@ -2869,7 +2869,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       <div style="display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;">
         <span style="font-size:9px;color:#6a6864;">Starting at</span>
         <span style="font-size:22px;font-weight:700;color:#1c1a17;">${spotMailer.bidLo||spotMailer.bid}</span>
-        ${spotMailer.bidHi?`<span style="font-size:9px;color:#6a6864;">— up to ${spotMailer.bidHi}</span>`:""}
+        ${spotMailer.bidHi?`<span style="font-size:9px;color:#6a6864;">- up to ${spotMailer.bidHi}</span>`:""}
       </div>
       ${spotMailer.includes?`<div style="font-size:8px;color:#8a8680;margin-top:2px;">✓ Includes: ${spotMailer.includes}</div>`:""}
     </div>
@@ -2964,19 +2964,19 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           track('gps_used', {accuracy: Math.round(accuracy), address: result.address});
           showToast(
             accuracy < 20
-              ? "📍 Address locked — " + result.address
+              ? "📍 Address locked - " + result.address
               : `📍 Got address (±${Math.round(accuracy)}m accuracy)`,
             "success"
           );
         } else {
-          showToast("Could not determine address — try moving outside", "info");
+          showToast("Could not determine address - try moving outside", "info");
         }
         setGpsLoading(false);
       },
       (err) => {
         setGpsLoading(false);
-        if (err.code === 1) showToast("Location access denied — enable in browser settings", "info");
-        else if (err.code === 2) showToast("GPS signal not found — try outside", "info");
+        if (err.code === 1) showToast("Location access denied - enable in browser settings", "info");
+        else if (err.code === 2) showToast("GPS signal not found - try outside", "info");
         else showToast("Location error: " + err.message, "info");
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -3198,7 +3198,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     >{k}</button>
                 ))}
               </div>
-              {demoShake&&<div style={{color:"#f08080",fontSize:12,textAlign:"center",marginBottom:8}}>Incorrect code — try again</div>}
+              {demoShake&&<div style={{color:"#f08080",fontSize:12,textAlign:"center",marginBottom:8}}>Incorrect code - try again</div>}
               <div style={{fontSize:10,color:"var(--gravel)",textAlign:"center",marginBottom:12,opacity:0.6}}>Keyboard input supported · Press Esc to go back</div>
               <button onClick={()=>{setAuthScreen("login");setDemoCode("");}} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:12,fontFamily:"'Syne',sans-serif",width:"100%",padding:"4px 0"}}>← Back</button>
             </>
@@ -3334,7 +3334,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   </div>
                   <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2,color:"var(--cream)",marginBottom:8}}>STEP 2: SPOT BID</div>
                   <div style={{fontSize:13,color:"var(--concrete)",lineHeight:1.7,marginBottom:20}}>
-                    AI reads the damage, writes a personal postcard — <em style={{color:"var(--orange2)"}}>{"\"We noticed your concrete at 4821 Oak Ridge Dr...\""}</em> — and sends it to print.
+                    AI reads the damage, writes a personal postcard - <em style={{color:"var(--orange2)"}}>{"\"We noticed your concrete at 4821 Oak Ridge Dr...\""}</em> - and sends it to print.
                   </div>
                   <div style={{background:"rgba(42,122,82,0.08)",border:"1px solid rgba(42,122,82,0.2)",borderRadius:10,padding:"12px 16px",fontSize:11,color:"var(--green2)",textAlign:"left",lineHeight:1.8,marginBottom:20}}>
                     <div>✓ Photo → AI damage analysis → personal note</div>
@@ -3469,7 +3469,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 return Math.floor((Date.now()-new Date(l.mailerSent))/86400000)>=5&&!l.calledBack;
               }).length;
               return(<>
-                {/* Crew utilization — clicks to Command */}
+                {/* Crew utilization - clicks to Command */}
                 <div className="topbar-stat" onClick={()=>switchTab("command")} style={{cursor:"pointer",borderColor:CAPACITY_MODES[capacity.mode].color+"40",color:CAPACITY_MODES[capacity.mode].color}}>
                   <span style={{width:6,height:6,borderRadius:"50%",background:CAPACITY_MODES[capacity.mode].color,flexShrink:0,display:"inline-block"}}/>
                   <span style={{fontFamily:"'DM Mono',monospace",fontWeight:700}}>{utilPct}%</span>
@@ -3494,7 +3494,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <span style={{fontFamily:"'DM Mono',monospace"}}>{todayJobs.length}</span>
                   <span style={{opacity:0.5,color:"var(--stone)"}}>today</span>
                 </div>
-                {/* Follow-ups due — shows red when urgent */}
+                {/* Follow-ups due - shows red when urgent */}
                 {followUpsDue>0&&(
                   <div className="topbar-stat" onClick={()=>switchTab("command")} style={{cursor:"pointer",borderColor:"rgba(224,82,82,0.4)",color:"#e05252"}}>
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" fill="rgba(224,82,82,0.2)" stroke="#e05252" strokeWidth="1"/><line x1="5" y1="2.5" x2="5" y2="5.5" stroke="#e05252" strokeWidth="1.3" strokeLinecap="round"/><circle cx="5" cy="7.5" r="0.6" fill="#e05252"/></svg>
@@ -3502,7 +3502,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <span style={{opacity:0.7}}>follow-up{followUpsDue!==1?"s":""}</span>
                   </div>
                 )}
-                {/* Field tags — shows when addresses tagged */}
+                {/* Field tags - shows when addresses tagged */}
                 {fieldTags.length>0&&(
                   <div className="topbar-stat" onClick={()=>switchTab("fieldmap")} style={{cursor:"pointer",color:"var(--orange2)"}}>
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1C3.3 1 2 2.3 2 4C2 6.2 5 9.5 5 9.5C5 9.5 8 6.2 8 4C8 2.3 6.7 1 5 1Z" fill="currentColor" fillOpacity="0.3" stroke="currentColor" strokeWidth="1.1"/><circle cx="5" cy="4" r="1.2" fill="currentColor"/></svg>
@@ -3745,7 +3745,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 </button>
                 {mailer&&!loading&&(
                   <button className="send-btn" onClick={sendToPress} disabled={sending}>
-                    {sending?<><span className="spin"/>SENDING TO LOB.COM...</>:`📬 SEND TO ${parseInt(form.homes)||0} TULSA HOMES — $${estCost}`}
+                    {sending?<><span className="spin"/>SENDING TO LOB.COM...</>:`📬 SEND TO ${parseInt(form.homes)||0} TULSA HOMES - $${estCost}`}
                   </button>
                 )}
                 {lobResult&&(
@@ -3775,7 +3775,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {tab==="tracker"&&(
             <div className="tracker-layout">
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>JOB TRACKER</div>
-              <p style={{fontSize:13,color:"var(--stone)",marginBottom:20}}>{ACTIVE_COMPANY.name} campaign — from print queue to Tulsa doorstep.</p>
+              <p style={{fontSize:13,color:"var(--stone)",marginBottom:20}}>{ACTIVE_COMPANY.name} campaign - from print queue to Tulsa doorstep.</p>
               <div className="stats-row">
                 {[
                   {label:"Total Campaigns",value:jobs.length,color:"var(--cream)",trend:"↑ growing",up:true},
@@ -3792,13 +3792,13 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               </div>
               {selectedJob&&(
                 <div className="track-card">
-                  <h3>DELIVERY STATUS — {selectedJob.name}<span className={`badge badge-${selectedJob.status}`}><span className="badge-dot"/>{selectedJob.status}</span></h3>
+                  <h3>DELIVERY STATUS - {selectedJob.name}<span className={`badge badge-${selectedJob.status}`}><span className="badge-dot"/>{selectedJob.status}</span></h3>
                   <div className="track-steps">
                     {TRACK_STEPS.map((s,i)=>{const si=stepIndex(selectedJob.status),done=i<si,active=i===si;return(
                       <div key={i} className={`track-step${done?" done":""}${active?" active":""}`}>
                         <div className="track-circle">{done?"✓":s.icon}</div>
                         <div className="track-lbl">{s.label}</div>
-                        <div className="track-date">{done?s.date:"—"}</div>
+                        <div className="track-date">{done?s.date:"-"}</div>
                       </div>
                     );})}
                   </div>
@@ -3816,7 +3816,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 {jobs.length===0&&(
                   <div style={{padding:"32px",textAlign:"center",color:"var(--gravel)",fontSize:13}}>
                     <div style={{fontSize:28,marginBottom:8}}>📬</div>
-                    No campaigns yet — send your first neighborhood mailer to see results here
+                    No campaigns yet - send your first neighborhood mailer to see results here
                   </div>
                 )}
                 {jobs.map(j=>(
@@ -3940,7 +3940,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       onClick={getGpsAddress}
                       disabled={gpsLoading}
                       style={{flexShrink:0,padding:"0 12px",background:"var(--green)",whiteSpace:"nowrap"}}
-                      title="Auto-fill from GPS — tap while parked outside the house"
+                      title="Auto-fill from GPS - tap while parked outside the house"
                     >
                       {gpsLoading?<span className="spin"/>:"📍 GPS"}
                     </button>
@@ -3957,7 +3957,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   {gpsAccuracy&&spotForm.address&&(
                     <div style={{display:"flex",alignItems:"center",gap:6,marginTop:6,fontSize:10,color:gpsAccuracy<15?"var(--green2)":gpsAccuracy<40?"var(--gold2)":"var(--stone)"}}>
                       <div style={{width:6,height:6,borderRadius:"50%",background:gpsAccuracy<15?"var(--green2)":gpsAccuracy<40?"var(--gold2)":"var(--stone)"}}/>
-                      {gpsAccuracy<15?"High accuracy":gpsAccuracy<40?"Good accuracy":"Moderate accuracy — verify address"} · GPS ±{gpsAccuracy}m
+                      {gpsAccuracy<15?"High accuracy":gpsAccuracy<40?"Good accuracy":"Moderate accuracy - verify address"} · GPS ±{gpsAccuracy}m
                     </div>
                   )}
                 </div>
@@ -4062,7 +4062,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
                 {spotMailer&&!spotLoading&&(
                   <button className="spot-send-btn" style={{background:"var(--green)",marginTop:8}} onClick={sendSpot} disabled={spotSending}>
-                    {spotSending?<><span className="spin"/>SENDING...</>:"📬 SEND THIS POSTCARD — $1.25"}
+                    {spotSending?<><span className="spin"/>SENDING...</>:"📬 SEND THIS POSTCARD - $1.25"}
                   </button>
                 )}
 
@@ -4115,7 +4115,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <div className="empty">
                     <div className="icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="1.5"/><circle cx="24" cy="24" r="13" stroke="currentColor" strokeWidth="1.5" opacity="0.6"/><circle cx="24" cy="24" r="5" fill="currentColor" opacity="0.8"/></svg></div>
                     <h3>Spot Bid Preview</h3>
-                    <p>Enter an address and damage details — AI writes a personal note that sounds like it came from Joel himself, not a corporation.</p>
+                    <p>Enter an address and damage details - AI writes a personal note that sounds like it came from Joel himself, not a corporation.</p>
                     <div style={{marginTop:16,background:"rgba(232,86,10,0.08)",border:"1px solid rgba(232,86,10,0.2)",borderRadius:8,padding:"14px 18px",textAlign:"left",maxWidth:320}}>
                       <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--orange2)",marginBottom:8}}>How It Works</div>
                       <div style={{fontSize:12,color:"var(--stone)",lineHeight:1.8}}>
@@ -4123,7 +4123,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                         <div>2. Enter the address on your phone</div>
                         <div>3. Check the damage you noticed</div>
                         <div>4. Enter your bid range</div>
-                        <div>5. Hit Send — postcard arrives in 2 days</div>
+                        <div>5. Hit Send - postcard arrives in 2 days</div>
                       </div>
                     </div>
                   </div>
@@ -4162,7 +4162,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                               style={{width:"100%",height:"auto",aspectRatio:"600/320",display:"block",borderRadius:"8px 8px 0 0"}}
                             />
                           ) : (spotMailer.photoUrl||spotMailer.photoData) ? (
-                            // Safari fallback — raw photo with CSS overlay
+                            // Safari fallback - raw photo with CSS overlay
                             <div style={{position:"relative",width:"100%",aspectRatio:"600/320",overflow:"hidden",borderRadius:"8px 8px 0 0"}}>
                               <img
                                 src={spotMailer.photoUrl||spotMailer.photoData}
@@ -4221,7 +4221,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <div className="page-tag">Back of Postcard</div>
                     <div className="spot-mailer">
                       <div className="spot-back">
-                        {/* Header bar — dynamic based on damage type */}
+                        {/* Header bar - dynamic based on damage type */}
                         <div className="spot-back-header">
                           <div>
                             <div className="spot-back-header-title">
@@ -4230,18 +4230,18 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                 const allDmg = dmgList.join(' ').toLowerCase();
                                 const hasPhoto = spotMailer.photoUsed;
                                 if(allDmg.includes('full')||allDmg.includes('replace')) return "Full Replacement Recommended";
-                                if(allDmg.includes('sink')||allDmg.includes('sunken')) return "Sinking Slab — Act Now";
+                                if(allDmg.includes('sink')||allDmg.includes('sunken')) return "Sinking Slab - Act Now";
                                 if(allDmg.includes('root')) return "Tree Root Damage Detected";
                                 if(allDmg.includes('drain')) return "Drainage Issue Detected";
                                 if(allDmg.includes('spall')) return "Surface Deterioration Detected";
-                                if(allDmg.includes('oil')) return "Oil Damage — Treatment Needed";
+                                if(allDmg.includes('oil')) return "Oil Damage - Treatment Needed";
                                 if(allDmg.includes('edge')) return "Edge Deterioration Detected";
                                 if(allDmg.includes('seal')) return "Professional Sealing Required";
                                 if(allDmg.includes('crack')&&dmgList.length>1) return `${dmgList.length} Issues Found on Your Property`;
-                                if(allDmg.includes('crack')) return "Cracks Spotted — Free Estimate Inside";
-                                if(dmgList.length>2) return `${dmgList.length} Issues Found — Free Estimate Inside`;
+                                if(allDmg.includes('crack')) return "Cracks Spotted - Free Estimate Inside";
+                                if(dmgList.length>2) return `${dmgList.length} Issues Found - Free Estimate Inside`;
                                 if(dmgList.length>0) return "Concrete Issues Spotted on Your Property";
-                                if(hasPhoto) return "Your Property Was Assessed — Free Estimate Inside";
+                                if(hasPhoto) return "Your Property Was Assessed - Free Estimate Inside";
                                 return "You Qualify for a Free Estimate";
                               })()}
                             </div>
@@ -4297,7 +4297,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           )}
 
 
-          {/* FIELD MAP — fully always mounted, CSS-only show/hide */}
+          {/* FIELD MAP - fully always mounted, CSS-only show/hide */}
           <div style={{display:tab==="fieldmap"?"flex":"none",flexDirection:"column",height:"100%"}}>
             <div style={{padding:"14px 20px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,borderBottom:"1px solid rgba(184,180,172,0.08)"}}>
                 <div>
@@ -4320,7 +4320,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 </div>
               </div>
 
-              {/* Map container — Leaflet loads here */}
+              {/* Map container - Leaflet loads here */}
               <div id="pavemail-fieldmap" style={{flex:"1 1 0",minHeight:0,background:"#1a1a16",position:"relative",overflow:"hidden",width:"100%"}}>
                 {!fieldMapReady&&(
                   <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,color:"var(--stone)"}}>
@@ -4381,7 +4381,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:1,color:"var(--cream)",marginBottom:4}}>TAG THIS PROPERTY</div>
                     <div style={{fontSize:13,color:"var(--orange2)",fontFamily:"'DM Mono',monospace",marginBottom:14,fontWeight:600}}>{tagModal.address||"Locating address..."}</div>
                     <textarea value={tagModal.notes||""} onChange={e=>setTagModal(m=>({...m,notes:e.target.value}))}
-                      placeholder="Quick note (optional) — e.g. severe cracking, tree roots..."
+                      placeholder="Quick note (optional) - e.g. severe cracking, tree roots..."
                       style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(184,180,172,0.12)",borderRadius:8,padding:"10px 12px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:16,resize:"none",height:70,outline:"none",boxSizing:"border-box",marginBottom:14}}
                     ></textarea>
                     <div style={{display:"flex",gap:8}}>
@@ -4458,7 +4458,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 );
               })()}
 
-              {/* WEEK VIEW — day columns */}
+              {/* WEEK VIEW - day columns */}
               {jobBoardView==="week"&&(()=>{
                 const today = new Date();
                 const days = Array.from({length:6},(_,i)=>{
@@ -4608,7 +4608,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 })()}
               </div>
 
-              {/* QUICK ACTIONS — the money buttons */}
+              {/* QUICK ACTIONS - the money buttons */}
               <div style={{marginBottom:24}}>
                 <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--stone)",marginBottom:10}}>Quick Actions</div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
@@ -4641,7 +4641,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1.5,color:"var(--concrete)",marginBottom:10}}>TODAY'S SCHEDULE</div>
                     {todayJobs.length===0?(
                       <div style={{background:"rgba(184,180,172,0.04)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,padding:"16px",fontSize:12,color:"var(--gravel)",textAlign:"center"}}>
-                        No jobs scheduled today — <button onClick={()=>switchTab("jobboard")} style={{background:"none",border:"none",color:"var(--orange2)",cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:600}}>open Job Board →</button>
+                        No jobs scheduled today - <button onClick={()=>switchTab("jobboard")} style={{background:"none",border:"none",color:"var(--orange2)",cursor:"pointer",fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:600}}>open Job Board →</button>
                       </div>
                     ):(
                       <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -4703,7 +4703,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 );
               })()}
 
-              {/* MAIL ROI — the investor number */}
+              {/* MAIL ROI - the investor number */}
               {(()=>{
                 const campaignSpend = jobs.reduce((s,j)=>s+parseFloat(j.cost||0),0);
                 const jobRevenue = jobBoardJobs.reduce((s,j)=>s+(j.value||0),0);
@@ -4734,7 +4734,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                         </div>
                         <div>
                           <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",marginBottom:4}}>Return</div>
-                          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:roi&&parseFloat(roi)>=5?"var(--orange2)":"var(--gold2)"}}>{roi?`${roi}x`:"—"}</div>
+                          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:roi&&parseFloat(roi)>=5?"var(--orange2)":"var(--gold2)"}}>{roi?`${roi}x`:"-"}</div>
                         </div>
                       </div>
                       <div style={{background:"rgba(0,0,0,0.2)",borderRadius:8,padding:"10px 14px",fontSize:11,color:"var(--concrete)",lineHeight:1.7}}>
@@ -4862,9 +4862,9 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div style={{padding:"32px 0",textAlign:"center",color:"var(--gravel)"}}>
                   <div style={{marginBottom:12,opacity:0.3}}><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 6C6 6 8 4 11 4C13 4 14 6 15 8L16 11C16.4 12.2 16 13.6 15 14.4L13 16C14 18 16 20.6 18 22L20 20C21 19.2 22.4 19 23.6 19.4L27 21C29 22 30 23 30 25C30 28 27 31 27 31C22 36 6 19 6 6Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg></div>
                   <div style={{fontSize:14,fontWeight:600,color:"var(--concrete)",marginBottom:6}}>No calls yet</div>
-                  <div style={{fontSize:12,color:"var(--stone)",marginBottom:16}}>The AI agent answers calls 24/7 — test it with your own number above</div>
+                  <div style={{fontSize:12,color:"var(--stone)",marginBottom:16}}>The AI agent answers calls 24/7 - test it with your own number above</div>
                   <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(42,122,82,0.1)",border:"1px solid rgba(42,122,82,0.25)",borderRadius:8,padding:"8px 14px",fontSize:11,color:"var(--green2)"}}>
-                    <span>●</span> Agent standing by — waiting for first call
+                    <span>●</span> Agent standing by - waiting for first call
                   </div>
                 </div>
               )}
@@ -5004,7 +5004,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                             <div className="pl-card" key={lead.id}>
                               <div className="pl-card-addr">{lead.address}</div>
                               <div className="pl-card-city">{lead.neighborhood} · {lead.city}</div>
-                              <div className="pl-card-bid">{lead.bidLo}{lead.bidHi&&<span className="pl-card-bid-range"> — {lead.bidHi}</span>}</div>
+                              <div className="pl-card-bid">{lead.bidLo}{lead.bidHi&&<span className="pl-card-bid-range"> - {lead.bidHi}</span>}</div>
                               {/* Customer flags */}
               {lead.flags?.length>0&&(
                 <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:4,marginBottom:2}}>
@@ -5082,7 +5082,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                   {!permitData[lead.id]&&<div className="permit-empty">Tap Permits to load...</div>}
                                   {permitData[lead.id]?.error&&(
                                     <div className="permit-empty">
-                                      API unavailable — use manual lookup below
+                                      API unavailable - use manual lookup below
                                     </div>
                                   )}
                                   {permitData[lead.id]?.permits?.length===0&&!permitData[lead.id]?.error&&(
@@ -5135,9 +5135,9 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       <div className="pl-list-row" key={lead.id}>
                         <div><div className="pl-addr">{lead.address}</div><div className="pl-sub">{lead.city}</div></div>
                         <div className="pl-cell">{lead.neighborhood}</div>
-                        <div className="pl-cell">{lead.spotted||"—"}</div>
-                        <div className="pl-cell">{lead.mailerSent||"—"}</div>
-                        <div className="pl-cell">{lead.calledBack||"—"}</div>
+                        <div className="pl-cell">{lead.spotted||"-"}</div>
+                        <div className="pl-cell">{lead.mailerSent||"-"}</div>
+                        <div className="pl-cell">{lead.calledBack||"-"}</div>
                         <div className="pl-cell mono">{lead.bidLo}{lead.bidHi?`–${lead.bidHi}`:""}</div>
                         <div>
                           <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",borderRadius:12,fontSize:10,fontWeight:700,background:stage?.bg,color:stage?.color}}>
@@ -5217,16 +5217,16 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div className="settings-section">
                   <h3>Production Checklist</h3>
                   <div style={{fontSize:12,color:"var(--stone)",lineHeight:2.4}}>
-                    <div>✅ <strong style={{color:"var(--cream)"}}>AI Mailer Generation</strong> — Live</div>
-                    <div>✅ <strong style={{color:"var(--cream)"}}>QR Code Auto-Dial</strong> — On every mailer</div>
-                    <div>✅ <strong style={{color:"var(--cream)"}}>Print & Mail API</strong> — Test mode connected</div>
-                    <div>✅ <strong style={{color:"var(--cream)"}}>USPS Route Data</strong> — Live address counts</div>
-                    <div>✅ <strong style={{color:"var(--cream)"}}>AI Phone Agent</strong> — Standing by</div>
-                    <div>✅ <strong style={{color:"var(--cream)"}}>Error Monitoring</strong> — Active</div>
-                    <div>✅ <strong style={{color:"var(--cream)"}}>Analytics</strong> — Tracking 11 events</div>
-                    <div>🔧 <strong style={{color:"var(--orange2)"}}>Print & Mail Live Mode</strong> — Flip to live key when ready</div>
-                    <div>🔧 <strong style={{color:"var(--orange2)"}}>Inbound Phone Number</strong> — Purchase ~$2/mo to activate</div>
-                    <div>🔧 <strong style={{color:"var(--orange2)"}}>Billing</strong> — Per-contractor subscription pending</div>
+                    <div>✅ <strong style={{color:"var(--cream)"}}>AI Mailer Generation</strong> - Live</div>
+                    <div>✅ <strong style={{color:"var(--cream)"}}>QR Code Auto-Dial</strong> - On every mailer</div>
+                    <div>✅ <strong style={{color:"var(--cream)"}}>Print & Mail API</strong> - Test mode connected</div>
+                    <div>✅ <strong style={{color:"var(--cream)"}}>USPS Route Data</strong> - Live address counts</div>
+                    <div>✅ <strong style={{color:"var(--cream)"}}>AI Phone Agent</strong> - Standing by</div>
+                    <div>✅ <strong style={{color:"var(--cream)"}}>Error Monitoring</strong> - Active</div>
+                    <div>✅ <strong style={{color:"var(--cream)"}}>Analytics</strong> - Tracking 11 events</div>
+                    <div>🔧 <strong style={{color:"var(--orange2)"}}>Print & Mail Live Mode</strong> - Flip to live key when ready</div>
+                    <div>🔧 <strong style={{color:"var(--orange2)"}}>Inbound Phone Number</strong> - Purchase ~$2/mo to activate</div>
+                    <div>🔧 <strong style={{color:"var(--orange2)"}}>Billing</strong> - Per-contractor subscription pending</div>
                   </div>
                 </div>
               )}
@@ -5277,7 +5277,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <h3>Mail Delivery</h3>
                 <div style={{display:"flex",flexDirection:"column",gap:10}}>
                   {[
-                    {label:"USPS Every Door Direct Mail",desc:"Neighborhood route data — real delivery counts for every ZIP",status:"live"},
+                    {label:"USPS Every Door Direct Mail",desc:"Neighborhood route data - real delivery counts for every ZIP",status:"live"},
                     {label:"Postcard Print & Mail",desc:"Physical 6x9 inch postcards printed and mailed to real addresses",status:"live"},
                     {label:"USPS Delivery Tracking",desc:"Know when your mail reaches the neighborhood",status:"soon"},
                   ].map((a,i)=>(
@@ -5300,12 +5300,12 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
         </div>
 
-        {/* WON BANNER — radius mailer suggestion */}
+        {/* WON BANNER - radius mailer suggestion */}
       {wonBanner&&(
         <div className="won-banner">
           <div className="won-banner-icon"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M13 2L15.8 9.5H24L17.6 14.2L20.4 21.7L13 17L5.6 21.7L8.4 14.2L2 9.5H10.2L13 2Z" fill="#f9a825" stroke="#f9a825" strokeWidth="0.5" strokeLinejoin="round"/></svg></div>
           <div className="won-banner-text">
-            <h4>Job Won — {wonBanner.address}!</h4>
+            <h4>Job Won: {wonBanner.address}!</h4>
             <p>Send a radius mailer to neighbors within half a mile?</p>
           </div>
           <div className="won-banner-actions">
@@ -5336,7 +5336,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             </div>
             <div style={{height:1,background:"rgba(184,180,172,0.08)",margin:"14px 0"}}/>
 
-            {/* STEP 1 — Configure */}
+            {/* STEP 1 - Configure */}
             {radiusStep===1&&(
               <div className="radius-step radius-config">
                 <div>
@@ -5384,7 +5384,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div className="field">
                   <label>Personal Note (optional)</label>
                   <textarea
-                    placeholder="e.g. We just finished the Smiths' project — mention any special offer..."
+                    placeholder="e.g. We just finished the Smiths' project - mention any special offer..."
                     value={radiusForm.message}
                     onChange={e=>setRadiusForm(f=>({...f,message:e.target.value}))}
                     style={{height:60}}
@@ -5397,7 +5397,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               </div>
             )}
 
-            {/* STEP 2 — Preview */}
+            {/* STEP 2 - Preview */}
             {radiusStep===2&&radiusMailer&&(
               <div className="radius-step">
                 <div className="radius-preview" style={{marginBottom:16}}>
@@ -5434,7 +5434,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               </div>
             )}
 
-            {/* STEP 3 — Sent */}
+            {/* STEP 3 - Sent */}
             {radiusStep===3&&(
               <div className="radius-step radius-success">
                 <div className="radius-success-icon">🎉</div>
@@ -5577,7 +5577,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <span style={{background:stage?.bg,color:stage?.color,padding:"3px 10px",borderRadius:12,fontSize:10,fontWeight:700}}>
                     {stage?.label}
                   </span>
-                  {lead.bidLo&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"var(--orange2)",fontWeight:600}}>{lead.bidLo}{lead.bidHi&&<span style={{opacity:0.6}}> — {lead.bidHi}</span>}</span>}
+                  {lead.bidLo&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"var(--orange2)",fontWeight:600}}>{lead.bidLo}{lead.bidHi&&<span style={{opacity:0.6}}> - {lead.bidHi}</span>}</span>}
                   {lead.flags?.map(fid=>{
                     const f=LEAD_FLAGS.find(x=>x.id===fid);
                     return f?<span key={fid} className="lead-flag" style={{background:f.bg,color:f.color,border:`1px solid ${f.color}30`,display:"inline-flex",alignItems:"center",gap:3}}>{f.icon}{f.label}</span>:null;
