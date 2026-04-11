@@ -4298,7 +4298,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
 
           {/* FIELD MAP — fully always mounted, CSS-only show/hide */}
-          <div style={{display:tab==="fieldmap"?"flex":"none",flexDirection:"column",position:"absolute",inset:0,top:52}}>
+          <div style={{display:tab==="fieldmap"?"flex":"none",flexDirection:"column",height:"100%"}}>
             <div style={{padding:"14px 20px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,borderBottom:"1px solid rgba(184,180,172,0.08)"}}>
                 <div>
                   <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:"var(--cream)"}}>FIELD MAP</div>
@@ -4321,7 +4321,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               </div>
 
               {/* Map container — Leaflet loads here */}
-              <div id="pavemail-fieldmap" style={{flex:1,minHeight:0,background:"#1a1a16",position:"relative",overflow:"hidden",width:"100%"}}>
+              <div id="pavemail-fieldmap" style={{flex:"1 1 0",minHeight:0,background:"#1a1a16",position:"relative",overflow:"hidden",width:"100%"}}>
                 {!fieldMapReady&&(
                   <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,color:"var(--stone)"}}>
                     <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="2" y="2" width="44" height="44" rx="6" fill="currentColor" fillOpacity="0.05" stroke="currentColor" strokeWidth="1.5" opacity="0.3"/><path d="M8 18L18 14L28 20L40 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.4"/><path d="M8 28L18 24L28 30L40 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.25"/><circle cx="30" cy="23" r="6" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="1.5" opacity="0.5"/><circle cx="30" cy="23" r="2.5" fill="currentColor" opacity="0.5"/></svg>
