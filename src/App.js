@@ -1,164 +1,4 @@
-import React,
-
-          {/* JOB BOARD */}
-          {tab==="jobboard"&&(
-            <div style={{height:"100%",overflowY:"auto",padding:"20px 24px"}}>
-              {/* Header */}
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)"}}>JOB BOARD</div>
-                  <div style={{fontSize:11,color:"var(--stone)"}}>Production schedule · crew assignments · revenue tracking</div>
-                </div>
-                <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                  {/* View toggle */}
-                  {[{id:"week",label:"Week View"},{id:"list",label:"All Jobs"}].map(v=>(
-                    <button key={v.id} onClick={()=>setJobBoardView(v.id)}
-                      style={{background:jobBoardView===v.id?"rgba(232,86,10,0.15)":"rgba(184,180,172,0.06)",border:`1px solid ${jobBoardView===v.id?"rgba(232,86,10,0.3)":"rgba(184,180,172,0.12)"}`,borderRadius:7,padding:"6px 12px",color:jobBoardView===v.id?"var(--orange2)":"var(--stone)",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>
-                      {v.label}
-                    </button>
-                  ))}
-                  <button onClick={()=>setNewJobModal(true)}
-                    style={{background:"var(--orange)",border:"none",borderRadius:8,padding:"7px 14px",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Syne',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><line x1="5.5" y1="1" x2="5.5" y2="10" stroke="white" strokeWidth="1.8" strokeLinecap="round"/><line x1="1" y1="5.5" x2="10" y2="5.5" stroke="white" strokeWidth="1.8" strokeLinecap="round"/></svg>
-                    Add Job
-                  </button>
-                </div>
-              </div>
-
-              {/* Revenue summary strip */}
-              {(()=>{
-                const thisWeek = jobBoardJobs;
-                const totalVal = thisWeek.reduce((s,j)=>s+(j.value||0),0);
-                const collected = thisWeek.filter(j=>j.status==="collected").reduce((s,j)=>s+(j.value||0),0);
-                const invoiced = thisWeek.filter(j=>j.status==="invoiced").reduce((s,j)=>s+(j.value||0),0);
-                const outstanding = invoiced;
-                return(
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
-                    {[
-                      {label:"Scheduled Value",val:`$${totalVal.toLocaleString()}`,color:"var(--cream)"},
-                      {label:"Collected",val:`$${collected.toLocaleString()}`,color:"var(--green2)"},
-                      {label:"Outstanding",val:`$${outstanding.toLocaleString()}`,color:outstanding>0?"var(--gold2)":"var(--stone)"},
-                      {label:"Jobs This Week",val:thisWeek.length,color:"var(--orange2)"},
-                    ].map((s,i)=>(
-                      <div key={i} style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:9,padding:"12px 14px"}}>
-                        <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",marginBottom:4}}>{s.label}</div>
-                        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,color:s.color,lineHeight:1}}>{s.val}</div>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })()}
-
-              {/* WEEK VIEW — day columns */}
-              {jobBoardView==="week"&&(()=>{
-                const today = new Date();
-                const days = Array.from({length:6},(_,i)=>{
-                  const d = new Date(today);
-                  d.setDate(today.getDate() - today.getDay() + 1 + i); // Mon-Sat
-                  return {
-                    label:d.toLocaleDateString("en-US",{weekday:"short"}),
-                    date:d.toISOString().split("T")[0],
-                    isToday:d.toDateString()===today.toDateString(),
-                  };
-                });
-                return(
-                  <div className="jobboard-week-grid" style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:8,minHeight:300}}>
-                    {days.map(day=>{
-                      const dayJobs = jobBoardJobs.filter(j=>j.date===day.date);
-                      return(
-                        <div key={day.date} style={{background:day.isToday?"rgba(232,86,10,0.05)":"rgba(0,0,0,0.15)",border:`1px solid ${day.isToday?"rgba(232,86,10,0.25)":"rgba(184,180,172,0.07)"}`,borderRadius:10,overflow:"hidden",minHeight:200}}>
-                          {/* Day header */}
-                          <div style={{padding:"8px 10px",borderBottom:"1px solid rgba(184,180,172,0.07)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:1,color:day.isToday?"var(--orange2)":"var(--stone)"}}>{day.label}</div>
-                            {day.isToday&&<div style={{width:6,height:6,borderRadius:"50%",background:"var(--orange)"}}/>}
-                          </div>
-                          {/* Jobs for this day */}
-                          <div style={{padding:"6px",display:"flex",flexDirection:"column",gap:5}}>
-                            {dayJobs.length===0&&(
-                              <div style={{fontSize:10,color:"var(--gravel)",textAlign:"center",padding:"20px 8px",opacity:0.5}}>Open</div>
-                            )}
-                            {dayJobs.map(job=>{
-                              const st = JOB_STATUSES.find(s=>s.id===job.status)||JOB_STATUSES[0];
-                              return(
-                                <div key={job.id} onClick={()=>setSelectedJobDetail(job)}
-                                  style={{background:st.bg,border:`1px solid ${st.color}30`,borderRadius:7,padding:"7px 8px",cursor:"pointer",transition:"all 0.12s"}}>
-                                  <div style={{fontSize:10,fontWeight:700,color:st.color,marginBottom:2}}>{st.label}</div>
-                                  <div style={{fontSize:10,color:"var(--cream)",fontWeight:600,lineHeight:1.3,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{job.address}</div>
-                                  <div style={{fontSize:9,color:"var(--stone)",marginTop:3}}>{job.service}</div>
-                                  {job.value>0&&<div style={{fontSize:10,color:"var(--orange2)",fontFamily:"'DM Mono',monospace",marginTop:2,fontWeight:600}}>${job.value.toLocaleString()}</div>}
-                                  {job.crew&&<div style={{fontSize:9,color:"var(--gravel)",marginTop:2}}>{job.crew}</div>}
-                                </div>
-                              );
-                            })}
-                            {/* Add job to this day quick button */}
-                            <button onClick={()=>{setNewJob(j=>({...j,date:day.date}));setNewJobModal(true);}}
-                              style={{background:"rgba(184,180,172,0.04)",border:"1px dashed rgba(184,180,172,0.12)",borderRadius:7,padding:"6px 0",color:"var(--gravel)",fontSize:10,cursor:"pointer",fontFamily:"'Syne',sans-serif",width:"100%"}}>
-                              + Add
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-
-              {/* LIST VIEW */}
-              {jobBoardView==="list"&&(
-                <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  {JOB_STATUSES.map(status=>{
-                    const statusJobs = jobBoardJobs.filter(j=>j.status===status.id);
-                    if(statusJobs.length===0) return null;
-                    return(
-                      <div key={status.id}>
-                        <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:status.color,marginBottom:8,paddingLeft:4}}>{status.label} ({statusJobs.length})</div>
-                        {statusJobs.map(job=>(
-                          <div key={job.id} onClick={()=>setSelectedJobDetail(job)}
-                            style={{background:"var(--ink)",border:`1px solid ${status.color}25`,borderRadius:10,padding:"12px 16px",marginBottom:6,cursor:"pointer",display:"flex",alignItems:"center",gap:12,transition:"all 0.12s"}}>
-                            <div style={{width:10,height:10,borderRadius:"50%",background:status.color,flexShrink:0}}/>
-                            <div style={{flex:1,minWidth:0}}>
-                              <div style={{fontSize:13,fontWeight:600,color:"var(--cream)",marginBottom:2}}>{job.address}</div>
-                              <div style={{fontSize:11,color:"var(--stone)"}}>{job.service} · {job.crew||"No crew"} · {job.date}</div>
-                            </div>
-                            {job.value>0&&<div style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"var(--orange2)",fontWeight:600,flexShrink:0}}>${job.value.toLocaleString()}</div>}
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })}
-                  {jobBoardJobs.length===0&&(
-                    <div style={{textAlign:"center",padding:"40px 20px",color:"var(--stone)"}}>
-                      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style={{opacity:0.3,marginBottom:12}}><rect x="2" y="5" width="36" height="32" rx="3" stroke="currentColor" strokeWidth="1.5"/><line x1="2" y1="13" x2="38" y2="13" stroke="currentColor" strokeWidth="1.5"/><line x1="12" y1="2" x2="12" y2="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="28" y1="2" x2="28" y2="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-                      <div style={{fontSize:14,fontWeight:600,color:"var(--concrete)",marginBottom:6}}>No jobs scheduled</div>
-                      <div style={{fontSize:12,color:"var(--gravel)",marginBottom:16}}>Convert a won Pipeline lead or add a job manually</div>
-                      <button onClick={()=>setNewJobModal(true)} style={{background:"var(--orange)",border:"none",borderRadius:8,padding:"10px 20px",color:"white",fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>+ Add First Job</button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Convert Won Pipeline leads CTA */}
-              {pipeline.filter(l=>l.stage==="won"&&!jobBoardJobs.find(j=>j.fromPipeline===l.id)).length>0&&(
-                <div style={{marginTop:20,background:"rgba(42,122,82,0.08)",border:"1px solid rgba(42,122,82,0.2)",borderRadius:10,padding:"14px 16px"}}>
-                  <div style={{fontSize:12,fontWeight:700,color:"var(--green2)",marginBottom:8}}>
-                    {pipeline.filter(l=>l.stage==="won"&&!jobBoardJobs.find(j=>j.fromPipeline===l.id)).length} Won Pipeline leads ready to schedule
-                  </div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                    {pipeline.filter(l=>l.stage==="won"&&!jobBoardJobs.find(j=>j.fromPipeline===l.id)).map(lead=>(
-                      <button key={lead.id} onClick={()=>{
-                        setNewJob({address:lead.address,city:lead.city||"Tulsa",service:"Concrete Work",value:lead.value||0,crew:"",date:new Date().toISOString().split("T")[0],notes:"Converted from Pipeline",status:"scheduled",fromPipeline:lead.id});
-                        setNewJobModal(true);
-                      }} style={{background:"rgba(42,122,82,0.12)",border:"1px solid rgba(42,122,82,0.25)",borderRadius:7,padding:"6px 10px",color:"var(--green2)",fontSize:11,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontWeight:600}}>
-                        + {lead.address}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
- { useState } from "react";
+import React, { useState } from "react";
 
 // ─────────────────────────────────────────────
 // ANALYTICS + ERROR MONITORING
@@ -4266,6 +4106,166 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               )}
             </div>
           )}
+          {/* JOB BOARD */}
+          {tab==="jobboard"&&(
+            <div style={{height:"100%",overflowY:"auto",padding:"20px 24px"}}>
+              {/* Header */}
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)"}}>JOB BOARD</div>
+                  <div style={{fontSize:11,color:"var(--stone)"}}>Production schedule · crew assignments · revenue tracking</div>
+                </div>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  {/* View toggle */}
+                  {[{id:"week",label:"Week View"},{id:"list",label:"All Jobs"}].map(v=>(
+                    <button key={v.id} onClick={()=>setJobBoardView(v.id)}
+                      style={{background:jobBoardView===v.id?"rgba(232,86,10,0.15)":"rgba(184,180,172,0.06)",border:`1px solid ${jobBoardView===v.id?"rgba(232,86,10,0.3)":"rgba(184,180,172,0.12)"}`,borderRadius:7,padding:"6px 12px",color:jobBoardView===v.id?"var(--orange2)":"var(--stone)",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>
+                      {v.label}
+                    </button>
+                  ))}
+                  <button onClick={()=>setNewJobModal(true)}
+                    style={{background:"var(--orange)",border:"none",borderRadius:8,padding:"7px 14px",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Syne',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><line x1="5.5" y1="1" x2="5.5" y2="10" stroke="white" strokeWidth="1.8" strokeLinecap="round"/><line x1="1" y1="5.5" x2="10" y2="5.5" stroke="white" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                    Add Job
+                  </button>
+                </div>
+              </div>
+
+              {/* Revenue summary strip */}
+              {(()=>{
+                const thisWeek = jobBoardJobs;
+                const totalVal = thisWeek.reduce((s,j)=>s+(j.value||0),0);
+                const collected = thisWeek.filter(j=>j.status==="collected").reduce((s,j)=>s+(j.value||0),0);
+                const invoiced = thisWeek.filter(j=>j.status==="invoiced").reduce((s,j)=>s+(j.value||0),0);
+                const outstanding = invoiced;
+                return(
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
+                    {[
+                      {label:"Scheduled Value",val:`$${totalVal.toLocaleString()}`,color:"var(--cream)"},
+                      {label:"Collected",val:`$${collected.toLocaleString()}`,color:"var(--green2)"},
+                      {label:"Outstanding",val:`$${outstanding.toLocaleString()}`,color:outstanding>0?"var(--gold2)":"var(--stone)"},
+                      {label:"Jobs This Week",val:thisWeek.length,color:"var(--orange2)"},
+                    ].map((s,i)=>(
+                      <div key={i} style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:9,padding:"12px 14px"}}>
+                        <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",marginBottom:4}}>{s.label}</div>
+                        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,color:s.color,lineHeight:1}}>{s.val}</div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
+              {/* WEEK VIEW — day columns */}
+              {jobBoardView==="week"&&(()=>{
+                const today = new Date();
+                const days = Array.from({length:6},(_,i)=>{
+                  const d = new Date(today);
+                  d.setDate(today.getDate() - today.getDay() + 1 + i); // Mon-Sat
+                  return {
+                    label:d.toLocaleDateString("en-US",{weekday:"short"}),
+                    date:d.toISOString().split("T")[0],
+                    isToday:d.toDateString()===today.toDateString(),
+                  };
+                });
+                return(
+                  <div className="jobboard-week-grid" style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:8,minHeight:300}}>
+                    {days.map(day=>{
+                      const dayJobs = jobBoardJobs.filter(j=>j.date===day.date);
+                      return(
+                        <div key={day.date} style={{background:day.isToday?"rgba(232,86,10,0.05)":"rgba(0,0,0,0.15)",border:`1px solid ${day.isToday?"rgba(232,86,10,0.25)":"rgba(184,180,172,0.07)"}`,borderRadius:10,overflow:"hidden",minHeight:200}}>
+                          {/* Day header */}
+                          <div style={{padding:"8px 10px",borderBottom:"1px solid rgba(184,180,172,0.07)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:1,color:day.isToday?"var(--orange2)":"var(--stone)"}}>{day.label}</div>
+                            {day.isToday&&<div style={{width:6,height:6,borderRadius:"50%",background:"var(--orange)"}}/>}
+                          </div>
+                          {/* Jobs for this day */}
+                          <div style={{padding:"6px",display:"flex",flexDirection:"column",gap:5}}>
+                            {dayJobs.length===0&&(
+                              <div style={{fontSize:10,color:"var(--gravel)",textAlign:"center",padding:"20px 8px",opacity:0.5}}>Open</div>
+                            )}
+                            {dayJobs.map(job=>{
+                              const st = JOB_STATUSES.find(s=>s.id===job.status)||JOB_STATUSES[0];
+                              return(
+                                <div key={job.id} onClick={()=>setSelectedJobDetail(job)}
+                                  style={{background:st.bg,border:`1px solid ${st.color}30`,borderRadius:7,padding:"7px 8px",cursor:"pointer",transition:"all 0.12s"}}>
+                                  <div style={{fontSize:10,fontWeight:700,color:st.color,marginBottom:2}}>{st.label}</div>
+                                  <div style={{fontSize:10,color:"var(--cream)",fontWeight:600,lineHeight:1.3,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{job.address}</div>
+                                  <div style={{fontSize:9,color:"var(--stone)",marginTop:3}}>{job.service}</div>
+                                  {job.value>0&&<div style={{fontSize:10,color:"var(--orange2)",fontFamily:"'DM Mono',monospace",marginTop:2,fontWeight:600}}>${job.value.toLocaleString()}</div>}
+                                  {job.crew&&<div style={{fontSize:9,color:"var(--gravel)",marginTop:2}}>{job.crew}</div>}
+                                </div>
+                              );
+                            })}
+                            {/* Add job to this day quick button */}
+                            <button onClick={()=>{setNewJob(j=>({...j,date:day.date}));setNewJobModal(true);}}
+                              style={{background:"rgba(184,180,172,0.04)",border:"1px dashed rgba(184,180,172,0.12)",borderRadius:7,padding:"6px 0",color:"var(--gravel)",fontSize:10,cursor:"pointer",fontFamily:"'Syne',sans-serif",width:"100%"}}>
+                              + Add
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
+              {/* LIST VIEW */}
+              {jobBoardView==="list"&&(
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {JOB_STATUSES.map(status=>{
+                    const statusJobs = jobBoardJobs.filter(j=>j.status===status.id);
+                    if(statusJobs.length===0) return null;
+                    return(
+                      <div key={status.id}>
+                        <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:status.color,marginBottom:8,paddingLeft:4}}>{status.label} ({statusJobs.length})</div>
+                        {statusJobs.map(job=>(
+                          <div key={job.id} onClick={()=>setSelectedJobDetail(job)}
+                            style={{background:"var(--ink)",border:`1px solid ${status.color}25`,borderRadius:10,padding:"12px 16px",marginBottom:6,cursor:"pointer",display:"flex",alignItems:"center",gap:12,transition:"all 0.12s"}}>
+                            <div style={{width:10,height:10,borderRadius:"50%",background:status.color,flexShrink:0}}/>
+                            <div style={{flex:1,minWidth:0}}>
+                              <div style={{fontSize:13,fontWeight:600,color:"var(--cream)",marginBottom:2}}>{job.address}</div>
+                              <div style={{fontSize:11,color:"var(--stone)"}}>{job.service} · {job.crew||"No crew"} · {job.date}</div>
+                            </div>
+                            {job.value>0&&<div style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"var(--orange2)",fontWeight:600,flexShrink:0}}>${job.value.toLocaleString()}</div>}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                  {jobBoardJobs.length===0&&(
+                    <div style={{textAlign:"center",padding:"40px 20px",color:"var(--stone)"}}>
+                      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style={{opacity:0.3,marginBottom:12}}><rect x="2" y="5" width="36" height="32" rx="3" stroke="currentColor" strokeWidth="1.5"/><line x1="2" y1="13" x2="38" y2="13" stroke="currentColor" strokeWidth="1.5"/><line x1="12" y1="2" x2="12" y2="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="28" y1="2" x2="28" y2="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                      <div style={{fontSize:14,fontWeight:600,color:"var(--concrete)",marginBottom:6}}>No jobs scheduled</div>
+                      <div style={{fontSize:12,color:"var(--gravel)",marginBottom:16}}>Convert a won Pipeline lead or add a job manually</div>
+                      <button onClick={()=>setNewJobModal(true)} style={{background:"var(--orange)",border:"none",borderRadius:8,padding:"10px 20px",color:"white",fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>+ Add First Job</button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Convert Won Pipeline leads CTA */}
+              {pipeline.filter(l=>l.stage==="won"&&!jobBoardJobs.find(j=>j.fromPipeline===l.id)).length>0&&(
+                <div style={{marginTop:20,background:"rgba(42,122,82,0.08)",border:"1px solid rgba(42,122,82,0.2)",borderRadius:10,padding:"14px 16px"}}>
+                  <div style={{fontSize:12,fontWeight:700,color:"var(--green2)",marginBottom:8}}>
+                    {pipeline.filter(l=>l.stage==="won"&&!jobBoardJobs.find(j=>j.fromPipeline===l.id)).length} Won Pipeline leads ready to schedule
+                  </div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                    {pipeline.filter(l=>l.stage==="won"&&!jobBoardJobs.find(j=>j.fromPipeline===l.id)).map(lead=>(
+                      <button key={lead.id} onClick={()=>{
+                        setNewJob({address:lead.address,city:lead.city||"Tulsa",service:"Concrete Work",value:lead.value||0,crew:"",date:new Date().toISOString().split("T")[0],notes:"Converted from Pipeline",status:"scheduled",fromPipeline:lead.id});
+                        setNewJobModal(true);
+                      }} style={{background:"rgba(42,122,82,0.12)",border:"1px solid rgba(42,122,82,0.25)",borderRadius:7,padding:"6px 10px",color:"var(--green2)",fontSize:11,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontWeight:600}}>
+                        + {lead.address}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+
+
           {/* COMMAND CENTER */}
           {tab==="command"&&(
             <div style={{height:"100%",overflowY:"auto",padding:"20px 24px"}}>
