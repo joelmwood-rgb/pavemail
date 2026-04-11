@@ -5,7 +5,7 @@ import React, { useState } from "react";
 // Initialized via useEffect in App component
 // ─────────────────────────────────────────────
 const POSTHOG_KEY   = "phc_kqPn9wagFCAw9QaUF4XJxKMNEnHRooEX7uBvt4wdv29z";
-const ADMIN_EMAIL   = "joelmwood@gmail.com";
+const ADMIN_EMAIL   = "${ACTIVE_COMPANY.email}";
 const SENTRY_DSN  = "https://7dbac4cf1178f77cd4f219c54e11225f@o4511197222797312.ingest.us.sentry.io/4511197260021760";
 
 function track(event, props) {
@@ -229,7 +229,7 @@ const COMPANY = {
   ownerName:   "Joel",
   phone:       "918-896-6737",
   phoneRaw:    "9188966737",             // digits only, for QR codes + Bland transfer
-  email:       "joelmwood@gmail.com",
+  email:       "${ACTIVE_COMPANY.email}",
   city:        "Tulsa",
   state:       "OK",
   promo:       "JWOOD",
@@ -543,7 +543,7 @@ async function reverseGeocode(lat, lng) {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-      { headers: { "User-Agent": "PaveMail/1.0 (joelmwood@gmail.com)" } }
+      { headers: { "User-Agent": "PaveMail/1.0 (${ACTIVE_COMPANY.email})" } }
     );
     const data = await res.json();
     if (!data || data.error) return null;
@@ -606,8 +606,8 @@ async function sendMailer({ neighborhood, headline, sub }) {
     to:   LOB_TO_ID,
     from: LOB_FROM_ID,
     size: "6x9",
-    front: `<html><body style="margin:0;padding:30px;background:#1c1a17;color:#f5f0e6;font-family:Arial,sans-serif;"><div style="color:#e8560a;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">JWood LLC · Tulsa, OK</div><h1 style="font-size:32px;color:#f5f0e6;margin:0;line-height:1.1;">${headline || "UPGRADE YOUR CONCRETE THIS SEASON"}</h1><p style="font-size:12px;color:#b8b4ac;margin-top:10px;line-height:1.6;">${sub || "Tulsa concrete specialists. Free estimates, written warranty, local crew."}</p><div style="margin-top:18px;background:#e8560a;color:white;padding:10px 16px;border-radius:6px;display:inline-block;"><strong style="font-size:13px;">FREE ESTIMATE — CALL 918-896-6737</strong></div><p style="margin-top:10px;font-size:10px;color:#7a7670;">Mention code JWOOD · joelmwood@gmail.com</p></body></html>`,
-    back: `<html><body style="margin:0;padding:30px;background:#f5f0e6;color:#1c1a17;font-family:Arial,sans-serif;"><h2 style="font-size:20px;color:#1c1a17;margin-bottom:12px;">Why Tulsa Homeowners Choose JWood LLC</h2><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Oklahoma Weather Experts</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">We know Tulsa freeze-thaw cycles and use the right materials.</p></div><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Commercial-Grade Materials</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">Reinforced concrete built to last 30+ years in Oklahoma soil.</p></div><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Written Warranty on Every Job</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">2-year workmanship guarantee. If something fails, we fix it free.</p></div></div><div style="background:#1c1a17;color:white;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:15px;font-weight:700;">918-896-6737</div><div style="font-size:10px;color:#b8b4ac;margin-top:2px;">joelmwood@gmail.com</div><div style="margin-top:5px;font-size:10px;background:#e8560a;display:inline-block;padding:3px 8px;border-radius:4px;">Code: JWOOD — FREE estimate</div></div></body></html>`,
+    front: `<html><body style="margin:0;padding:30px;background:#1c1a17;color:#f5f0e6;font-family:Arial,sans-serif;"><div style="color:#e8560a;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">JWood LLC · Tulsa, OK</div><h1 style="font-size:32px;color:#f5f0e6;margin:0;line-height:1.1;">${headline || "UPGRADE YOUR CONCRETE THIS SEASON"}</h1><p style="font-size:12px;color:#b8b4ac;margin-top:10px;line-height:1.6;">${sub || "Tulsa concrete specialists. Free estimates, written warranty, local crew."}</p><div style="margin-top:18px;background:#e8560a;color:white;padding:10px 16px;border-radius:6px;display:inline-block;"><strong style="font-size:13px;">FREE ESTIMATE — CALL 918-896-6737</strong></div><p style="margin-top:10px;font-size:10px;color:#7a7670;">Mention code JWOOD · ${ACTIVE_COMPANY.email}</p></body></html>`,
+    back: `<html><body style="margin:0;padding:30px;background:#f5f0e6;color:#1c1a17;font-family:Arial,sans-serif;"><h2 style="font-size:20px;color:#1c1a17;margin-bottom:12px;">Why Tulsa Homeowners Choose JWood LLC</h2><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Oklahoma Weather Experts</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">We know Tulsa freeze-thaw cycles and use the right materials.</p></div><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Commercial-Grade Materials</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">Reinforced concrete built to last 30+ years in Oklahoma soil.</p></div><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Written Warranty on Every Job</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">2-year workmanship guarantee. If something fails, we fix it free.</p></div></div><div style="background:#1c1a17;color:white;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:15px;font-weight:700;">${ACTIVE_COMPANY.phone}</div><div style="font-size:10px;color:#b8b4ac;margin-top:2px;">${ACTIVE_COMPANY.email}</div><div style="margin-top:5px;font-size:10px;background:#e8560a;display:inline-block;padding:3px 8px;border-radius:4px;">Code: JWOOD — FREE estimate</div></div></body></html>`,
     use_type: "marketing",
   });
 }
@@ -1453,6 +1453,18 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
   document.head.appendChild(el);
 })();
 
+// ─────────────────────────────────────────────
+// DEMO COMPANY — replaces JWood in demo mode
+// ─────────────────────────────────────────────
+const DEMO_COMPANY = {
+  name:"Pave Pro LLC", ownerName:"Alex", phone:"918-555-0199",
+  phoneRaw:"9185550199", email:"hello@paveprollc.com",
+  city:"Tulsa", state:"OK", promo:"DEMO25",
+  tagline:"Tulsa's Concrete Specialists",
+  accentColor:"#e8560a", lobFromId:"", transferPhone:"",
+  contractorId:"demo", crewSize:8, maxJobsWeek:5, weeklyTarget:35000,
+};
+
 const ROUTES = [
   {id:1,name:"South Tulsa / Midtown",zip:"74105",homes:0,color:"#e8560a"},
   {id:2,name:"Broken Arrow",         zip:"74011",homes:0,color:"#2a7a52"},
@@ -1538,8 +1550,8 @@ function MailerPreview({mailer,form}){
           <div className="mp-badge"><span className="sm">{p1?.badgeTop}</span><span className="big">{p1?.badgeMain}</span><span className="sm">{p1?.badgeBottom}</span></div>
           <div className="mp-foot">
             <div className="mp-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect x="3" y="10" width="30" height="22" rx="3" stroke="currentColor" strokeWidth="1.5"/><path d="M3 17L18 25L33 17" stroke="currentColor" strokeWidth="1.5"/><path d="M13 10V6C13 4.3 15.2 3 18 3C20.8 3 23 4.3 23 6V10" stroke="currentColor" strokeWidth="1.5"/></svg></div>
-            <div><div className="mp-co">{COMPANY.name}</div><div className="mp-ph">{COMPANY.phone}</div></div>
-            <div className="mp-qr-wrap"><QRCode value={`tel:${COMPANY.phone.replace(/-/g,"")}`} size={72}/><div className="mp-qr-label">Scan to Call</div></div>
+            <div><div className="mp-co">{ACTIVE_COMPANY.name}</div><div className="mp-ph">{ACTIVE_COMPANY.phone}</div></div>
+            <div className="mp-qr-wrap"><QRCode value={`tel:${ACTIVE_COMPANY.phone.replace(/-/g,"")}`} size={72}/><div className="mp-qr-label">Scan to Call</div></div>
           </div>
           <div className="mp-bar"/>
         </div></div>
@@ -1556,7 +1568,7 @@ function MailerPreview({mailer,form}){
           <h2>{p3?.headline}</h2><p className="intro">{p3?.intro}</p>
           <div className="steps-list">{p3?.steps?.map((s,i)=><div className="step-row" key={i}><div className="step-num">{i+1}</div><div><h4>{s.title}</h4><p>{s.desc}</p></div></div>)}</div>
           <div className="offer-strip"><div><h3>{p3?.offerHeadline}</h3><p>{p3?.offerSub}</p></div>
-            <div className="promo-box"><div className="promo-code">{form.promoCode||COMPANY.promo}<small>Say this when you call</small></div></div>
+            <div className="promo-box"><div className="promo-code">{form.promoCode||ACTIVE_COMPANY.promo}<small>Say this when you call</small></div></div>
           </div>
         </div></div>
       </div>
@@ -1565,11 +1577,11 @@ function MailerPreview({mailer,form}){
           <div className="ey">{p4?.eyebrow}</div>
           <h2>{p4?.headline}</h2>
           <p className="sub">{p4?.sub}</p>
-          <div className="cta-qr"><QRCode value={`tel:${COMPANY.phone.replace(/-/g,"")}`} size={100}/><div className="cta-qr-label">📱 Scan to call {COMPANY.phone} instantly</div></div>
+          <div className="cta-qr"><QRCode value={`tel:${ACTIVE_COMPANY.phone.replace(/-/g,"")}`} size={100}/><div className="cta-qr-label">📱 Scan to call {ACTIVE_COMPANY.phone} instantly</div></div>
           <div className="contact-row">
-            <div className="contact-box"><div className="lbl">Call / Text</div><div className="val">{COMPANY.phone}</div></div>
-            <div className="contact-box"><div className="lbl">Email</div><div className="val" style={{fontSize:11}}>{COMPANY.email}</div></div>
-            <div className="contact-box"><div className="lbl">Promo Code</div><div className="val">{form.promoCode||COMPANY.promo}</div></div>
+            <div className="contact-box"><div className="lbl">Call / Text</div><div className="val">{ACTIVE_COMPANY.phone}</div></div>
+            <div className="contact-box"><div className="lbl">Email</div><div className="val" style={{fontSize:11}}>{ACTIVE_COMPANY.email}</div></div>
+            <div className="contact-box"><div className="lbl">Promo Code</div><div className="val">{form.promoCode||ACTIVE_COMPANY.promo}</div></div>
           </div>
           <div className="guarantee"><strong>Our Guarantee: </strong>{p4?.guarantee}</div>
         </div></div>
@@ -1673,7 +1685,7 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
     ctx.fillStyle='#e8560a'; ctx.fillRect(W-112,by+4,98,40);
     ctx.fillStyle='white'; ctx.font='bold 8px Arial'; ctx.textAlign='center';
     ctx.fillText('CALL NOW',W-63,by+17);
-    ctx.font='bold 11px monospace'; ctx.fillText('918-896-6737',W-63,by+34);
+    ctx.font='bold 11px monospace'; ctx.fillText(mailer.ownerPhone||mailer.phone||'',W-63,by+34);
     ctx.textAlign='left';
     try {
       setDataUrl(canvas.toDataURL('image/jpeg',0.92));
@@ -1910,32 +1922,6 @@ export default function App(){
     showToast("🎯 Demo loaded — explore PaveMail","success");
   }
 
-  // Legacy PIN state (kept for compatibility)
-  const[pin,setPin]=useState("");
-  const[pinError,setPinError]=useState(false);
-  const[rememberMe,setRememberMe]=useState(true);
-  const[shaking,setShaking]=useState(false);
-
-  function pressKey(k){
-    if(pin.length>=4)return;
-    const next=pin+k;
-    setPin(next);
-    if(next.length===4){
-      setTimeout(()=>{
-        if(next===ACCESS_CODE){
-          if(rememberMe){ try{localStorage.setItem(STORAGE_KEY,"true");}catch{} }
-          // setUnlocked removed - now using authUser
-          setPin("");
-        } else {
-          setPinError(true);
-          setShaking(true);
-          setTimeout(()=>{setPin("");setPinError(false);setShaking(false);},600);
-        }
-      },200);
-    }
-  }
-
-  function delKey(){ setPin(p=>p.slice(0,-1)); }
 
   const[tab,setTab]=useState("map");
   function switchTab(t){ track('tab_viewed',{tab:t}); setTab(t); }
@@ -1950,7 +1936,7 @@ export default function App(){
   const[gpsLoading,setGpsLoading]=useState(false);
   const[gpsAccuracy,setGpsAccuracy]=useState(null);
   const[verifying,setVerifying]=useState(false);
-  const[form,setForm]=useState({company:COMPANY.name,phone:COMPANY.phone,neighborhood:"",city:COMPANY.city,season:"Spring",offer:"Free Estimate",angle:"Crack Repair",homes:"200",promoCode:COMPANY.promo,extraNotes:""});
+  const[form,setForm]=useState({company:"",phone:"",neighborhood:"",city:"Tulsa",season:"Spring",offer:"Free Estimate",angle:"Crack Repair",homes:"200",promoCode:"",extraNotes:""});
   const[loading,setLoading]=useState(false);
   const[sending,setSending]=useState(false);
   const[mailer,setMailer]=useState(null);
@@ -2013,25 +1999,50 @@ export default function App(){
 
   const[pipeline,setPipeline]=useState([]);
 
-  // Recalculate capacity whenever pipeline changes
+  // Real capacity engine — data-driven, auto-sets mode
   React.useEffect(()=>{
-    const activeJobs = pipeline.filter(l=>l.stage==="won").length;
-    const weeklyRevenue = pipeline
-      .filter(l=>l.stage==="won")
-      .reduce((s,l)=>s+(l.value||0), 0);
-    const pct = activeJobs / CAPACITY_CONFIG.maxJobs;
-    let mode = "hungry";
-    if(pct >= 1.0) mode = "paused";
-    else if(pct >= 0.8) mode = "selective";
-    else if(pct >= 0.5) mode = "normal";
+    const C = ACTIVE_COMPANY;
+    const maxJobs = C.maxJobsWeek || 6;
+    const crewSize = C.crewSize || 12;
+    const weeklyTarget = C.weeklyTarget || 40000;
+    const AVG_JOB_DAYS = 2; // avg days per concrete job
+
+    const wonJobs     = pipeline.filter(l=>l.stage==="won");
+    const activeJobs  = wonJobs.length;
+    const wonRevenue  = wonJobs.reduce((s,l)=>s+(l.value||0),0);
+    const pipeValue   = pipeline.filter(l=>l.stage!=="won").reduce((s,l)=>s+(l.value||0),0);
+
+    // Crew-day math: how many days of work is committed?
+    const committedDays = activeJobs * AVG_JOB_DAYS;
+    const availDays     = crewSize * 5; // 5-day work week
+    const utilizationPct = Math.min(100, Math.round((committedDays / availDays) * 100));
+
+    // Revenue velocity: on pace for weekly target?
+    const revenueGap  = Math.max(0, weeklyTarget - wonRevenue);
+    const onPace      = wonRevenue >= weeklyTarget;
+
+    // Auto mode from real utilization
+    let autoMode = "hungry";
+    if(utilizationPct >= 100) autoMode = "paused";
+    else if(utilizationPct >= 75) autoMode = "selective";
+    else if(utilizationPct >= 45) autoMode = "normal";
+
     setCapacity(c=>({
       ...c,
       activeJobs,
-      weeklyRevenue,
-      weeksBooked: Math.ceil(activeJobs / CAPACITY_CONFIG.maxJobs),
-      mode: c.manualOverride || mode,
+      wonRevenue,
+      pipeValue,
+      weeklyRevenue: wonRevenue,
+      revenueGap,
+      onPace,
+      utilizationPct,
+      committedDays,
+      availDays,
+      weeksBooked: activeJobs > 0 ? Math.ceil(activeJobs / maxJobs) : 0,
+      mode: c.manualOverride || autoMode,
+      autoMode,
     }));
-  },[pipeline]);
+  },[pipeline, contractor, isDemoMode]);
 
   // CAPACITY_MODES moved to module scope
 
@@ -2152,7 +2163,7 @@ export default function App(){
         body:JSON.stringify({
           model:"claude-sonnet-4-5-20250929",
           max_tokens:400,
-          messages:[{role:"user",content:`Write a direct mail postcard for JWood LLC (concrete contractor, Tulsa OK, 918-896-6737). We just completed a concrete project at ${radiusLead.address}, ${radiusLead.city}. This postcard goes to their neighbors within ${radiusForm.radius} miles. The angle: we are already working in the neighborhood, equipment is here, we can offer a neighbor discount this week. Be warm, neighbor-to-neighbor tone. Return ONLY JSON: {"headline":"string","personalNote":"string","urgencyLine":"string","offer":"string"}`}]
+          messages:[{role:"user",content:`Write a direct mail postcard for ${ACTIVE_COMPANY.name} (concrete contractor, ${ACTIVE_COMPANY.city} OK, ${ACTIVE_COMPANY.phone}). We just completed a concrete project at ${radiusLead.address}, ${radiusLead.city}. This postcard goes to their neighbors within ${radiusForm.radius} miles. The angle: we are already working in the neighborhood, equipment is here, we can offer a neighbor discount this week. Be warm, neighbor-to-neighbor tone. Return ONLY JSON: {"headline":"string","personalNote":"string","urgencyLine":"string","offer":"string"}`}]
         })
       });
       const data=await res.json();
@@ -2189,7 +2200,7 @@ export default function App(){
           </div>
           <div style="background:#e8560a;color:white;padding:10px 14px;border-radius:6px;text-align:center;">
             <div style="font-size:9px;font-weight:700;letter-spacing:1px;">CALL JOEL DIRECTLY</div>
-            <div style="font-size:16px;font-weight:700;font-family:monospace;">918-896-6737</div>
+            <div style="font-size:16px;font-weight:700;font-family:monospace;">{ACTIVE_COMPANY.phone}</div>
           </div>
           <p style="margin-top:10px;font-size:10px;color:rgba(184,180,172,0.5);">${radiusMailer.urgencyLine}</p>
         </div>
@@ -2202,8 +2213,8 @@ export default function App(){
         </div>
         <p style="font-size:12px;line-height:1.7;margin-bottom:14px;">While our equipment is in your neighborhood, we'd love to give you a <strong>free estimate</strong> on your project. As your neighbor's contractor, you get our neighbor rate this week.</p>
         <div style="background:#1c1a17;color:white;padding:12px;border-radius:8px;text-align:center;">
-          <div style="font-size:14px;font-weight:700;">918-896-6737</div>
-          <div style="font-size:10px;color:#b8b4ac;margin-top:2px;">Call or text Joel · JWood LLC · Tulsa, OK</div>
+          <div style="font-size:14px;font-weight:700;">{ACTIVE_COMPANY.phone}</div>
+          <div style="font-size:10px;color:#b8b4ac;margin-top:2px;">Call or text {ACTIVE_COMPANY.ownerName} · {ACTIVE_COMPANY.name} · {ACTIVE_COMPANY.city}, OK</div>
           <div style="margin-top:6px;font-size:10px;background:#e8560a;display:inline-block;padding:3px 10px;border-radius:4px;">Free estimate · No obligation</div>
         </div>
       </body></html>`;
@@ -2221,7 +2232,7 @@ export default function App(){
             address_zip:radiusLead.zip||"74105",
             address_country:"US",
           },
-          from:COMPANY.lobFromId,
+          from:ACTIVE_COMPANY.lobFromId,
           front,back,
           size:"6x11",
           metadata:{type:"radius",radius_miles:String(radiusMiles),center_address:radiusMailer.address}
@@ -2350,7 +2361,9 @@ export default function App(){
   React.useEffect(()=>{
     const sqft = spotForm.customSqft ? parseInt(spotForm.customSqft) : spotForm.sqft;
     if(sqft && spotForm.service && spotForm.damageLevel && !spotForm.overridePrice){
-      const{lo,hi}=calcPrice(sqft,spotForm.service,spotForm.damageLevel);
+      const mult = getBidMultiplierForMode();
+      const raw  = calcPrice(sqft,spotForm.service,spotForm.damageLevel);
+      const{lo,hi}={lo:Math.round(raw.lo*mult/50)*50, hi:Math.round(raw.hi*mult/50)*50};
       setAutoPrice({lo,hi});
       setSpotForm(f=>({...f,bidLow:String(lo),bidHigh:String(hi)}));
     }
@@ -2371,7 +2384,7 @@ export default function App(){
     if(!form.neighborhood)return;
     setLoading(true);setMailer(null);setLobResult(null);
     try{
-      const prompt=`You are a direct mail copywriter for a concrete contractor in Tulsa, Oklahoma. Company: ${COMPANY.name}, Phone: ${COMPANY.phone}. Neighborhood: ${form.neighborhood}, OK. Season: ${form.season}, Service: ${form.angle}, Offer: ${form.offer}, Promo: ${form.promoCode}. Notes: ${form.extraNotes||"Tulsa area, Oklahoma weather"}.
+      const prompt=`You are a direct mail copywriter for a concrete contractor in Tulsa, Oklahoma. Company: ${ACTIVE_COMPANY.name}, Phone: ${ACTIVE_COMPANY.phone}. Neighborhood: ${form.neighborhood}, OK. Season: ${form.season}, Service: ${form.angle}, Offer: ${form.offer}, Promo: ${form.promoCode}. Notes: ${form.extraNotes||"Tulsa area, Oklahoma weather"}.
 Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subheadline":"string","badgeTop":"string","badgeMain":"string","badgeBottom":"string"},"page2":{"headline":"string","intro":"string","benefits":[{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"}],"whyTitle":"string","whyText":"string"},"page3":{"headline":"string","intro":"string","steps":[{"title":"string","desc":"string"},{"title":"string","desc":"string"},{"title":"string","desc":"string"},{"title":"string","desc":"string"}],"offerHeadline":"string","offerSub":"string"},"page4":{"eyebrow":"string","headline":"string","sub":"string","guarantee":"string"}}`;
       const res=await fetch(ANTHROPIC_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5-20250929",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
       const data=await res.json();
@@ -2384,7 +2397,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
     setMailer({...demo,page1:{...demo.page1,eyebrow:`${form.neighborhood} — ${demo.page1.eyebrow}`}});
     setLoading(false);
-    showToast("✨ Demo mailer loaded — JWood LLC branded & ready","info");
+    showToast(`✨ Demo mailer loaded — ${ACTIVE_COMPANY.name} branded & ready`,"info");
   };
 
   const sendToPress=async()=>{
@@ -2501,7 +2514,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       const damageList=detectedDamage.length>0?detectedDamage.join(", "):"general concrete wear";
       const photoContext=capturedPhoto?" We photographed the damage for reference.":"";
       const sqftDesc=`${spotForm.customSqft||spotForm.sqft} sq ft ${spotForm.service} job`;
-      const prompt=`Write a personal note for a direct mail postcard from JWood LLC (concrete contractor, Tulsa OK, 918-896-6737) to a homeowner at ${spotForm.address}, ${spotForm.city} OK. The contractor noticed: ${damageList}.${photoContext} This is a ${sqftDesc} with ${spotForm.damageLevel} damage. Bid range: ${bidRange}. Notes: ${spotForm.notes||"none"}. Write a warm, personal 2-3 sentence note that mentions we drove past their home, noticed the specific damage, and want to help. Sound like a neighbor, not a corporation. Do NOT be salesy. Return ONLY JSON: {"personalNote":"string","headline":"string","urgencyLine":"string"}`;
+      const prompt=`Write a personal note for a direct mail postcard from ${ACTIVE_COMPANY.name} (concrete contractor, ${spotForm.city} OK, ${ACTIVE_COMPANY.phone}) to a homeowner at ${spotForm.address}, ${spotForm.city} OK. The contractor noticed: ${damageList}.${photoContext} This is a ${sqftDesc} with ${spotForm.damageLevel} damage. Bid range: ${bidRange}. Notes: ${spotForm.notes||"none"}. Write a warm, personal 2-3 sentence note that mentions we drove past their home, noticed the specific damage, and want to help. Sound like a neighbor, not a corporation. Do NOT be salesy. Return ONLY JSON: {"personalNote":"string","headline":"string","urgencyLine":"string"}`;
 
       const res=await fetch(ANTHROPIC_PROXY,{
         method:"POST",
@@ -2515,7 +2528,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
 
         track('spot_generated', {address:spotForm.address, hasPhoto:!!capturedPhoto, damage:detectedDamage?.length||0});
-        const mailerObj={...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,damage:detectedDamage,photoUsed:!!capturedPhoto,photoData:capturedPhoto||null,photoUrl:capturedPhotoUrl||null};
+        const mailerObj={...parsed,address:spotForm.address,city:spotForm.city,bid:bidRange,bidLo:bidStarting,bidHi:bidUpTo,includes:includesText,damage:detectedDamage,photoUsed:!!capturedPhoto,photoData:capturedPhoto||null,photoUrl:capturedPhotoUrl||null,ownerPhone:ACTIVE_COMPANY.phone,ownerName:ACTIVE_COMPANY.ownerName,companyName:ACTIVE_COMPANY.name};
         setSpotMailer(mailerObj);
         // Draw canvas preview
         renderPostcardCanvas(capturedPhotoUrl||capturedPhoto||null, mailerObj, setCanvasDataUrl);
@@ -2537,7 +2550,10 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       damage:detectedDemo,
       photoUsed:!!capturedPhoto,
       photoData:capturedPhoto||null,
-      photoUrl:capturedPhotoUrl||null
+      photoUrl:capturedPhotoUrl||null,
+      ownerPhone:ACTIVE_COMPANY.phone,
+      ownerName:ACTIVE_COMPANY.ownerName,
+      companyName:ACTIVE_COMPANY.name
     };
     setSpotMailer(demoMailer);
     renderPostcardCanvas(capturedPhotoUrl||capturedPhoto||null, demoMailer, setCanvasDataUrl);
@@ -2560,7 +2576,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     showToast("📤 Sending spot bid...","info");
     try{
       await lobRequest("/postcards",{
-        description:`JWood LLC Spot Bid - ${spotMailer.address}`,
+        description:`${ACTIVE_COMPANY.name} Spot Bid - ${spotMailer.address}`,
         to:LOB_TO_ID,from:LOB_FROM_ID,size:"6x9",
         front:`<html><body style="margin:0;padding:0;font-family:Arial,sans-serif;position:relative;width:100%;height:100%;overflow:hidden;">
   ${hostedPhotoUrl
@@ -2570,7 +2586,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
   }
   <div style="position:relative;padding:26px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;">
     <div style="position:absolute;top:22px;left:26px;right:26px;display:flex;justify-content:space-between;align-items:center;">
-      <div style="color:#e8560a;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">JWood LLC · Tulsa, OK</div>
+      <div style="color:#e8560a;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">${spotMailer.companyName||ACTIVE_COMPANY.name} · ${spotMailer.city||ACTIVE_COMPANY.city}, OK</div>
       ${hostedPhotoUrl?`<div style="background:rgba(232,86,10,0.9);color:white;font-size:8px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:1px;">📷 YOUR PROJECT</div>`:""}
     </div>
     <div style="margin-top:auto;">
@@ -2588,7 +2604,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         </div>
         <div style="background:#e8560a;color:white;padding:8px 12px;border-radius:6px;text-align:center;flex-shrink:0;">
           <div style="font-size:8px;font-weight:700;letter-spacing:1px;">CALL NOW</div>
-          <div style="font-size:14px;font-weight:700;font-family:monospace;">918-896-6737</div>
+          <div style="font-size:14px;font-weight:700;font-family:monospace;">${ACTIVE_COMPANY.phone}</div>
         </div>
       </div>
     </div>
@@ -2602,7 +2618,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         ${spotMailer.damage?.map(d=>`<div style="background:#f0ebe0;border-left:3px solid #e8560a;padding:5px 9px;border-radius:3px;margin-bottom:4px;font-size:9px;color:#3a3835;">${d}</div>`).join("")||`<div style="font-size:10px;color:#6a6864;">General surface wear</div>`}
       </div>
       <div style="width:120px;flex-shrink:0;">
-        <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2a7a52;margin-bottom:4px;">After JWood LLC</div>
+        <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2a7a52;margin-bottom:4px;">After ${spotMailer.companyName||ACTIVE_COMPANY.name}</div>
         <img src="${BEFORE_AFTER_URL}" style="width:100%;height:90px;object-fit:cover;border-radius:6px;border:2px solid #2a7a52;" alt="Finished project"/>
         <div style="font-size:7px;color:#2a7a52;text-align:center;margin-top:3px;font-weight:700;">✓ GUARANTEED RESULT</div>
       </div>
@@ -2618,8 +2634,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     </div>
     <div style="background:#1c1a17;color:white;padding:10px 14px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;">
       <div>
-        <div style="font-size:13px;font-weight:700;">918-896-6737</div>
-        <div style="font-size:8px;color:#b8b4ac;margin-top:1px;">Call or text Joel directly · joelmwood@gmail.com</div>
+        <div style="font-size:13px;font-weight:700;">${ACTIVE_COMPANY.phone}</div>
+        <div style="font-size:8px;color:#b8b4ac;margin-top:1px;">${"Call or text " + ACTIVE_COMPANY.ownerName + " direc"}tly · ${ACTIVE_COMPANY.email}</div>
       </div>
       <div style="background:#e8560a;color:white;font-size:9px;font-weight:700;padding:5px 10px;border-radius:5px;text-align:center;">FREE<br/>ESTIMATE</div>
     </div>
@@ -2760,22 +2776,23 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
   }
 
   // Build dynamic COMPANY from contractor profile
-  const ACTIVE_COMPANY = contractor ? {
-    name:          contractor.company_name || COMPANY.name,
-    ownerName:     contractor.owner_name || COMPANY.ownerName,
-    phone:         contractor.phone || COMPANY.phone,
-    phoneRaw:      (contractor.phone||COMPANY.phone).replace(/\D/g,""),
-    email:         contractor.email || COMPANY.email,
-    city:          contractor.city || COMPANY.city,
-    state:         contractor.state || COMPANY.state,
-    lobFromId:     contractor.lob_from_id || COMPANY.lobFromId,
-    transferPhone: contractor.bland_transfer || COMPANY.transferPhone,
-    contractorId:  authUser?.user?.id || COMPANY.contractorId,
-    crewSize:      contractor.crew_size || COMPANY.crewSize,
-    maxJobsWeek:   contractor.max_jobs_week || COMPANY.maxJobsWeek,
-    weeklyTarget:  contractor.weekly_target || COMPANY.weeklyTarget,
-    accentColor:   contractor.accent_color || COMPANY.accentColor,
-  } : COMPANY;
+  const BASE = isDemoMode ? DEMO_COMPANY : (contractor ? {
+    name:          contractor.company_name || ACTIVE_COMPANY.name,
+    ownerName:     contractor.owner_name || ACTIVE_COMPANY.ownerName,
+    phone:         contractor.phone || ACTIVE_COMPANY.phone,
+    phoneRaw:      (contractor.phone||ACTIVE_COMPANY.phone).replace(/\D/g,""),
+    email:         contractor.email || ACTIVE_COMPANY.email,
+    city:          contractor.city || ACTIVE_COMPANY.city,
+    state:         contractor.state || ACTIVE_COMPANY.state,
+    lobFromId:     contractor.lob_from_id || ACTIVE_COMPANY.lobFromId,
+    transferPhone: contractor.bland_transfer || ACTIVE_COMPANY.transferPhone,
+    contractorId:  authUser?.user?.id || ACTIVE_COMPANY.contractorId,
+    crewSize:      contractor.crew_size || ACTIVE_COMPANY.crewSize,
+    maxJobsWeek:   contractor.max_jobs_week || ACTIVE_COMPANY.maxJobsWeek,
+    weeklyTarget:  contractor.weekly_target || ACTIVE_COMPANY.weeklyTarget,
+    accentColor:   contractor.accent_color || ACTIVE_COMPANY.accentColor,
+  } : COMPANY);
+  const ACTIVE_COMPANY = BASE;
 
   // Show auth screen if not logged in
   if(!authUser) return(
@@ -3015,9 +3032,9 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               <div
                 className="avatar"
                 onClick={()=>setShowUserMenu(m=>!m)}
-                title={contractor?.company_name||COMPANY.name}
+                title={contractor?.company_name||ACTIVE_COMPANY.name}
               >
-                {(contractor?.owner_name||COMPANY.ownerName||"J")[0].toUpperCase()}{(contractor?.company_name||COMPANY.name).split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase()}
+                {(contractor?.owner_name||ACTIVE_COMPANY.ownerName||"J")[0].toUpperCase()}{(contractor?.company_name||ACTIVE_COMPANY.name).split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase()}
               </div>
               {showUserMenu&&(
                 <>
@@ -3025,8 +3042,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <div onClick={()=>setShowUserMenu(false)} style={{position:"fixed",inset:0,zIndex:498}}/>
                   <div className="user-menu">
                     <div className="user-menu-header">
-                      <div className="user-menu-name">{contractor?.company_name||COMPANY.name}</div>
-                      <div className="user-menu-email">{authUser?.user?.email||COMPANY.email}</div>
+                      <div className="user-menu-name">{contractor?.company_name||ACTIVE_COMPANY.name}</div>
+                      <div className="user-menu-email">{authUser?.user?.email||ACTIVE_COMPANY.email}</div>
                       {isAdmin&&<div style={{marginTop:6,fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--orange2)"}}>⚙ Super Admin</div>}
                     </div>
                     <button className="user-menu-item" onClick={()=>{setShowUserMenu(false);switchTab("settings");}}>
@@ -3251,7 +3268,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 )}
               </div>
               <div className="create-preview">
-                {!mailer&&!loading&&<div className="empty"><div className="icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="4" y="10" width="40" height="28" rx="4" stroke="currentColor" strokeWidth="1.5"/><path d="M4 16L24 28L44 16" stroke="currentColor" strokeWidth="1.5"/></svg></div><h3>Your Mailer Appears Here</h3><p>Enter a Tulsa neighborhood and hit Generate. JWood LLC info and QR code load automatically.</p></div>}
+                {!mailer&&!loading&&<div className="empty"><div className="icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="4" y="10" width="40" height="28" rx="4" stroke="currentColor" strokeWidth="1.5"/><path d="M4 16L24 28L44 16" stroke="currentColor" strokeWidth="1.5"/></svg></div><h3>Your Mailer Appears Here</h3><p>Enter a Tulsa neighborhood and hit Generate. Your business info and QR code load automatically.</p></div>}
                 {loading&&<div className="mailer-stack">{[1,2,3,4].map(i=><div key={i}><div className="page-tag">Page {i}</div><div className="skel-page"><div className="skel" style={{height:16,width:"40%",marginBottom:14}}/><div className="skel" style={{height:36,width:"70%",marginBottom:10}}/><div className="skel" style={{height:13,width:"55%",marginBottom:7}}/><div className="skel" style={{height:13,width:"45%"}}/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:20}}><div className="skel" style={{height:72}}/><div className="skel" style={{height:72}}/></div></div></div>)}</div>}
                 {mailer&&!loading&&<>
                   <div className="preview-actions">
@@ -3269,7 +3286,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {tab==="tracker"&&(
             <div className="tracker-layout">
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>JOB TRACKER</div>
-              <p style={{fontSize:13,color:"var(--stone)",marginBottom:20}}>Every JWood LLC campaign — from print queue to Tulsa doorstep.</p>
+              <p style={{fontSize:13,color:"var(--stone)",marginBottom:20}}>{ACTIVE_COMPANY.name} campaign — from print queue to Tulsa doorstep.</p>
               <div className="stats-row">
                 {[
                   {label:"Total Campaigns",value:jobs.length,color:"var(--cream)",trend:"↑ growing",up:true},
@@ -3581,7 +3598,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                               j.photoUrl||j.photoData||null,
                               j.mailerContent||{
                                 headline:"Your Personalized Estimate",
-                                personalNote:"Thank you for considering JWood LLC.",
+                                personalNote:`Thank you for considering ${ACTIVE_COMPANY.name}.`,
                                 address:j.address, city:j.city,
                                 bidLo:j.bid, bid:j.bid,
                               },
@@ -3674,7 +3691,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                   </div>
                                   <div style={{background:"#e8560a",borderRadius:5,padding:"6px 10px",textAlign:"center"}}>
                                     <div style={{fontSize:8,fontWeight:700,color:"white"}}>CALL NOW</div>
-                                    <div style={{fontSize:11,fontFamily:"'DM Mono',monospace",color:"white"}}>918-896-6737</div>
+                                    <div style={{fontSize:11,fontFamily:"'DM Mono',monospace",color:"white"}}>${ACTIVE_COMPANY.phone}</div>
                                   </div>
                                 </div>
                               </div>
@@ -3685,7 +3702,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                               <div className="spot-front-texture"/>
                               <div className="spot-front-content">
                                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"auto"}}>
-                                  <div className="spot-tag" style={{margin:0}}>JWood LLC · Tulsa, OK</div>
+                                  <div className="spot-tag" style={{margin:0}}>{ACTIVE_COMPANY.name} · {ACTIVE_COMPANY.city}, OK</div>
                                 </div>
                                 <div style={{paddingTop:16}}>
                                   <div className="spot-address">{spotMailer.address}, {spotMailer.city}</div>
@@ -3700,7 +3717,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                       </div>
                                       {spotMailer.bidHi&&<div style={{fontSize:12,color:"rgba(184,180,172,0.6)",marginTop:2}}>Up to {spotMailer.bidHi}</div>}
                                     </div>
-                                    <div style={{flexShrink:0,background:"var(--orange)",color:"white",padding:"8px 14px",borderRadius:6,fontSize:11,fontWeight:700,textAlign:"center"}}>CALL NOW<br/><span style={{fontSize:13,fontFamily:"'DM Mono',monospace"}}>918-896-6737</span></div>
+                                    <div style={{flexShrink:0,background:"var(--orange)",color:"white",padding:"8px 14px",borderRadius:6,fontSize:11,fontWeight:700,textAlign:"center"}}>CALL NOW<br/><span style={{fontSize:13,fontFamily:"'DM Mono',monospace"}}>${ACTIVE_COMPANY.phone}</span></div>
                                   </div>
                                   <div style={{marginTop:10,fontSize:10,color:"rgba(184,180,172,0.5)"}}>{spotMailer.urgencyLine}</div>
                                 </div>
@@ -3765,21 +3782,21 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                             </div>
                             <div style={{textAlign:"right"}}>
                               <div style={{fontSize:9,color:"rgba(184,180,172,0.4)",marginBottom:4}}>Scan to call</div>
-                              <QRCode value={`tel:${COMPANY.phoneRaw}`} size={50} fgColor="#f5f0e6" bgColor="#1c1a17"/>
+                              <QRCode value={`tel:${ACTIVE_ACTIVE_COMPANY.phoneRaw}`} size={50} fgColor="#f5f0e6" bgColor="#1c1a17"/>
                             </div>
                           </div>
                           {/* CTA */}
                           <div className="spot-cta-box">
                             <div className="spot-cta-text">
-                              <h4>CALL OR TEXT JOEL</h4>
-                              <p>918-896-6737 · Free estimate · No obligation</p>
+                              <h4>CALL OR TEXT {ACTIVE_COMPANY.ownerName.toUpperCase()}</h4>
+                              <p>{ACTIVE_COMPANY.phone} · Free estimate · No obligation</p>
                             </div>
-                            <div style={{fontFamily:"'DM Mono',monospace",fontSize:12,fontWeight:700,color:"rgba(184,180,172,0.7)",letterSpacing:0.5,flexShrink:0}}>918-896-6737</div>
+                            <div style={{fontFamily:"'DM Mono',monospace",fontSize:12,fontWeight:700,color:"rgba(184,180,172,0.7)",letterSpacing:0.5,flexShrink:0}}>{ACTIVE_COMPANY.phone}</div>
                           </div>
                           {/* Trust line */}
                           <div className="spot-guarantee">
                             <div className="spot-guarantee-icon"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1L11 3V7C11 9.8 9 11.8 6.5 12.5C4 11.8 2 9.8 2 7V3L6.5 1Z" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="M4.5 6.5L6 8L9 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
-                            <div className="spot-guarantee-text">Licensed & insured · Tulsa, OK · JWood LLC · We stand behind every pour</div>
+                            <div className="spot-guarantee-text">Licensed & insured · {ACTIVE_COMPANY.city}, OK · {ACTIVE_COMPANY.name} · We stand behind every pour</div>
                           </div>
                         </div>
                       </div>
@@ -3794,8 +3811,20 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {/* CAPACITY */}
           {tab==="capacity"&&(
             <div style={{padding:"24px 28px"}}>
-              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>CAPACITY ENGINE</div>
-              <div style={{fontSize:12,color:"var(--stone)",marginBottom:20}}>12-man crew · {CAPACITY_CONFIG.maxJobs} jobs/week max · ${CAPACITY_CONFIG.weeklyTarget.toLocaleString()} weekly target</div>
+              <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",flexWrap:"wrap",gap:8,marginBottom:4}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)"}}>CAPACITY ENGINE</div>
+                {capacity.manualOverride&&(
+                  <button onClick={()=>setCapacity(c=>({...c,manualOverride:null}))}
+                    style={{fontSize:10,color:"var(--stone)",background:"rgba(184,180,172,0.08)",border:"1px solid rgba(184,180,172,0.15)",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>
+                    ↺ Back to Auto
+                  </button>
+                )}
+              </div>
+              <div style={{fontSize:12,color:"var(--stone)",marginBottom:20}}>
+                {ACTIVE_COMPANY.crewSize||12}-man crew · {ACTIVE_COMPANY.maxJobsWeek||6} jobs/week max · ${(ACTIVE_COMPANY.weeklyTarget||40000).toLocaleString()} weekly target
+                {capacity.autoMode&&!capacity.manualOverride&&<span style={{marginLeft:8,color:"var(--green2)",fontSize:10}}>● Auto mode active</span>}
+                {capacity.manualOverride&&<span style={{marginLeft:8,color:"var(--gold2)",fontSize:10}}>⚑ Manual override</span>}
+              </div>
 
               {/* Current mode banner */}
               <div style={{background:CAPACITY_MODES[capacity.mode].bg,border:`1px solid ${CAPACITY_MODES[capacity.mode].color}40`,borderRadius:12,padding:"20px 24px",marginBottom:20,display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
@@ -3806,13 +3835,14 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       stroke={CAPACITY_MODES[capacity.mode].color}
                       strokeWidth="8"
                       strokeDasharray={`${2*Math.PI*32}`}
-                      strokeDashoffset={`${2*Math.PI*32*(1-(capacity.mode==="hungry"?0.95:capacity.mode==="normal"?0.65:capacity.mode==="selective"?0.4:0.1))}`}
+                      strokeDashoffset={`${2*Math.PI*32*(1-Math.min(1,(capacity.utilizationPct||0)/100))}`}
                       strokeLinecap="round"
                       style={{transition:"stroke-dashoffset 0.6s ease,stroke 0.3s ease"}}
                     />
                   </svg>
-                  <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:CAPACITY_MODES[capacity.mode].color}}>
-                    {capacity.mode==="hungry"?"95%":capacity.mode==="normal"?"65%":capacity.mode==="selective"?"40%":"10%"}
+                  <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:0}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:CAPACITY_MODES[capacity.mode].color,lineHeight:1}}>{capacity.utilizationPct||0}%</div>
+                    <div style={{fontSize:8,color:"var(--stone)",letterSpacing:1,textTransform:"uppercase"}}>used</div>
                   </div>
                 </div>
                 <div style={{flex:1}}>
@@ -3835,20 +3865,42 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 </div>
               </div>
 
-              {/* Stats grid */}
+              {/* Stats grid — real data */}
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
                 {[
-                  {label:"Active Jobs",value:capacity.activeJobs,max:CAPACITY_CONFIG.maxJobs,color:"var(--orange2)"},
-                  {label:"Capacity Used",value:`${Math.round(capacity.activeJobs/CAPACITY_CONFIG.maxJobs*100)}%`,color:CAPACITY_MODES[capacity.mode].color},
-                  {label:"Weekly Revenue",value:`$${capacity.weeklyRevenue.toLocaleString()}`,color:"var(--green2)"},
-                  {label:"Target Gap",value:`$${Math.max(0,CAPACITY_CONFIG.weeklyTarget-capacity.weeklyRevenue).toLocaleString()}`,color:capacity.weeklyRevenue>=CAPACITY_CONFIG.weeklyTarget?"var(--green2)":"var(--gold2)"},
+                  {label:"Won Jobs",         value:capacity.activeJobs||0,      suffix:`/${ACTIVE_COMPANY.maxJobsWeek||6}`, color:"var(--orange2)", bar:true, barPct:Math.min(100,((capacity.activeJobs||0)/(ACTIVE_COMPANY.maxJobsWeek||6))*100)},
+                  {label:"Crew Days Booked", value:capacity.committedDays||0,    suffix:`/${capacity.availDays||60} days`,   color:CAPACITY_MODES[capacity.mode].color, bar:true, barPct:capacity.utilizationPct||0},
+                  {label:"Revenue Won",      value:`$${(capacity.wonRevenue||0).toLocaleString()}`, suffix:"", color:"var(--green2)", bar:false},
+                  {label:"To Target",        value:`$${(capacity.revenueGap||0).toLocaleString()}`, suffix:"", color:capacity.onPace?"var(--green2)":"var(--gold2)", bar:false},
                 ].map((s,i)=>(
                   <div key={i} style={{background:"var(--ink)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:9,padding:"14px 16px"}}>
                     <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)",marginBottom:6}}>{s.label}</div>
-                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:s.color,letterSpacing:1,lineHeight:1}}>{s.value}</div>
-                    {s.max&&<div style={{marginTop:6}}><div className="capacity-bar-wrap"><div className="capacity-bar" style={{width:`${Math.min(100,Math.round(s.value/s.max*100))}%`,background:s.color}}/></div></div>}
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:s.bar?28:24,color:s.color,letterSpacing:1,lineHeight:1}}>{s.value}<span style={{fontSize:11,opacity:0.5,fontFamily:"'Syne',sans-serif"}}>{s.suffix}</span></div>
+                    {s.bar&&<div style={{marginTop:6}}><div className="capacity-bar-wrap"><div className="capacity-bar" style={{width:`${s.barPct}%`,background:s.color,transition:"width 0.5s ease"}}/></div></div>}
                   </div>
                 ))}
+              </div>
+              {/* Pipeline intelligence row */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:20}}>
+                <div style={{background:"rgba(42,122,82,0.08)",border:"1px solid rgba(42,122,82,0.15)",borderRadius:9,padding:"12px 16px"}}>
+                  <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--green2)",marginBottom:4}}>Pipeline Value</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:"var(--green2)"}}>${(capacity.pipeValue||0).toLocaleString()}</div>
+                  <div style={{fontSize:10,color:"var(--stone)",marginTop:2}}>{pipeline.filter(l=>l.stage!=="won").length} leads in play</div>
+                </div>
+                <div style={{background:"rgba(26,111,168,0.08)",border:"1px solid rgba(26,111,168,0.15)",borderRadius:9,padding:"12px 16px"}}>
+                  <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--blue2)",marginBottom:4}}>Win Rate</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:"var(--blue2)"}}>
+                    {pipeline.length > 0 ? Math.round((pipeline.filter(l=>l.stage==="won").length / pipeline.length) * 100) : 0}%
+                  </div>
+                  <div style={{fontSize:10,color:"var(--stone)",marginTop:2}}>{pipeline.filter(l=>l.stage==="won").length} of {pipeline.length} leads won</div>
+                </div>
+                <div style={{background:capacity.onPace?"rgba(42,122,82,0.08)":"rgba(212,160,23,0.08)",border:`1px solid ${capacity.onPace?"rgba(42,122,82,0.15)":"rgba(212,160,23,0.15)"}`,borderRadius:9,padding:"12px 16px"}}>
+                  <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:capacity.onPace?"var(--green2)":"var(--gold2)",marginBottom:4}}>Weekly Pace</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:capacity.onPace?"var(--green2)":"var(--gold2)"}}>
+                    {capacity.onPace?"ON TARGET":"BEHIND"}
+                  </div>
+                  <div style={{fontSize:10,color:"var(--stone)",marginTop:2}}>${(ACTIVE_COMPANY.weeklyTarget||40000).toLocaleString()} target</div>
+                </div>
               </div>
 
               {/* Smart suggestions */}
@@ -3918,7 +3970,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:10}}>
                 <div>
                   <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)",lineHeight:1}}>ADMIN DASHBOARD</div>
-                  <div style={{fontSize:12,color:"var(--stone)",marginTop:3}}>joelmwood@gmail.com · Full access</div>
+                  <div style={{fontSize:12,color:"var(--stone)",marginTop:3}}>${ACTIVE_COMPANY.email} · Full access</div>
                 </div>
                 <button className="btn btn-primary btn-sm" onClick={loadAdminData} disabled={adminLoading}>
                   {adminLoading?<span className="spin"/>:"↺ Refresh Data"}
@@ -4114,7 +4166,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div style={{flex:1}}>
                   <div style={{fontSize:12,fontWeight:700,color:"var(--cream)",marginBottom:4}}>How It Works</div>
                   <div style={{fontSize:11,color:"var(--stone)",lineHeight:1.7}}>
-                    Homeowner calls your QR code number → AI agent "Alex" answers → qualifies the lead (name, address, service, timeline) → transfers live to Joel at 918-896-6737 → call summary appears here automatically.
+                    Homeowner calls your QR code number → AI agent answers → qualifies the lead (name, address, service, timeline) → transfers live to your phone → call summary appears here automatically.
                   </div>
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:6,fontSize:11,color:"var(--stone)"}}>
@@ -4220,7 +4272,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10}}>
                 <div>
                   <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)",lineHeight:1}}>ADDRESS PIPELINE</div>
-                  <div style={{fontSize:12,color:"var(--stone)",marginTop:3}}>Every address JWood LLC has spotted, mailed, or closed.</div>
+                  <div style={{fontSize:12,color:"var(--stone)",marginTop:3}}>{`Every address ${ACTIVE_COMPANY.name} `}LLC has spotted, mailed, or closed.</div>
                 </div>
                 <div style={{display:"flex",gap:8}}>
                   <button className="btn btn-ghost btn-sm" onClick={()=>setShowAddLead(true)}>+ Log Address</button>
@@ -4489,7 +4541,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"var(--cream)"}}>SETTINGS</div>
                 <button className="btn btn-ghost btn-sm" onClick={handleLogout}>🔒 Sign Out</button>
               </div>
-              <p style={{fontSize:13,color:"var(--stone)",marginBottom:26}}>{contractor?.company_name||COMPANY.name} · {contractor?.city||COMPANY.city}, {contractor?.state||COMPANY.state} · {contractor?.phone||COMPANY.phone}</p>
+              <p style={{fontSize:13,color:"var(--stone)",marginBottom:26}}>{contractor?.company_name||ACTIVE_COMPANY.name} · {contractor?.city||ACTIVE_COMPANY.city}, {contractor?.state||ACTIVE_COMPANY.state} · {contractor?.phone||ACTIVE_COMPANY.phone}</p>
 
               {/* ── ADMIN ONLY: Production Checklist ── */}
               {isAdmin&&(
@@ -4522,14 +4574,14 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       <line x1="3" y1="11" x2="4.5" y2="11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                       <rect x="7.5" y="8" width="3" height="5" rx="0.5" fill="currentColor" opacity="0.5"/>
                     </svg>
-                    <strong style={{color:"var(--cream)"}}>{COMPANY.name}</strong>
+                    <strong style={{color:"var(--cream)"}}>{ACTIVE_COMPANY.name}</strong>
                   </div>
-                  <div>📞 <strong style={{color:"var(--cream)",fontFamily:"'DM Mono',monospace"}}>{COMPANY.phone}</strong></div>
-                  <div>✉️ <strong style={{color:"var(--cream)"}}>{COMPANY.email}</strong></div>
-                  <div>📍 <strong style={{color:"var(--cream)"}}>{COMPANY.city}, {COMPANY.state}</strong></div>
-                  {COMPANY.promo&&<div>🏷️ Promo Code: <strong style={{color:"var(--orange2)",fontFamily:"'DM Mono',monospace"}}>{COMPANY.promo}</strong></div>}
+                  <div>📞 <strong style={{color:"var(--cream)",fontFamily:"'DM Mono',monospace"}}>{ACTIVE_COMPANY.phone}</strong></div>
+                  <div>✉️ <strong style={{color:"var(--cream)"}}>{ACTIVE_COMPANY.email}</strong></div>
+                  <div>📍 <strong style={{color:"var(--cream)"}}>{ACTIVE_COMPANY.city}, {ACTIVE_COMPANY.state}</strong></div>
+                  {ACTIVE_COMPANY.promo&&<div>🏷️ Promo Code: <strong style={{color:"var(--orange2)",fontFamily:"'DM Mono',monospace"}}>{ACTIVE_COMPANY.promo}</strong></div>}
                   <div style={{marginTop:12,display:"flex",alignItems:"center",gap:12}}>
-                    <QRCode value={`tel:${COMPANY.phoneRaw}`} size={72}/>
+                    <QRCode value={`tel:${ACTIVE_ACTIVE_COMPANY.phoneRaw}`} size={72}/>
                     <div style={{fontSize:11,color:"var(--stone)",lineHeight:1.8}}>Your QR code appears on every mailer<br/>Homeowners scan to call you instantly<br/>Works on all smartphones</div>
                   </div>
                 </div>
@@ -4694,7 +4746,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     </div>
                     <div style={{background:"var(--orange)",color:"white",padding:"10px 14px",borderRadius:6,textAlign:"center"}}>
                       <div style={{fontSize:9,fontWeight:700,letterSpacing:1}}>CALL JOEL DIRECTLY</div>
-                      <div style={{fontSize:16,fontWeight:700,fontFamily:"'DM Mono',monospace"}}>918-896-6737</div>
+                      <div style={{fontSize:16,fontWeight:700,fontFamily:"'DM Mono',monospace"}}>${ACTIVE_COMPANY.phone}</div>
                     </div>
                     <p style={{marginTop:8,fontSize:10,color:"var(--gravel)"}}>{radiusMailer.urgencyLine}</p>
                   </div>
@@ -4760,7 +4812,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                         <div style={{fontSize:9,color:"rgba(232,86,10,0.8)",fontWeight:700,letterSpacing:1}}>YOUR ESTIMATE<br/><span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:"#f5f0e6"}}>{previewJob.bid}</span></div>
                         <div style={{background:"#e8560a",padding:"6px 10px",borderRadius:5,textAlign:"center"}}>
                           <div style={{fontSize:8,fontWeight:700,color:"white"}}>CALL NOW</div>
-                          <div style={{fontSize:11,fontFamily:"'DM Mono',monospace",color:"white"}}>{COMPANY.phone}</div>
+                          <div style={{fontSize:11,fontFamily:"'DM Mono',monospace",color:"white"}}>{ACTIVE_COMPANY.phone}</div>
                         </div>
                       </div>
                     </div>
@@ -4801,12 +4853,12 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       <div style={{fontSize:8,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"rgba(232,86,10,0.7)"}}>Your Estimate</div>
                       <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,color:"#f5f0e6"}}>{previewJob.bid}</div>
                     </div>
-                    <QRCode value={`tel:${COMPANY.phoneRaw}`} size={44} fgColor="#f5f0e6" bgColor="#1a1814"/>
+                    <QRCode value={`tel:${ACTIVE_ACTIVE_COMPANY.phoneRaw}`} size={44} fgColor="#f5f0e6" bgColor="#1a1814"/>
                   </div>
                   <div style={{background:"rgba(232,86,10,0.1)",border:"1px solid rgba(232,86,10,0.2)",borderLeft:"3px solid rgba(232,86,10,0.6)",borderRadius:6,padding:"10px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                     <div>
-                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,letterSpacing:1,color:"#f5f0e6"}}>CALL OR TEXT {COMPANY.ownerName.toUpperCase()}</div>
-                      <div style={{fontSize:10,color:"rgba(184,180,172,0.5)",fontFamily:"'DM Mono',monospace"}}>{COMPANY.phone} · Free estimate · No obligation</div>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,letterSpacing:1,color:"#f5f0e6"}}>CALL OR TEXT {ACTIVE_COMPANY.ownerName.toUpperCase()}</div>
+                      <div style={{fontSize:10,color:"rgba(184,180,172,0.5)",fontFamily:"'DM Mono',monospace"}}>{ACTIVE_COMPANY.phone} · Free estimate · No obligation</div>
                     </div>
                   </div>
                 </div>
