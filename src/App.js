@@ -1234,7 +1234,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 }
 
 /* ── LOGIN SCREEN ── */
-.login-screen{position:fixed;inset:0;inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:var(--black);display:flex;align-items:flex-start;justify-content:center;z-index:9999;flex-direction:column;gap:0;min-height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:env(safe-area-inset-top);}
+.login-screen{position:fixed;inset:0;inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:var(--black);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0;min-height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom);box-sizing:border-box;}
 /* Animated login background */
 .login-bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(232,86,10,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(232,86,10,0.04) 1px,transparent 1px);background-size:40px 40px;animation:gridMove 20s linear infinite;}
 @keyframes gridMove{0%{background-position:0 0;}100%{background-position:40px 40px;}}
@@ -2472,12 +2472,13 @@ export default function App(){
   },[isDemoMode]);
 
   // ── LEAFLET FIELD MAP INIT ──
+  const leafletMapRef = React.useRef(null);
+
   React.useEffect(()=>{
     if(tab !== "fieldmap") return;
-    if(fieldMapReady) return;
 
-    // Load Leaflet CSS + JS from CDN
-    const loadLeaflet = async () => {
+    const initOrRefresh = async () => {
+      // Load Leaflet CSS + JS from CDN
       if(!document.getElementById("leaflet-css")){
         const css = document.createElement("link");
         css.id = "leaflet-css";
@@ -2495,14 +2496,34 @@ export default function App(){
       }
 
       const container = document.getElementById("pavemail-fieldmap");
-      if(!container || container._leaflet_id) return;
+      if(!container) return;
 
       const L = window.L;
+
+      // If map already exists, just invalidate size and redraw tiles
+      if(leafletMapRef.current) {
+        setTimeout(()=>{
+          leafletMapRef.current.invalidateSize(true);
+        }, 100);
+        setFieldMapReady(true);
+        return;
+      }
+
+      // First init — create the map
+      if(container._leaflet_id) {
+        // Container was reused, clean it
+        delete container._leaflet_id;
+        container.innerHTML = "";
+      }
+
       const map = L.map("pavemail-fieldmap", {
         center: [fieldMapCenter.lat, fieldMapCenter.lng],
         zoom: 16,
         zoomControl: false,
       });
+
+      // Store ref immediately
+      leafletMapRef.current = map;
 
       // Satellite tiles via Esri (free, no API key)
       L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
@@ -2510,7 +2531,7 @@ export default function App(){
         maxZoom: 20,
       }).addTo(map);
 
-      // Zoom control top-left
+      // Zoom control
       L.control.zoom({position:"topright"}).addTo(map);
 
       // GPS marker if available
@@ -2537,7 +2558,7 @@ export default function App(){
           .bindPopup(`<b>${lead.address}</b><br/>${lead.stage}`);
       });
 
-      // Existing field tags
+      // Field tags
       fieldTags.forEach(tag=>{
         const icon = L.divIcon({
           className:"",
@@ -2551,7 +2572,6 @@ export default function App(){
       // Click handler — tap to tag
       map.on("click", async(e)=>{
         const {lat, lng} = e.latlng;
-        // Show loading modal
         setTagModal({lat, lng, address:"Looking up address...", notes:""});
         try {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
@@ -2566,11 +2586,13 @@ export default function App(){
         }
       });
 
+      // Force size recalc after mount
+      setTimeout(()=>{ map.invalidateSize(true); }, 200);
       setFieldMapReady(true);
     };
 
-    loadLeaflet();
-  },[tab, fieldMapReady]);
+    initOrRefresh();
+  },[tab]);
 
   // Auto-recalculate price whenever inputs change
   React.useEffect(()=>{
@@ -4271,11 +4293,10 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           )}
 
 
-          {/* FIELD MAP */}
-          {tab==="fieldmap"&&(
-            <div style={{position:"relative",height:"100%",display:"flex",flexDirection:"column"}}>
-              {/* Header bar */}
-              <div style={{padding:"14px 20px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,borderBottom:"1px solid rgba(184,180,172,0.08)"}}>
+          {/* FIELD MAP — always mounted to preserve Leaflet state */}
+          <div style={{display:tab==="fieldmap"?"flex":"none",flexDirection:"column",height:"100%"}}>
+            {tab==="fieldmap"&&(<>
+            <div style={{padding:"14px 20px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,borderBottom:"1px solid rgba(184,180,172,0.08)"}}>
                 <div>
                   <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:"var(--cream)"}}>FIELD MAP</div>
                   <div style={{fontSize:11,color:"var(--stone)"}}>Tap the map to tag properties · {fieldTags.length} tagged · {pipeline.length} pipeline leads</div>
@@ -4383,8 +4404,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   </div>
                 </div>
               )}
-            </div>
-          )}
+            </>)}
+          </div>
           {/* JOB BOARD */}
           {tab==="jobboard"&&(
             <div style={{height:"100%",overflowY:"auto",padding:"20px 24px"}}>
