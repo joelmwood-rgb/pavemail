@@ -2472,13 +2472,24 @@ export default function App(){
   },[isDemoMode]);
 
   // ── LEAFLET FIELD MAP INIT ──
+  // Key insight: init ONLY when tab is visible (display:none = zero size = blank map on Chrome)
   const leafletMapRef = React.useRef(null);
+  const leafletInitialized = React.useRef(false);
 
   React.useEffect(()=>{
     if(tab !== "fieldmap") return;
 
-    const initOrRefresh = async () => {
-      // Load Leaflet CSS + JS from CDN
+    // If already initialized, just force a redraw
+    if(leafletInitialized.current && leafletMapRef.current) {
+      setTimeout(()=>{
+        leafletMapRef.current.invalidateSize(true);
+        leafletMapRef.current.eachLayer(l=>{ if(l.redraw) l.redraw(); });
+      }, 150);
+      return;
+    }
+
+    const initLeaflet = async () => {
+      // Load CSS
       if(!document.getElementById("leaflet-css")){
         const css = document.createElement("link");
         css.id = "leaflet-css";
@@ -2486,63 +2497,58 @@ export default function App(){
         css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
         document.head.appendChild(css);
       }
+      // Load JS
       if(!window.L){
-        await new Promise(resolve=>{
+        await new Promise((resolve, reject)=>{
           const script = document.createElement("script");
           script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
           script.onload = resolve;
+          script.onerror = reject;
           document.head.appendChild(script);
         });
       }
 
+      // Wait for container to be visible and have real dimensions
       const container = document.getElementById("pavemail-fieldmap");
       if(!container) return;
 
-      const L = window.L;
-
-      // If map already exists, just invalidate size and redraw tiles
-      if(leafletMapRef.current) {
-        setTimeout(()=>{
-          leafletMapRef.current.invalidateSize(true);
-        }, 100);
-        setFieldMapReady(true);
-        return;
-      }
-
-      // First init — create the map
+      // Clean any stale Leaflet state
       if(container._leaflet_id) {
-        // Container was reused, clean it
         delete container._leaflet_id;
         container.innerHTML = "";
       }
 
+      // Wait one frame for browser to paint the container at full size
+      await new Promise(r => requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+      const L = window.L;
       const map = L.map("pavemail-fieldmap", {
         center: [fieldMapCenter.lat, fieldMapCenter.lng],
         zoom: 16,
         zoomControl: false,
+        preferCanvas: true,
       });
 
-      // Store ref immediately
       leafletMapRef.current = map;
+      leafletInitialized.current = true;
 
-      // Satellite tiles via Esri (free, no API key)
+      // Satellite tiles
       L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
         attribution: "Tiles © Esri",
         maxZoom: 20,
+        detectRetina: true,
       }).addTo(map);
 
-      // Zoom control
       L.control.zoom({position:"topright"}).addTo(map);
 
-      // GPS marker if available
+      // GPS marker
       if(fieldMapGps){
         const gpsDot = L.divIcon({
           className:"",
           html:`<div style="width:14px;height:14px;border-radius:50%;background:#3a8fd4;border:3px solid white;box-shadow:0 0 0 3px rgba(58,143,212,0.4)"></div>`,
           iconSize:[14,14],iconAnchor:[7,7]
         });
-        L.marker([fieldMapGps.lat,fieldMapGps.lng],{icon:gpsDot}).addTo(map)
-          .bindPopup("<b>Your Location</b>");
+        L.marker([fieldMapGps.lat,fieldMapGps.lng],{icon:gpsDot}).addTo(map).bindPopup("<b>Your Location</b>");
       }
 
       // Pipeline pins
@@ -2554,8 +2560,7 @@ export default function App(){
           html:`<div style="width:10px;height:10px;border-radius:50%;background:${st};border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.5)"></div>`,
           iconSize:[10,10],iconAnchor:[5,5]
         });
-        L.marker([lead.lat,lead.lng],{icon}).addTo(map)
-          .bindPopup(`<b>${lead.address}</b><br/>${lead.stage}`);
+        L.marker([lead.lat,lead.lng],{icon}).addTo(map).bindPopup(`<b>${lead.address}</b><br/>${lead.stage}`);
       });
 
       // Field tags
@@ -2565,11 +2570,10 @@ export default function App(){
           html:`<div style="width:12px;height:12px;border-radius:50%;background:#e8560a;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.5)"></div>`,
           iconSize:[12,12],iconAnchor:[6,6]
         });
-        L.marker([tag.lat,tag.lng],{icon}).addTo(map)
-          .bindPopup(`<b>${tag.address}</b><br/>${tag.notes||""}`);
+        L.marker([tag.lat,tag.lng],{icon}).addTo(map).bindPopup(`<b>${tag.address}</b><br/>${tag.notes||""}`);
       });
 
-      // Click handler — tap to tag
+      // Tap to tag
       map.on("click", async(e)=>{
         const {lat, lng} = e.latlng;
         setTagModal({lat, lng, address:"Looking up address...", notes:""});
@@ -2579,19 +2583,19 @@ export default function App(){
           const addr = data.address;
           const street = (addr.house_number ? addr.house_number + " " : "") + (addr.road || addr.pedestrian || "");
           const city = addr.city || addr.town || addr.village || "Tulsa";
-          const full = `${street}, ${city}, OK`;
-          setTagModal(m=>({...m, address:full, city}));
-        } catch(e) {
+          setTagModal(m=>({...m, address:`${street}, ${city}, OK`, city}));
+        } catch(err) {
           setTagModal(m=>({...m, address:`${lat.toFixed(5)}, ${lng.toFixed(5)}`}));
         }
       });
 
-      // Force size recalc after mount
-      setTimeout(()=>{ map.invalidateSize(true); }, 200);
+      // Final size check — critical for Chrome mobile
+      setTimeout(()=>{ map.invalidateSize(true); }, 100);
+      setTimeout(()=>{ map.invalidateSize(true); }, 500);
       setFieldMapReady(true);
     };
 
-    initOrRefresh();
+    initLeaflet().catch(err => console.warn("Leaflet init failed:", err));
   },[tab]);
 
   // Auto-recalculate price whenever inputs change
@@ -4293,9 +4297,8 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           )}
 
 
-          {/* FIELD MAP — always mounted to preserve Leaflet state */}
-          <div style={{display:tab==="fieldmap"?"flex":"none",flexDirection:"column",height:"100%"}}>
-            {tab==="fieldmap"&&(<>
+          {/* FIELD MAP — fully always mounted, CSS-only show/hide */}
+          <div style={{display:tab==="fieldmap"?"flex":"none",flexDirection:"column",position:"absolute",inset:0,top:52}}>
             <div style={{padding:"14px 20px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,borderBottom:"1px solid rgba(184,180,172,0.08)"}}>
                 <div>
                   <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:"var(--cream)"}}>FIELD MAP</div>
@@ -4318,7 +4321,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               </div>
 
               {/* Map container — Leaflet loads here */}
-              <div id="pavemail-fieldmap" style={{flex:1,minHeight:0,height:"100%",background:"#1a1a16",position:"relative",overflow:"hidden"}}>
+              <div id="pavemail-fieldmap" style={{flex:1,minHeight:0,background:"#1a1a16",position:"relative",overflow:"hidden",width:"100%"}}>
                 {!fieldMapReady&&(
                   <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,color:"var(--stone)"}}>
                     <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="2" y="2" width="44" height="44" rx="6" fill="currentColor" fillOpacity="0.05" stroke="currentColor" strokeWidth="1.5" opacity="0.3"/><path d="M8 18L18 14L28 20L40 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.4"/><path d="M8 28L18 24L28 30L40 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.25"/><circle cx="30" cy="23" r="6" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="1.5" opacity="0.5"/><circle cx="30" cy="23" r="2.5" fill="currentColor" opacity="0.5"/></svg>
@@ -4404,7 +4407,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   </div>
                 </div>
               )}
-            </>)}
+            </div>
           </div>
           {/* JOB BOARD */}
           {tab==="jobboard"&&(
