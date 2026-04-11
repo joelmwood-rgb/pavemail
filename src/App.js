@@ -1167,6 +1167,19 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 /* LIST VIEW */
 .pl-list{background:var(--ink);border:1px solid rgba(184,180,172,0.08);border-radius:10px;overflow:hidden;}
 .pl-list-head{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1fr 1fr 120px 80px;gap:10px;padding:10px 16px;background:rgba(0,0,0,0.2);border-bottom:1px solid rgba(184,180,172,0.07);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);}
+.lead-flag{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700;letter-spacing:0.3px;white-space:nowrap;}
+.flag-picker{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.flag-picker-btn{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;background:transparent;transition:all 0.12s;font-family:'Syne',sans-serif;}
+.lead-detail-modal{background:var(--ink);border:1px solid rgba(184,180,172,0.12);border-radius:16px;width:100%;max-width:480px;max-height:90dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.lead-detail-header{padding:20px 22px 16px;border-bottom:1px solid rgba(184,180,172,0.08);}
+.lead-detail-addr{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cream);line-height:1.1;}
+.lead-detail-sub{font-size:12px;color:var(--stone);margin-top:4px;}
+.lead-detail-section{padding:16px 22px;border-bottom:1px solid rgba(184,180,172,0.06);}
+.lead-detail-section:last-child{border-bottom:none;}
+.lead-detail-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:10px;}
+.county-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(184,180,172,0.1);border-radius:8px;color:var(--concrete);font-size:12px;cursor:pointer;transition:all 0.15s;width:100%;text-align:left;font-family:'Syne',sans-serif;margin-bottom:6px;}
+.county-btn:hover{background:rgba(184,180,172,0.06);border-color:rgba(184,180,172,0.18);color:var(--cream);}
+.county-btn-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .pl-list-row{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1fr 1fr 120px 80px;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(184,180,172,0.05);align-items:center;transition:background 0.12s;cursor:pointer;}
 .pl-list-row:last-child{border-bottom:none;}
 .pl-list-row:hover{background:rgba(184,180,172,0.04);}
@@ -1960,6 +1973,7 @@ export default function App(){
   const[radiusSending,setRadiusSending]=useState(false);
   const[radiusStep,setRadiusStep]=useState(1); // 1=config 2=preview 3=sent
   const[wonBanner,setWonBanner]=useState(null); // lead that just moved to won
+  const[showLeadDetail,setShowLeadDetail]=useState(null); // lead id for detail modal
   const[permitData,setPermitData]=useState({});   // keyed by pipeline lead id
   const[permitLoading,setPermitLoading]=useState(null); // lead id currently loading
   const[expandedLead,setExpandedLead]=useState(null); // lead id with expanded permits
@@ -1978,6 +1992,15 @@ export default function App(){
   };
   const[showAddLead,setShowAddLead]=useState(false);
   const[newLead,setNewLead]=useState({address:"",city:"Tulsa",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
+
+  const LEAD_FLAGS = [
+    {id:"no_pay",    label:"No Pay",       color:"#c0392b", bg:"rgba(192,57,43,0.15)",  icon:"⛔", desc:"Did not pay or disputed invoice"},
+    {id:"repeat",    label:"Repeat Client", color:"#2a7a52", bg:"rgba(42,122,82,0.15)",  icon:"★",  desc:"Returning customer — priority service"},
+    {id:"hoa",       label:"HOA Issues",    color:"#d4a017", bg:"rgba(212,160,23,0.15)", icon:"⚠",  desc:"HOA approval required before work"},
+    {id:"negotiator",label:"Hard Negotiator",color:"#7a5a2a",bg:"rgba(122,90,42,0.15)", icon:"◈",  desc:"Haggles on price — stick to estimate"},
+    {id:"referral",  label:"Referral",      color:"#1a6fa8", bg:"rgba(26,111,168,0.15)", icon:"→",  desc:"Referred by existing customer"},
+    {id:"lien_risk", label:"Lien Risk",     color:"#8b2fc9", bg:"rgba(139,47,201,0.15)", icon:"⚑",  desc:"Property has financial complications"},
+  ];
 
   const STAGES = [
     {id:"spotted", label:"Spotted",    icon:"◉", color:"#7a7670", bg:"rgba(122,118,112,0.15)"},
@@ -4067,7 +4090,16 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                               <div className="pl-card-addr">{lead.address}</div>
                               <div className="pl-card-city">{lead.neighborhood} · {lead.city}</div>
                               <div className="pl-card-bid">{lead.bidLo}{lead.bidHi&&<span className="pl-card-bid-range"> — {lead.bidHi}</span>}</div>
-                              {lead.notes&&<div className="pl-card-notes">{lead.notes}</div>}
+                              {/* Customer flags */}
+              {lead.flags?.length>0&&(
+                <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:4,marginBottom:2}}>
+                  {lead.flags.map(fid=>{
+                    const f=LEAD_FLAGS.find(x=>x.id===fid);
+                    return f?<span key={fid} className="lead-flag" style={{background:f.bg,color:f.color,border:`1px solid ${f.color}30`}}>{f.icon} {f.label}</span>:null;
+                  })}
+                </div>
+              )}
+              {lead.notes&&<div className="pl-card-notes">{lead.notes}</div>}
                               <div className="pl-card-date">
                                 {lead.spotted&&`Spotted ${lead.spotted}`}
                                 {lead.mailerSent&&` · Sent ${lead.mailerSent}`}
@@ -4087,9 +4119,12 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                                 )}
                                 {stage.id==="spotted"&&(
                                   <button className="pl-action-btn" style={{background:"rgba(232,86,10,0.15)",color:"var(--orange2)"}} onClick={()=>{setSpotForm(f=>({...f,address:lead.address,city:lead.city,neighborhood:lead.neighborhood}));setTab("spotbid");}}>
-                                    🎯 Spot Bid
+                                    ◎ Spot Bid
                                   </button>
                                 )}
+                                <button className="pl-action-btn" style={{background:"rgba(184,180,172,0.07)",color:"var(--stone)"}} onClick={()=>setShowLeadDetail(lead.id)}>
+                                  ⋯ Detail
+                                </button>
                                 {stage.id==="won"&&(
                                   <button className="pl-action-btn" style={{background:"rgba(42,122,82,0.15)",color:"var(--green2)"}} onClick={()=>{setRadiusLead(lead);setRadiusStep(1);setRadiusMailer(null);setShowRadiusModal(true);}}>
                                     📬 Radius Mailer
@@ -4574,6 +4609,155 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           </div>
         </div>
       )}
+
+      {/* LEAD DETAIL MODAL */}
+      {showLeadDetail&&(()=>{
+        const lead = pipeline.find(l=>l.id===showLeadDetail);
+        if(!lead) return null;
+        const stage = STAGES.find(s=>s.id===lead.stage);
+        const tulsaAddr = encodeURIComponent(`${lead.address}, ${lead.city}, OK`);
+        const countyUrl = `https://www.assessor.tulsacounty.org/assessor-property-search.php?strap=${tulsaAddr}`;
+        const cssPortalUrl = `https://tulsaok-energovweb.tylerhost.net/apps/selfservice#/search?q=${encodeURIComponent(lead.address)}`;
+        const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(`${lead.address} ${lead.city} OK property lien record`)}`;
+        const toggleFlag = (fid) => {
+          const flags = lead.flags||[];
+          const next = flags.includes(fid) ? flags.filter(f=>f!==fid) : [...flags,fid];
+          setPipeline(p=>p.map(l=>l.id===lead.id?{...l,flags:next}:l));
+          db.updateLeadStage(lead.id, lead.stage).catch(()=>{});
+        };
+        return(
+          <div className="modal-overlay" onClick={e=>{if(e.target.className==="modal-overlay")setShowLeadDetail(null);}}>
+            <div className="lead-detail-modal">
+
+              {/* HEADER */}
+              <div className="lead-detail-header">
+                <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:12}}>
+                  <div style={{flex:1}}>
+                    <div className="lead-detail-addr">{lead.address}</div>
+                    <div className="lead-detail-sub">{lead.city}, OK · {lead.neighborhood}</div>
+                  </div>
+                  <button onClick={()=>setShowLeadDetail(null)} style={{background:"none",border:"none",color:"var(--stone)",fontSize:18,cursor:"pointer",padding:"0 0 0 8px",lineHeight:1,flexShrink:0}}>✕</button>
+                </div>
+                {/* Stage + bid inline */}
+                <div style={{display:"flex",alignItems:"center",gap:8,marginTop:12,flexWrap:"wrap"}}>
+                  <span style={{background:stage?.bg,color:stage?.color,padding:"3px 10px",borderRadius:12,fontSize:10,fontWeight:700}}>
+                    {stage?.label}
+                  </span>
+                  {lead.bidLo&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"var(--orange2)",fontWeight:600}}>{lead.bidLo}{lead.bidHi&&<span style={{opacity:0.6}}> — {lead.bidHi}</span>}</span>}
+                  {lead.flags?.map(fid=>{
+                    const f=LEAD_FLAGS.find(x=>x.id===fid);
+                    return f?<span key={fid} className="lead-flag" style={{background:f.bg,color:f.color,border:`1px solid ${f.color}30`}}>{f.icon} {f.label}</span>:null;
+                  })}
+                </div>
+              </div>
+
+              {/* TIMELINE */}
+              <div className="lead-detail-section">
+                <div className="lead-detail-label">Timeline</div>
+                <div style={{display:"flex",gap:0,position:"relative"}}>
+                  <div style={{position:"absolute",top:10,left:10,right:10,height:1,background:"rgba(184,180,172,0.1)",zIndex:0}}/>
+                  {[
+                    {label:"Spotted",date:lead.spotted,done:!!lead.spotted},
+                    {label:"Mailer",date:lead.mailerSent,done:!!lead.mailerSent},
+                    {label:"Called",date:lead.calledBack,done:!!lead.calledBack},
+                    {label:"Won",date:lead.jobWon,done:!!lead.jobWon},
+                  ].map((t,i)=>(
+                    <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4,position:"relative",zIndex:1}}>
+                      <div style={{width:20,height:20,borderRadius:"50%",border:`2px solid ${t.done?"var(--orange)":"rgba(184,180,172,0.2)"}`,background:t.done?"var(--orange)":"var(--ink)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                        {t.done&&<svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3 5.5L6.5 2" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </div>
+                      <div style={{fontSize:9,color:t.done?"var(--concrete)":"var(--gravel)",fontWeight:t.done?600:400,textAlign:"center"}}>{t.label}</div>
+                      {t.date&&<div style={{fontSize:8,color:"var(--stone)",fontFamily:"'DM Mono',monospace"}}>{t.date}</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* NOTES */}
+              <div className="lead-detail-section">
+                <div className="lead-detail-label">Notes</div>
+                <textarea
+                  value={lead.notes||""}
+                  onChange={e=>setPipeline(p=>p.map(l=>l.id===lead.id?{...l,notes:e.target.value}:l))}
+                  placeholder="Add notes about this property or customer..."
+                  style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(184,180,172,0.1)",borderRadius:8,padding:"10px 12px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:12,resize:"vertical",minHeight:72,outline:"none",boxSizing:"border-box",lineHeight:1.6}}
+                ></textarea>
+              </div>
+
+              {/* CUSTOMER FLAGS */}
+              <div className="lead-detail-section">
+                <div className="lead-detail-label">Customer Intelligence</div>
+                <div className="flag-picker">
+                  {LEAD_FLAGS.map(f=>{
+                    const active=(lead.flags||[]).includes(f.id);
+                    return(
+                      <button key={f.id} className="flag-picker-btn"
+                        onClick={()=>toggleFlag(f.id)}
+                        style={{
+                          borderColor: active ? f.color : "rgba(184,180,172,0.15)",
+                          background: active ? f.bg : "transparent",
+                          color: active ? f.color : "var(--stone)",
+                        }}
+                        title={f.desc}
+                      >
+                        <span>{f.icon}</span>
+                        <span>{f.label}</span>
+                        {active&&<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5L4 7L8 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* PROPERTY INTELLIGENCE */}
+              <div className="lead-detail-section">
+                <div className="lead-detail-label">Property Research</div>
+                <button className="county-btn" onClick={()=>window.open(`https://assessor.tulsacounty.org/assessor-property-search.php?q=${encodeURIComponent(lead.address)}`, "_blank")}>
+                  <div className="county-btn-icon" style={{background:"rgba(26,111,168,0.12)"}}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="12" rx="2" stroke="#1a6fa8" strokeWidth="1.2"/><line x1="4" y1="4.5" x2="10" y2="4.5" stroke="#1a6fa8" strokeWidth="1.2" strokeLinecap="round"/><line x1="4" y1="7" x2="10" y2="7" stroke="#1a6fa8" strokeWidth="1.2" strokeLinecap="round"/><line x1="4" y1="9.5" x2="7" y2="9.5" stroke="#1a6fa8" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                  </div>
+                  <div>
+                    <div style={{fontWeight:600,color:"var(--cream)",marginBottom:1}}>Tulsa County Assessor</div>
+                    <div style={{fontSize:10,color:"var(--stone)"}}>Ownership, assessed value, tax status</div>
+                  </div>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{marginLeft:"auto",flexShrink:0,opacity:0.4}}><path d="M2 10L10 2M10 2H5M10 2V7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+                <button className="county-btn" onClick={()=>window.open(cssPortalUrl,"_blank")}>
+                  <div className="county-btn-icon" style={{background:"rgba(232,86,10,0.1)"}}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1C4.2 1 2 3.2 2 6C2 8.5 4 11 7 13C10 11 12 8.5 12 6C12 3.2 9.8 1 7 1Z" stroke="#e8560a" strokeWidth="1.2"/><circle cx="7" cy="6" r="1.5" fill="#e8560a" opacity="0.8"/></svg>
+                  </div>
+                  <div>
+                    <div style={{fontWeight:600,color:"var(--cream)",marginBottom:1}}>Tulsa Permit History</div>
+                    <div style={{fontSize:10,color:"var(--stone)"}}>Building permits, violations, inspections</div>
+                  </div>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{marginLeft:"auto",flexShrink:0,opacity:0.4}}><path d="M2 10L10 2M10 2H5M10 2V7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+                <button className="county-btn" onClick={()=>window.open(googleUrl,"_blank")}>
+                  <div className="county-btn-icon" style={{background:"rgba(139,47,201,0.1)"}}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2V4M7 10V12M2 7H4M10 7H12M3.5 3.5L4.9 4.9M9.1 9.1L10.5 10.5M3.5 10.5L4.9 9.1M9.1 4.9L10.5 3.5" stroke="#8b2fc9" strokeWidth="1.2" strokeLinecap="round"/><circle cx="7" cy="7" r="2" stroke="#8b2fc9" strokeWidth="1.2"/></svg>
+                  </div>
+                  <div>
+                    <div style={{fontWeight:600,color:"var(--cream)",marginBottom:1}}>Search Liens & Records</div>
+                    <div style={{fontSize:10,color:"var(--stone)"}}>Google: liens, judgments, foreclosure records</div>
+                  </div>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{marginLeft:"auto",flexShrink:0,opacity:0.4}}><path d="M2 10L10 2M10 2H5M10 2V7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+              </div>
+
+              {/* QUICK ACTIONS */}
+              <div className="lead-detail-section">
+                <div className="lead-detail-label">Quick Actions</div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  {lead.stage!=="won"&&<button className="btn btn-primary btn-sm" onClick={()=>{moveStage(lead.id,"won");setShowLeadDetail(null);}}>✦ Mark Won</button>}
+                  {lead.stage==="spotted"&&<button className="btn btn-ghost btn-sm" onClick={()=>{setSpotForm(f=>({...f,address:lead.address,city:lead.city,neighborhood:lead.neighborhood}));setTab("spotbid");setShowLeadDetail(null);}}>◎ Create Spot Bid</button>}
+                  {lead.stage==="won"&&<button className="btn btn-ghost btn-sm" onClick={()=>{setRadiusLead(lead);setRadiusStep(1);setRadiusMailer(null);setShowRadiusModal(true);setShowLeadDetail(null);}}>◫ Radius Mailer</button>}
+                  <button className="btn btn-ghost btn-sm" onClick={()=>{if(window.confirm("Delete this lead?"))setPipeline(p=>p.filter(l=>l.id!==lead.id));setShowLeadDetail(null);}}>✕ Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ADD LEAD MODAL */}
       {showAddLead&&(
