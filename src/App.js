@@ -689,19 +689,19 @@ function calcPrice(sqft, service, damage) {
 const DEMO_MAILERS = {
   "Spring-Crack Repair-Free Estimate": {
     page1: { eyebrow:"Your Neighbors Are Already Upgrading", headline:"TULSA WINTERS ARE TOUGH ON CONCRETE", subheadline:"Freeze-thaw cycles across Tulsa have left concrete cracked and crumbling this spring. Don't let small damage turn into a full replacement — JWood LLC is already working in your neighborhood.", badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"No Obligation" },
-    page2: { headline:"WHY YOUR CONCRETE CAN'T WAIT", intro:"Oklahoma's temperature swings — from icy winters to 100°F summers — are brutal on concrete. Cracks ignored now become costly replacements by fall.", benefits:[{icon:"🌡️",title:"Oklahoma Weather Damage",desc:"Tulsa's freeze-thaw cycles crack concrete fast. Spring is the best time to repair before summer heat sets in."},{icon:"💧",title:"Stop Water Intrusion",desc:"Cracks let water in. Water expands when frozen. That destroys your base and doubles repair costs."},{icon:"🏡",title:"Boost Curb Appeal",desc:"A repaired surface instantly upgrades your home's appearance and protects its value."},{icon:"⏱️",title:"One-Day Turnaround",desc:"Most crack repairs completed same day. Driveable within 24 hours."}], whyTitle:"Why JWood LLC?", whyText:"We're local Tulsans — we know Oklahoma soil, Oklahoma weather, and Oklahoma homeowners. Every job is done with commercial-grade materials and backed by our written warranty." },
+    page2: { headline:"WHY YOUR CONCRETE CAN'T WAIT", intro:"Oklahoma's temperature swings — from icy winters to 100°F summers — are brutal on concrete. Cracks ignored now become costly replacements by fall.", benefits:[{icon:"▲",title:"Oklahoma Weather Damage",desc:"Tulsa's freeze-thaw cycles crack concrete fast. Spring is the best time to repair before summer heat sets in."},{icon:"◉",title:"Stop Water Intrusion",desc:"Cracks let water in. Water expands when frozen. That destroys your base and doubles repair costs."},{icon:"◫",title:"Boost Curb Appeal",desc:"A repaired surface instantly upgrades your home's appearance and protects its value."},{icon:"◌",title:"One-Day Turnaround",desc:"Most crack repairs completed same day. Driveable within 24 hours."}], whyTitle:"Why JWood LLC?", whyText:"We're local Tulsans — we know Oklahoma soil, Oklahoma weather, and Oklahoma homeowners. Every job is done with commercial-grade materials and backed by our written warranty." },
     page3: { headline:"OUR SIMPLE 4-STEP PROCESS", intro:"From your first call to pulling your car back in — we make it effortless.", steps:[{title:"Free On-Site Estimate",desc:"We visit, assess the damage, and give you a written quote. No pressure, no surprises."},{title:"Schedule at Your Convenience",desc:"We work around your schedule, including Saturdays."},{title:"Expert Repair",desc:"Our crew arrives on time, protects your lawn, and gets to work with commercial-grade materials."},{title:"Done & Guaranteed",desc:"We clean up completely and hand you a written warranty before we leave."}], offerHeadline:"FREE ESTIMATE — CALL TODAY", offerSub:"Spring slots filling fast — mention code JWOOD when you call" },
     page4: { eyebrow:"Ready to Get Started?", headline:"CALL JWOOD LLC TODAY", sub:"Serving Tulsa and surrounding areas. Spring is our busiest season — call now to lock in your free estimate before your neighbors do.", guarantee:"We guarantee our work for 2 full years. If anything fails due to workmanship, we come back and fix it — no questions asked." }
   },
   "Summer-New Installation-Free Estimate": {
     page1: { eyebrow:"Upgrade Before Summer Cookout Season", headline:"NEW CONCRETE PROJECT COMPLETED THIS SUMMER", subheadline:"Long Tulsa summer days mean faster curing and better results. JWood LLC is completing concrete projects across your neighborhood — and we have a free estimate ready for you.", badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"Call Today" },
-    page2: { headline:"TRANSFORM YOUR HOME'S FIRST IMPRESSION", intro:"A new concrete project is one of the highest-ROI investments a Tulsa homeowner can make — averaging 98% return at resale.", benefits:[{icon:"☀️",title:"Summer Is Ideal",desc:"Oklahoma's warm temps and dry summers create perfect conditions for long-lasting concrete pours."},{icon:"💰",title:"Best ROI",desc:"New concrete projects return nearly 100% of cost at resale — better than most home renovations."},{icon:"🏗️",title:"Custom Finish",desc:"Choose width, texture, color, and edging to perfectly match your Tulsa home."},{icon:"📅",title:"Done in Days",desc:"Most residential projects installed and driveable within 3–5 days."}], whyTitle:"Why JWood LLC?", whyText:"Tulsa homeowners trust JWood LLC because we show up on time, communicate clearly, and stand behind every pour. We use reinforced concrete with proper base prep." },
+    page2: { headline:"TRANSFORM YOUR HOME'S FIRST IMPRESSION", intro:"A new concrete project is one of the highest-ROI investments a Tulsa homeowner can make — averaging 98% return at resale.", benefits:[{icon:"◈",title:"Summer Is Ideal",desc:"Oklahoma's warm temps and dry summers create perfect conditions for long-lasting concrete pours."},{icon:"◆",title:"Best ROI",desc:"New concrete projects return nearly 100% of cost at resale — better than most home renovations."},{icon:"▦",title:"Custom Finish",desc:"Choose width, texture, color, and edging to perfectly match your Tulsa home."},{icon:"▣",title:"Done in Days",desc:"Most residential projects installed and driveable within 3–5 days."}], whyTitle:"Why JWood LLC?", whyText:"Tulsa homeowners trust JWood LLC because we show up on time, communicate clearly, and stand behind every pour. We use reinforced concrete with proper base prep." },
     page3: { headline:"HOW IT WORKS", intro:"A new concrete project is easier than you think.", steps:[{title:"Free Design Consultation",desc:"We measure your space and help you choose the right width, finish, and budget."},{title:"Demo & Excavation",desc:"We remove your old surface and properly prepare the base — the most critical step."},{title:"Pour & Finish",desc:"Commercial-grade concrete poured by our experienced Tulsa crew."},{title:"Cure, Seal & Warranty",desc:"We apply a professional sealer and hand you a written warranty before we leave."}], offerHeadline:"FREE ESTIMATE — NO OBLIGATION", offerSub:"Summer slots limited — call 918-896-6737 and mention JWOOD" },
     page4: { eyebrow:"Let's Build Something Great", headline:"CALL 918-896-6737 THIS WEEK", sub:"Summer slots fill fast across Tulsa. We can usually start within 2 weeks of your estimate.", guarantee:"5-year structural warranty on all new installations. We stand behind every pour." }
   },
   "Fall-Sealing-Free Estimate": {
     page1: { eyebrow:"Protect Your Concrete Before Winter Hits", headline:"SEAL IT NOW BEFORE OKLAHOMA WINTER CRACKS IT", subheadline:"Fall is the last chance to protect your concrete before Tulsa's freeze-thaw season begins. JWood LLC is sealing concrete across your neighborhood right now.", badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"Limited Slots" },
-    page2: { headline:"WHY FALL SEALING IS CRITICAL IN TULSA", intro:"Oklahoma's winters are unpredictable — ice, snow, and freeze-thaw cycles can destroy unsealed concrete in a single season.", benefits:[{icon:"❄️",title:"Winter Protection",desc:"Sealing blocks water before it freezes and expands inside your concrete."},{icon:"🛡️",title:"UV & Heat Shield",desc:"Tulsa summers hit 100°F+. Sealer protects against UV damage and surface deterioration."},{icon:"✨",title:"Like-New Appearance",desc:"Professional sealing restores color and gives your concrete a clean, finished look."},{icon:"💵",title:"Prevent Costly Repairs",desc:"A $300 seal job now prevents a $3,000 replacement later."}], whyTitle:"Why JWood LLC?", whyText:"We use commercial-grade penetrating sealers — not the hardware store stuff that peels in one season. Our sealing jobs are done right, and we're Tulsa locals." },
+    page2: { headline:"WHY FALL SEALING IS CRITICAL IN TULSA", intro:"Oklahoma's winters are unpredictable — ice, snow, and freeze-thaw cycles can destroy unsealed concrete in a single season.", benefits:[{icon:"◈",title:"Winter Protection",desc:"Sealing blocks water before it freezes and expands inside your concrete."},{icon:"◆",title:"UV & Heat Shield",desc:"Tulsa summers hit 100°F+. Sealer protects against UV damage and surface deterioration."},{icon:"✦",title:"Like-New Appearance",desc:"Professional sealing restores color and gives your concrete a clean, finished look."},{icon:"▣",title:"Prevent Costly Repairs",desc:"A $300 seal job now prevents a $3,000 replacement later."}], whyTitle:"Why JWood LLC?", whyText:"We use commercial-grade penetrating sealers — not the hardware store stuff that peels in one season. Our sealing jobs are done right, and we're Tulsa locals." },
     page3: { headline:"SIMPLE SEALING PROCESS", intro:"In and out in a few hours. Your concrete is protected all winter.", steps:[{title:"Free Assessment",desc:"We inspect your concrete and check for cracks that need repair before sealing."},{title:"Surface Prep & Clean",desc:"We power wash and prep the surface for maximum sealer adhesion."},{title:"Professional Application",desc:"Commercial-grade sealer applied evenly by our trained crew."},{title:"24-Hour Cure",desc:"Stay off it for 24 hours and you're fully protected for the season."}], offerHeadline:"FREE ESTIMATE THIS WEEK", offerSub:"Fall slots filling fast — mention JWOOD when you call 918-896-6737" },
     page4: { eyebrow:"Don't Wait for the First Freeze", headline:"CALL JWOOD LLC BEFORE WINTER HITS", sub:"Once temperatures drop below 50°F sealing becomes less effective. Call now while fall conditions are still perfect.", guarantee:"All sealing work guaranteed for 2 seasons. If it peels or fails, we come back and redo it — free." }
   }
@@ -1585,10 +1585,10 @@ function MailerPreview({mailer,form}){
 const CAPACITY_CONFIG = { crewSize:12, maxJobs:6, weeklyTarget:40000 };
 
 const CAPACITY_MODES = {
-    hungry:   { label:"Hungry",   color:"#b83232", bg:"rgba(184,50,50,0.12)",   icon:"▲", desc:"Aggressive outbound — large radius, fast follow-up, low bid threshold" },
-    normal:   { label:"Normal",   color:"#c4a020", bg:"rgba(196,160,32,0.12)",  icon:"◆", desc:"Standard outbound — normal radius, normal pricing" },
-    selective:{ label:"Selective",color:"#1a6fa8", bg:"rgba(26,111,168,0.12)",  icon:"◈", desc:"High-value leads only — bids +15%, radius reduced" },
-    paused:   { label:"Paused",   color:"#6a6662", bg:"rgba(106,102,98,0.12)",  icon:"■", desc:"Fully booked — campaigns paused, AI agent books 3 weeks out" },
+    hungry:   { label:"Hungry",   color:"#e05252", bg:"rgba(224,82,82,0.12)",   icon:"🔴", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L10 6.5H15.5L11 9.8L13 15.5L8 12.2L3 15.5L5 9.8L0.5 6.5H6L8 1Z" fill="#e05252"/></svg>, desc:"Aggressive outbound — large radius, fast follow-up, low bid threshold" },
+    normal:   { label:"Normal",   color:"#d4a017", bg:"rgba(212,160,23,0.12)",  icon:"🟡", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L9.5 6H14.5L10.5 9L12 13.5L8 10.8L4 13.5L5.5 9L1.5 6H6.5L8 1.5Z" fill="#d4a017"/></svg>, desc:"Standard outbound — normal radius, normal pricing" },
+    selective:{ label:"Selective",color:"#3a8fd4", bg:"rgba(58,143,212,0.12)",  icon:"🔵", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" fill="#3a8fd4" fillOpacity="0.2" stroke="#3a8fd4" strokeWidth="1.5"/><circle cx="8" cy="8" r="3.5" fill="#3a8fd4" fillOpacity="0.4" stroke="#3a8fd4" strokeWidth="1"/><circle cx="8" cy="8" r="1.5" fill="#3a8fd4"/></svg>, desc:"High-value leads only — bids +15%, radius reduced" },
+    paused:   { label:"Paused",   color:"#8a8682", bg:"rgba(138,134,130,0.12)", icon:"⚫", svgIcon:<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" fill="#8a8682" fillOpacity="0.3" stroke="#8a8682" strokeWidth="1.5"/><rect x="5" y="4.5" width="2.2" height="7" rx="1" fill="#8a8682"/><rect x="8.8" y="4.5" width="2.2" height="7" rx="1" fill="#8a8682"/></svg>, desc:"Fully booked — campaigns paused, AI agent books 3 weeks out" },
   };
 
 function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
@@ -1723,17 +1723,59 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
 // ─────────────────────────────────────────────
 function NavIcon({id}) {
   const icons = {
-    map:      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C6.5 1.5 4.5 3.5 4.5 6C4.5 9.5 9 16.5 9 16.5C9 16.5 13.5 9.5 13.5 6C13.5 3.5 11.5 1.5 9 1.5Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/><circle cx="9" cy="6" r="1.75" fill="currentColor"/></svg>,
-    create:   <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.4"/><line x1="5.5" y1="6.5" x2="12.5" y2="6.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="5.5" y1="9" x2="12.5" y2="9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="5.5" y1="11.5" x2="9.5" y2="11.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
-    tracker:  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="9" width="3.5" height="7" rx="1" fill="currentColor" opacity="0.5"/><rect x="7.25" y="5.5" width="3.5" height="10.5" rx="1" fill="currentColor" opacity="0.75"/><rect x="12.5" y="2" width="3.5" height="14" rx="1" fill="currentColor"/></svg>,
-    spotbid:  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.25" stroke="currentColor" strokeWidth="1.4"/><circle cx="9" cy="9" r="4.5" stroke="currentColor" strokeWidth="1.4" opacity="0.6"/><circle cx="9" cy="9" r="1.75" fill="currentColor"/></svg>,
-    pipeline: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="4" cy="4.5" r="2" stroke="currentColor" strokeWidth="1.4"/><circle cx="14" cy="4.5" r="2" stroke="currentColor" strokeWidth="1.4"/><circle cx="9" cy="13.5" r="2" stroke="currentColor" strokeWidth="1.4"/><line x1="5.8" y1="5.5" x2="12.2" y2="5.5" stroke="currentColor" strokeWidth="1.4"/><line x1="4" y1="6.5" x2="9" y2="11.5" stroke="currentColor" strokeWidth="1.4"/><line x1="14" y1="6.5" x2="9" y2="11.5" stroke="currentColor" strokeWidth="1.4"/></svg>,
-    capacity: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2L10.8 7H16L11.6 10.2L13.4 15.2L9 12L4.6 15.2L6.4 10.2L2 7H7.2L9 2Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>,
-    aiphone:  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3.5 3.5C3.5 3.5 4.5 2 6 2C7 2 7.5 3 8 4L8.5 5.5C8.7 6.1 8.5 6.8 8 7.2L7 8C7.5 9 8.5 10.3 9.5 11L10.5 10C11 9.6 11.7 9.5 12.3 9.7L14 10.5C15 11 16 11.5 16 12.5C16 14 14.5 15.5 14.5 15.5C12 18 3 9.5 3.5 3.5Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/><path d="M12 2C13.1 2.3 14.5 3.2 15.5 4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><path d="M11.5 4.5C12.2 4.8 13 5.4 13.5 6.3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
-    admin:    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.4"/><path d="M9 1.5V3M9 15v1.5M1.5 9H3M15 9h1.5M3.2 3.2l1.1 1.1M13.7 13.7l1.1 1.1M3.2 14.8l1.1-1.1M13.7 4.3l1.1-1.1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
-    settings: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.4"/><path d="M9 1.5V3M9 15v1.5M1.5 9H3M15 9h1.5M3.2 3.2l1.1 1.1M13.7 13.7l1.1 1.1M3.2 14.8l1.1-1.1M13.7 4.3l1.1-1.1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+    // Neighborhood Scan — bold filled pin with radiating signal rings
+    map: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M9 1C6.24 1 4 3.24 4 6C4 9.75 9 17 9 17C9 17 14 9.75 14 6C14 3.24 11.76 1 9 1Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
+      <circle cx="9" cy="6" r="2.2" fill="currentColor"/>
+    </svg>,
+    // Create Mailer — envelope with a spark/star on it
+    create: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="1.5" y="4.5" width="15" height="11" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.6"/>
+      <path d="M1.5 6.5L9 11L16.5 6.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M11.5 1.5L12.2 3.3L14 4L12.2 4.7L11.5 6.5L10.8 4.7L9 4L10.8 3.3L11.5 1.5Z" fill="currentColor"/>
+    </svg>,
+    // Job Tracker — three rising bars, tallest filled solid
+    tracker: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="1.5" y="10" width="4" height="6.5" rx="1.2" fill="currentColor" fillOpacity="0.4"/>
+      <rect x="7" y="6.5" width="4" height="10" rx="1.2" fill="currentColor" fillOpacity="0.7"/>
+      <rect x="12.5" y="2" width="4" height="14.5" rx="1.2" fill="currentColor"/>
+    </svg>,
+    // Spot Bid — camera with viewfinder crosshair
+    spotbid: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="1.5" y="5" width="15" height="11" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.6"/>
+      <path d="M6 5V4C6 3.45 6.45 3 7 3H11C11.55 3 12 3.45 12 4V5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+      <circle cx="9" cy="10.5" r="3" stroke="currentColor" strokeWidth="1.5"/>
+      <circle cx="9" cy="10.5" r="1.2" fill="currentColor"/>
+    </svg>,
+    // Pipeline — flowing funnel with stages
+    pipeline: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M2 3H16L11 9V15L7 13V9L2 3Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
+      <line x1="9" y1="9" x2="9" y2="14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+    </svg>,
+    // Capacity — lightning bolt, bold and filled
+    capacity: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M10.5 1.5L4 10H8.5L7.5 16.5L14 7.5H9.5L10.5 1.5Z" fill="currentColor" stroke="currentColor" strokeWidth="0.5" strokeLinejoin="round"/>
+    </svg>,
+    // AI Phone — handset with sound waves, bold
+    aiphone: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M4 3.5C4 3.5 5.2 2 7 2C8 2 8.8 3 9.5 4.5L10 6C10.3 6.8 10 7.8 9.2 8.3L8 9C8.8 10.3 10 11.5 11.2 12.2L12.3 11C13 10.4 14 10.2 14.8 10.5L16.5 11.5C17.5 12 18 13 18 14C18 16 16 17.5 16 17.5C13 20 2 10 4 3.5Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+      <path d="M13 1.5C14.5 2 16.2 3.2 17.2 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M12.5 4.5C13.5 5 14.5 5.8 15.2 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>,
+    // Admin — grid of 4 squares, top-right filled solid
+    admin: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="1.5" y="1.5" width="6.5" height="6.5" rx="1.5" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.5"/>
+      <rect x="10" y="1.5" width="6.5" height="6.5" rx="1.5" fill="currentColor"/>
+      <rect x="1.5" y="10" width="6.5" height="6.5" rx="1.5" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.5"/>
+      <rect x="10" y="10" width="6.5" height="6.5" rx="1.5" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="1.5"/>
+    </svg>,
+    // Settings — gear with solid center dot
+    settings: <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M9 1.5L10.2 4.2C10.8 4.4 11.3 4.7 11.8 5.1L14.7 4.5L16.5 7.5L14.4 9.3C14.5 9.5 14.5 9.8 14.5 10C14.5 10.2 14.5 10.5 14.4 10.7L16.5 12.5L14.7 15.5L11.8 14.9C11.3 15.3 10.8 15.6 10.2 15.8L9 18.5L7.8 15.8C7.2 15.6 6.7 15.3 6.2 14.9L3.3 15.5L1.5 12.5L3.6 10.7C3.5 10.5 3.5 10.2 3.5 10C3.5 9.8 3.5 9.5 3.6 9.3L1.5 7.5L3.3 4.5L6.2 5.1C6.7 4.7 7.2 4.4 7.8 4.2L9 1.5Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+      <circle cx="9" cy="10" r="2.5" fill="currentColor"/>
+    </svg>,
   };
-  return <span className="nav-icon">{icons[id]||<span>●</span>}</span>;
+  return <span className="nav-icon">{icons[id]||<span style={{color:"currentColor"}}>●</span>}</span>;
 }
 
 export default function App(){
@@ -2061,14 +2103,20 @@ export default function App(){
   const[newLead,setNewLead]=useState({address:"",city:"Tulsa",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
 
   const LEAD_FLAGS = [
-    {id:"no_pay",    label:"No Pay",       color:"#c0392b", bg:"rgba(192,57,43,0.15)",  icon:"⛔", desc:"Did not pay or disputed invoice"},
-    {id:"repeat",    label:"Repeat Client", color:"#2a7a52", bg:"rgba(42,122,82,0.15)",  icon:"★",  desc:"Returning customer — priority service"},
-    {id:"hoa",       label:"HOA Issues",    color:"#d4a017", bg:"rgba(212,160,23,0.15)", icon:"⚠",  desc:"HOA approval required before work"},
-    {id:"negotiator",label:"Hard Negotiator",color:"#7a5a2a",bg:"rgba(122,90,42,0.15)", icon:"◈",  desc:"Haggles on price — stick to estimate"},
-    {id:"referral",  label:"Referral",      color:"#1a6fa8", bg:"rgba(26,111,168,0.15)", icon:"→",  desc:"Referred by existing customer"},
-    {id:"lien_risk", label:"Lien Risk",     color:"#8b2fc9", bg:"rgba(139,47,201,0.15)", icon:"⚑",  desc:"Property has financial complications"},
+    {id:"no_pay",    label:"No Pay",        color:"#c0392b", bg:"rgba(192,57,43,0.15)",  icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="4.5" fill="#c0392b" fillOpacity="0.2" stroke="#c0392b" strokeWidth="1.3"/><line x1="3" y1="3" x2="8" y2="8" stroke="#c0392b" strokeWidth="1.4" strokeLinecap="round"/><line x1="8" y1="3" x2="3" y2="8" stroke="#c0392b" strokeWidth="1.4" strokeLinecap="round"/></svg>, desc:"Did not pay or disputed invoice"},
+    {id:"repeat",    label:"Repeat Client", color:"#2a7a52", bg:"rgba(42,122,82,0.15)",  icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1L6.7 4.2H10.2L7.45 6.1L8.55 9.2L5.5 7.4L2.45 9.2L3.55 6.1L0.8 4.2H4.3L5.5 1Z" fill="#2a7a52"/></svg>, desc:"Returning customer — priority service"},
+    {id:"hoa",       label:"HOA Issues",    color:"#d4a017", bg:"rgba(212,160,23,0.15)", icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1L10 9.5H1L5.5 1Z" fill="#d4a017" fillOpacity="0.2" stroke="#d4a017" strokeWidth="1.3" strokeLinejoin="round"/><line x1="5.5" y1="4" x2="5.5" y2="6.5" stroke="#d4a017" strokeWidth="1.3" strokeLinecap="round"/><circle cx="5.5" cy="8" r="0.6" fill="#d4a017"/></svg>, desc:"HOA approval required before work"},
+    {id:"negotiator",label:"Negotiator",    color:"#c47a1a", bg:"rgba(196,122,26,0.15)", icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 7.5L4 4.5L6.5 7L10 2" stroke="#c47a1a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, desc:"Haggles on price — stick to estimate"},
+    {id:"referral",  label:"Referral",      color:"#1a6fa8", bg:"rgba(26,111,168,0.15)", icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="3" r="2" fill="#1a6fa8" fillOpacity="0.3" stroke="#1a6fa8" strokeWidth="1.2"/><path d="M2 10C2 8.3 3.6 7 5.5 7C7.4 7 9 8.3 9 10" stroke="#1a6fa8" strokeWidth="1.2" strokeLinecap="round"/><path d="M8 4.5L10 5.5L8 6.5" stroke="#1a6fa8" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>, desc:"Referred by existing customer"},
+    {id:"lien_risk", label:"Lien Risk",     color:"#8b2fc9", bg:"rgba(139,47,201,0.15)", icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1L9.5 3V6C9.5 8.5 7.5 10.2 5.5 11C3.5 10.2 1.5 8.5 1.5 6V3L5.5 1Z" fill="#8b2fc9" fillOpacity="0.2" stroke="#8b2fc9" strokeWidth="1.2" strokeLinejoin="round"/><line x1="5.5" y1="4" x2="5.5" y2="6.5" stroke="#8b2fc9" strokeWidth="1.3" strokeLinecap="round"/><circle cx="5.5" cy="8" r="0.6" fill="#8b2fc9"/></svg>, desc:"Property has financial complications"},
   ];
 
+  const STAGE_ICONS = {
+    spotted: <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.4"/><circle cx="6" cy="6" r="2.5" fill="currentColor" fillOpacity="0.6"/></svg>,
+    sent:    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="3" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><path d="M1 5L6 8L11 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+    called:  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 2C2.5 2 3.3 1 4.5 1C5.2 1 5.7 1.8 6.1 2.7L6.5 3.9C6.7 4.4 6.5 5 6 5.4L5.3 5.9C5.7 6.6 6.4 7.4 7.2 7.8L7.8 7.2C8.2 6.8 8.8 6.6 9.3 6.8L10.5 7.4C11.2 7.8 11.5 8.5 11.5 9C11.5 10.2 10.5 11 10.5 11C8.5 13 1 6.5 2.5 2Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.3"/></svg>,
+    won:     <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1L7.2 4.2H10.7L7.95 6.1L9.1 9.3L6 7.5L2.9 9.3L4.05 6.1L1.3 4.2H4.8L6 1Z" fill="currentColor"/></svg>,
+  };
   const STAGES = [
     {id:"spotted", label:"Spotted",    icon:"◉", color:"#7a7670", bg:"rgba(122,118,112,0.15)"},
     {id:"sent",    label:"Mailer Sent",icon:"◫", color:"#1a6fa8", bg:"rgba(26,111,168,0.15)"},
@@ -3025,7 +3073,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             <div className="capacity-widget" style={{marginBottom:8}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                 <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"var(--stone)"}}>Crew Capacity</div>
-                <div style={{fontSize:10,fontWeight:700,color:CAPACITY_MODES[capacity.mode].color}}>{CAPACITY_MODES[capacity.mode].icon} {CAPACITY_MODES[capacity.mode].label}</div>
+                <div style={{fontSize:10,fontWeight:700,color:CAPACITY_MODES[capacity.mode].color}}>{CAPACITY_MODES[capacity.mode].svgIcon} {CAPACITY_MODES[capacity.mode].label}</div>
               </div>
               <div className="capacity-bar-wrap">
                 <div className="capacity-bar" style={{
@@ -3042,7 +3090,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <button key={mode} className={`mode-pill${capacity.manualOverride===mode?" active":""}`}
                     style={{background:capacity.manualOverride===mode?cfg.bg:"transparent",color:cfg.color,fontSize:8}}
                     onClick={()=>setCapacity(c=>({...c,manualOverride:c.manualOverride===mode?null:mode,mode:c.manualOverride===mode?(()=>{const pct=c.activeJobs/CAPACITY_CONFIG.maxJobs;return pct>=1?"paused":pct>=0.8?"selective":pct>=0.5?"normal":"hungry";})():mode}))}>
-                    {cfg.icon} {cfg.label}
+                    {cfg.svgIcon} {cfg.label}
                   </button>
                 ))}
               </div>
@@ -3348,7 +3396,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                         </>
                       ) : (
                         <>
-                          <div className="pd-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="2" y="8" width="28" height="20" rx="3" stroke="currentColor" strokeWidth="1.5"/><circle cx="16" cy="18" r="5" stroke="currentColor" strokeWidth="1.5"/><path d="M11 8l2-4h6l2 4" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><circle cx="24" cy="13" r="1.5" fill="currentColor"/></svg></div>
+                          <div className="pd-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect x="2" y="9" width="32" height="22" rx="4" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="1.8"/><path d="M12 9V7C12 5.9 12.9 5 14 5H22C23.1 5 24 5.9 24 7V9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><circle cx="18" cy="20" r="6" stroke="currentColor" strokeWidth="1.8"/><circle cx="18" cy="20" r="2.5" fill="currentColor" fillOpacity="0.6"/><circle cx="27" cy="14" r="1.8" fill="currentColor" fillOpacity="0.5"/></svg></div>
                           <div className="pd-label">Tap to take photo or upload<br/><span style={{fontSize:10,color:"var(--gravel)"}}>AI reads the damage automatically</span></div>
                         </>
                       )}
@@ -3730,7 +3778,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                           </div>
                           {/* Trust line */}
                           <div className="spot-guarantee">
-                            <div className="spot-guarantee-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L12 3V7C12 10 9.5 12.5 7 13C4.5 12.5 2 10 2 7V3L7 1Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/><path d="M5 7L6.5 8.5L9.5 5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+                            <div className="spot-guarantee-icon"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1L11 3V7C11 9.8 9 11.8 6.5 12.5C4 11.8 2 9.8 2 7V3L6.5 1Z" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="M4.5 6.5L6 8L9 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
                             <div className="spot-guarantee-text">Licensed & insured · Tulsa, OK · JWood LLC · We stand behind every pour</div>
                           </div>
                         </div>
@@ -3781,7 +3829,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <button key={mode} className={`mode-pill${capacity.mode===mode?" active":""}`}
                       style={{background:capacity.mode===mode?cfg.bg:"transparent",color:cfg.color}}
                       onClick={()=>setCapacity(c=>({...c,mode,manualOverride:mode}))}>
-                      {cfg.icon} {cfg.label}
+                      {cfg.svgIcon} {cfg.label}
                     </button>
                   ))}
                 </div>
@@ -3807,7 +3855,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:"var(--concrete)",marginBottom:12}}>SMART SUGGESTIONS</div>
               {capacity.mode==="hungry"&&(
                 <div className="smart-suggest">
-                  <div className="smart-suggest-icon" style={{color:"#b83232"}}>▲</div>
+                  <div className="smart-suggest-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1L11 7.5H17.5L12.2 11L14.2 17.5L9 14L3.8 17.5L5.8 11L0.5 7.5H7L9 1Z" fill="#e05252"/></svg></div>
                   <div className="smart-suggest-text">
                     <strong>You have open capacity.</strong> Consider sending a radius mailer from your most recent Won job, or running a new neighborhood campaign in a high-income ZIP. Radius auto-set to <strong>1.0 miles</strong> in Hungry mode.
                     <div style={{marginTop:8}}>
@@ -3820,7 +3868,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               )}
               {capacity.mode==="paused"&&(
                 <div className="smart-suggest">
-                  <div className="smart-suggest-icon" style={{color:"#6a6662"}}>■</div>
+                  <div className="smart-suggest-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="12" height="12" rx="2" fill="#8a8682" fillOpacity="0.3" stroke="#8a8682" strokeWidth="1.5"/><rect x="6" y="5.5" width="2.2" height="7" rx="1" fill="#8a8682"/><rect x="9.8" y="5.5" width="2.2" height="7" rx="1" fill="#8a8682"/></svg></div>
                   <div className="smart-suggest-text">
                     <strong>You are fully booked.</strong> Outbound campaigns are paused. The AI phone agent is telling callers you are booking 3 weeks out. When a job completes and is removed from Won, capacity will auto-resume.
                   </div>
@@ -3828,7 +3876,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               )}
               {capacity.mode==="selective"&&(
                 <div className="smart-suggest">
-                  <div className="smart-suggest-icon" style={{color:"#1a6fa8"}}>◈</div>
+                  <div className="smart-suggest-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" fill="#3a8fd4" fillOpacity="0.15" stroke="#3a8fd4" strokeWidth="1.5"/><circle cx="9" cy="9" r="4" fill="#3a8fd4" fillOpacity="0.3" stroke="#3a8fd4" strokeWidth="1"/><circle cx="9" cy="9" r="1.8" fill="#3a8fd4"/></svg></div>
                   <div className="smart-suggest-text">
                     <strong>Nearly full — focus on high-value leads only.</strong> Pipeline leads with a score below 50 are deprioritized. Bids are automatically increased by 15% to maximize margin on remaining capacity.
                     {pipeline.filter(l=>scoreLead(l)<50&&l.stage!=="won").length>0&&(
@@ -3849,7 +3897,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   return(
                     <div key={lead.id} style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",padding:"11px 16px",borderBottom:"1px solid rgba(184,180,172,0.05)",alignItems:"center",cursor:"pointer"}} onClick={()=>setTab("pipeline")}>
                       <div style={{fontSize:12,fontWeight:600,color:"var(--cream)"}}>{lead.address}<div style={{fontSize:10,color:"var(--stone)"}}>{lead.city}</div></div>
-                      <div style={{fontSize:11,color:"var(--concrete)"}}>{STAGES.find(s=>s.id===lead.stage)?.id==="spotted"?"◉":STAGES.find(s=>s.id===lead.stage)?.id==="sent"?"◫":STAGES.find(s=>s.id===lead.stage)?.id==="called"?"◌":"✦"} {STAGES.find(s=>s.id===lead.stage)?.label}</div>
+                      <div style={{fontSize:11,color:"var(--concrete)"}}>{STAGE_ICONS[lead.stage]} {STAGES.find(s=>s.id===lead.stage)?.label}</div>
                       <div style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"var(--orange2)"}}>{lead.value?`$${lead.value.toLocaleString()}`:"—"}</div>
                       <div>
                         <span className={`score-pill ${score>=70?"score-high":score>=40?"score-mid":"score-low"}`}>{score}</span>
@@ -4122,7 +4170,12 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       <span className={`ai-badge badge-${lead.status==="qualified"?"qualified":lead.status==="pending"?"pending":"not-qualified"}`}>
                         {lead.status==="qualified"?"✓ Qualified":lead.status==="pending"?"⏳ Pending":"✗ Not Qualified"}
                       </span>
-                      {lead.service&&<span style={{fontSize:10,color:"var(--stone)"}}>🏗️ {lead.service}</span>}
+                      {lead.service&&(
+                      <span style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:10,color:"var(--stone)"}}>
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="4" width="8" height="5" rx="1" stroke="currentColor" strokeWidth="1.1"/><path d="M3 4V3C3 1.9 3.9 1 5 1C6.1 1 7 1.9 7 3V4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/></svg>
+                        {lead.service}
+                      </span>
+                    )}
                       {lead.address&&<span style={{fontSize:10,color:"var(--stone)"}}>📍 {lead.address}</span>}
                       {lead.transferred&&<span style={{fontSize:10,color:"var(--green2)"}}>📞 Transferred to Joel</span>}
                     </div>
@@ -4231,9 +4284,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     return(
                       <div className="kanban-col" key={stage.id}>
                         <div className="kanban-head" style={{borderTop:`3px solid ${stage.color}`}}>
-                          <span className="kanban-head-icon" style={{fontSize:14}}>
-                          {stage.id==="spotted"?"◉":stage.id==="sent"?"◫":stage.id==="called"?"◌":"✦"}
-                        </span>
+                          <span className="kanban-head-icon">{STAGE_ICONS[stage.id]}</span>
                           <span className="kanban-head-label" style={{color:stage.color}}>{stage.label}</span>
                           <span className="kanban-count">{leads.length}</span>
                         </div>
@@ -4248,7 +4299,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:4,marginBottom:2}}>
                   {lead.flags.map(fid=>{
                     const f=LEAD_FLAGS.find(x=>x.id===fid);
-                    return f?<span key={fid} className="lead-flag" style={{background:f.bg,color:f.color,border:`1px solid ${f.color}30`}}>{f.icon} {f.label}</span>:null;
+                    return f?<span key={fid} className="lead-flag" style={{background:f.bg,color:f.color,border:`1px solid ${f.color}30`,display:"inline-flex",alignItems:"center",gap:3}}>{f.icon}{f.label}</span>:null;
                   })}
                 </div>
               )}
@@ -4412,7 +4463,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       return(
                         <div key={lead.id} className="pl-pin" style={{left:`${pos.x}%`,top:`${pos.y}%`}}>
                           <div className="pl-pin-dot" style={{background:stage?.color}}>
-                            <span style={{fontSize:12}}>{stage?.icon}</span>
+                            <span style={{display:"inline-flex"}}>{STAGE_ICONS[lead.stage]}</span>
                           </div>
                           <div className="pl-pin-label">{lead.address.split(" ").slice(0,3).join(" ")}</div>
                         </div>
@@ -4463,7 +4514,16 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               <div className="settings-section">
                 <h3>Your Business</h3>
                 <div style={{background:"rgba(232,86,10,0.07)",border:"1px solid rgba(232,86,10,0.18)",borderRadius:9,padding:"16px 18px",fontSize:13,lineHeight:2,color:"var(--concrete)"}}>
-                  <div>🏗️ <strong style={{color:"var(--cream)"}}>{COMPANY.name}</strong></div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <rect x="1" y="6" width="12" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                      <path d="M4 6V4.5C4 2.8 5.3 1.5 7 1.5C8.7 1.5 10 2.8 10 4.5V6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                      <line x1="3" y1="9" x2="5.5" y2="9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                      <line x1="3" y1="11" x2="4.5" y2="11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                      <rect x="7.5" y="8" width="3" height="5" rx="0.5" fill="currentColor" opacity="0.5"/>
+                    </svg>
+                    <strong style={{color:"var(--cream)"}}>{COMPANY.name}</strong>
+                  </div>
                   <div>📞 <strong style={{color:"var(--cream)",fontFamily:"'DM Mono',monospace"}}>{COMPANY.phone}</strong></div>
                   <div>✉️ <strong style={{color:"var(--cream)"}}>{COMPANY.email}</strong></div>
                   <div>📍 <strong style={{color:"var(--cream)"}}>{COMPANY.city}, {COMPANY.state}</strong></div>
@@ -4522,7 +4582,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         {/* WON BANNER — radius mailer suggestion */}
       {wonBanner&&(
         <div className="won-banner">
-          <div className="won-banner-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L14.4 8.8H22L16 13.2L18.4 20L12 15.6L5.6 20L8 13.2L2 8.8H9.6L12 2Z" fill="currentColor"/></svg></div>
+          <div className="won-banner-icon"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M13 2L15.8 9.5H24L17.6 14.2L20.4 21.7L13 17L5.6 21.7L8.4 14.2L2 9.5H10.2L13 2Z" fill="#f9a825" stroke="#f9a825" strokeWidth="0.5" strokeLinejoin="round"/></svg></div>
           <div className="won-banner-text">
             <h4>Job Won — {wonBanner.address}!</h4>
             <p>Send a radius mailer to neighbors within half a mile?</p>
@@ -4799,7 +4859,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   {lead.bidLo&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"var(--orange2)",fontWeight:600}}>{lead.bidLo}{lead.bidHi&&<span style={{opacity:0.6}}> — {lead.bidHi}</span>}</span>}
                   {lead.flags?.map(fid=>{
                     const f=LEAD_FLAGS.find(x=>x.id===fid);
-                    return f?<span key={fid} className="lead-flag" style={{background:f.bg,color:f.color,border:`1px solid ${f.color}30`}}>{f.icon} {f.label}</span>:null;
+                    return f?<span key={fid} className="lead-flag" style={{background:f.bg,color:f.color,border:`1px solid ${f.color}30`,display:"inline-flex",alignItems:"center",gap:3}}>{f.icon}{f.label}</span>:null;
                   })}
                 </div>
               </div>
