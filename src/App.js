@@ -2296,8 +2296,14 @@ export default function App(){
   function showToast(msg,type="success") {setToast({msg,type});setTimeout(()=>setToast(null),4000);}
   function toggleRoute(id){ setSelectedRoutes(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]); }
 
-
   const[pipeline,setPipeline]=useState([]);
+
+  // ── JOB BOARD STATE — declared here so capacity engine can read it ──
+  const[jobBoardJobs,setJobBoardJobs]=useState([]);
+  const[jobBoardView,setJobBoardView]=useState("week");
+  const[newJobModal,setNewJobModal]=useState(false);
+  const[newJob,setNewJob]=useState({address:"",service:"Crack Repair",value:"",crew:"",date:"",notes:"",status:"scheduled"});
+  const[selectedJobDetail,setSelectedJobDetail]=useState(null);
 
   // Real capacity engine - data-driven, auto-sets mode
   React.useEffect(()=>{
@@ -2404,13 +2410,6 @@ export default function App(){
     return 1.0;
   };
   const[showRadiusModal,setShowRadiusModal]=useState(false);
-
-  // ── JOB BOARD STATE ──
-  const[jobBoardJobs,setJobBoardJobs]=useState([]);
-  const[jobBoardView,setJobBoardView]=useState("week"); // week | list
-  const[newJobModal,setNewJobModal]=useState(false);
-  const[newJob,setNewJob]=useState({address:"",service:"Crack Repair",value:"",crew:"",date:"",notes:"",status:"scheduled"});
-  const[selectedJobDetail,setSelectedJobDetail]=useState(null);
 
   // ── FIELD MAP STATE ──
   const[fieldMapReady,setFieldMapReady]=useState(false);
@@ -2606,7 +2605,7 @@ export default function App(){
     setPipeline(p=>[newLeadObj,...p]);
     track('lead_added', {address:newLeadObj.address, city:newLeadObj.city});
     db.upsertLead(newLeadObj).catch(e=>console.error("Save lead failed:", e));
-    setNewLead("address":"",city:"",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
+    setNewLead({address:"",city:"",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
     setShowAddLead(false);
     showToast("📍 Lead added to pipeline","success");
   }
@@ -6644,3 +6643,4 @@ export default function App(){
     </div>
   );
 }
+
