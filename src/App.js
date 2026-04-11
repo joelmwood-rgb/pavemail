@@ -1,12 +1,22 @@
 import React, { useState } from "react";
 
 // ─────────────────────────────────────────────
-// ANALYTICS + ERROR MONITORING
-// Initialized via useEffect in App component
+// RUNTIME CONFIG
+// In production: replace these with environment variables at build time.
+// e.g. Vite: import.meta.env.VITE_POSTHOG_KEY
+//      Next:  process.env.NEXT_PUBLIC_POSTHOG_KEY
+// For now they are inlined — rotate keys if repo is ever made public.
 // ─────────────────────────────────────────────
-const POSTHOG_KEY   = "phc_kqPn9wagFCAw9QaUF4XJxKMNEnHRooEX7uBvt4wdv29z";
-const ADMIN_EMAIL   = "${ACTIVE_COMPANY.email}";
-const SENTRY_DSN  = "https://7dbac4cf1178f77cd4f219c54e11225f@o4511197222797312.ingest.us.sentry.io/4511197260021760";
+const CONFIG = {
+  POSTHOG_KEY:   window.__ENV__?.POSTHOG_KEY   || "phc_kqPn9wagFCAw9QaUF4XJxKMNEnHRooEX7uBvt4wdv29z",
+  SENTRY_DSN:    window.__ENV__?.SENTRY_DSN    || "https://7dbac4cf1178f77cd4f219c54e11225f@o4511197222797312.ingest.us.sentry.io/4511197260021760",
+  SUPABASE_URL:  window.__ENV__?.SUPABASE_URL  || "https://pzbvvohedpgeiynqoujr.supabase.co",
+  SUPABASE_KEY:  window.__ENV__?.SUPABASE_KEY  || "sb_publishable_H6U94DoMxk7_Cap6ftIoew_14fhh8Qe",
+  PROXY_BASE:    window.__ENV__?.PROXY_BASE    || "https://joelmwood--b166b8c432db11f19dff42b51c65c3df.web.val.run",
+  STRIPE_KEY:    window.__ENV__?.STRIPE_KEY    || "", // Stripe publishable key — set before billing goes live
+  ADMIN_EMAIL:   window.__ENV__?.ADMIN_EMAIL   || "joel@jwoodllc.com", // Super admin login email
+};
+// Inject via <script>window.__ENV__ = {...}</script> in your HTML shell for zero-rebuild config changes.
 
 function track(event, props) {
   try { if(window.posthog) window.posthog.capture(event, props||{}); } catch(e){}
@@ -25,7 +35,7 @@ function initAnalytics() {
       document.head.appendChild(s);
       s.onload = function() {
         try {
-          window.posthog.init(POSTHOG_KEY, {
+          window.posthog.init(CONFIG.POSTHOG_KEY, {
             api_host: 'https://us.i.posthog.com',
             autocapture: true,
           });
@@ -41,7 +51,7 @@ function initAnalytics() {
     sen.onload = function() {
       try {
         window.Sentry && window.Sentry.init({
-          dsn: SENTRY_DSN,
+          dsn: CONFIG.SENTRY_DSN,
           tracesSampleRate: 0.1,
           environment: 'production',
         });
@@ -54,13 +64,13 @@ function initAnalytics() {
 // ─────────────────────────────────────────────
 // LOB API INTEGRATION
 // ─────────────────────────────────────────────
-const PROXY_BASE      = "https://joelmwood--b166b8c432db11f19dff42b51c65c3df.web.val.run";
+const PROXY_BASE = CONFIG.PROXY_BASE;
 
 // ─────────────────────────────────────────────
 // SUPABASE CLIENT
 // ─────────────────────────────────────────────
-const SUPABASE_URL = "https://pzbvvohedpgeiynqoujr.supabase.co";
-const SUPABASE_KEY = "sb_publishable_H6U94DoMxk7_Cap6ftIoew_14fhh8Qe";
+const SUPABASE_URL = CONFIG.SUPABASE_URL;
+const SUPABASE_KEY = CONFIG.SUPABASE_KEY;
 
 function getAuthToken() {
   try {
@@ -223,29 +233,25 @@ const auth = {
 // To set up a new contractor — change ONLY these values.
 // Everything else in the app pulls from here automatically.
 // ─────────────────────────────────────────────
+// Default fallback — overridden at runtime by contractor_profiles record
 const COMPANY = {
-  // Identity
-  name:        "JWood LLC",
-  ownerName:   "Joel",
-  phone:       "918-896-6737",
-  phoneRaw:    "9188966737",             // digits only, for QR codes + Bland transfer
-  email:       "${ACTIVE_COMPANY.email}",
-  city:        "Tulsa",
-  state:       "OK",
-  promo:       "JWOOD",
-  // Lob.com — address ID for return address on postcards
-  lobFromId:   "adr_910e8abc86e78815",
-  // Bland.ai — phone number to transfer qualified leads to
-  transferPhone: "+19188966737",
-  // Supabase — contractor identifier for data isolation
-  contractorId: "jwood",
-  // Capacity defaults
-  crewSize:    12,
-  maxJobsWeek: 6,
-  weeklyTarget: 40000,
-  // Branding
-  accentColor: "#e8560a",            // orange — change for each contractor
-  tagline:     "Tulsa's Concrete Specialists",
+  name:         "My Company",
+  ownerName:    "Owner",
+  phone:        "",
+  phoneRaw:     "",
+  email:        "",
+  city:         "",
+  state:        "",
+  promo:        "SAVE10",
+  lobFromId:    "",
+  transferPhone:"",
+  contractorId: "",
+  crewSize:     10,
+  maxJobsWeek:  5,
+  weeklyTarget: 30000,
+  accentColor:  "#e8560a",
+  tagline:      "Concrete Specialists",
+  logoUrl:      "",
 };
 
 
@@ -266,7 +272,7 @@ const db = {
       headers: { "Prefer": "resolution=merge-duplicates,return=representation" },
       body: JSON.stringify({
         id: lead.id,
-        contractor_id: COMPANY.contractorId,
+        contractor_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         address: lead.address,
         city: lead.city,
         neighborhood: lead.neighborhood||"",
@@ -304,7 +310,7 @@ const db = {
     return sbFetch("campaigns", {
       method: "POST",
       body: JSON.stringify({
-        contractor_id: COMPANY.contractorId,
+        contractor_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         name: campaign.name,
         area: campaign.area,
         homes: parseInt(campaign.homes)||0,
@@ -328,7 +334,7 @@ const db = {
     return sbFetch("spot_bids", {
       method: "POST",
       body: JSON.stringify({
-        contractor_id: COMPANY.contractorId,
+        contractor_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         address: bid.address,
         city: bid.city||"Tulsa",
         bid: bid.bid||"",
@@ -353,7 +359,7 @@ const db = {
     return sbFetch("ai_calls", {
       method: "POST",
       body: JSON.stringify({
-        contractor_id: COMPANY.contractorId,
+        contractor_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         caller: call.caller||"Unknown",
         phone: call.phone||"",
         summary: call.summary||"",
@@ -378,7 +384,7 @@ const db = {
     return sbFetch("jobs", {
       method: "POST",
       body: JSON.stringify({
-        contractor_id: COMPANY.contractorId,
+        contractor_id: (function(){try{return JSON.parse(localStorage.getItem("pm_session"))?.user?.id||""}catch{return ""}})(),
         name: job.name,
         area: job.area||"",
         homes: String(job.homes||0),
@@ -423,42 +429,51 @@ const BLAND_STATUS    = PROXY_BASE + "/?target=bland-status";
 // ─────────────────────────────────────────────
 // BLAND.AI AGENT CONFIG
 // ─────────────────────────────────────────────
-const BLAND_AGENT_SCRIPT = `You are a friendly assistant answering calls for JWood LLC, a concrete contractor in Tulsa, Oklahoma. Your name is Alex.
+function buildBlandScript(company) {
+  const name    = company.name     || "us";
+  const owner   = company.ownerName|| "the owner";
+  const phone   = company.phone    || "";
+  const city    = company.city     || "your area";
+  const state   = company.state    || "";
+  const loc     = [city, state].filter(Boolean).join(", ");
+  return `You are a friendly assistant answering calls for ${name}, a concrete contractor in ${loc}. Your name is Alex.
 
 When someone calls:
-1. Greet them warmly: "Thanks for calling JWood LLC! This is Alex. Are you calling about a concrete project?"
+1. Greet them warmly: "Thanks for calling ${name}! This is Alex. Are you calling about a concrete project?"
 2. Get their name and callback number
 3. Ask what service they need: crack repair, new concrete, resurfacing, or sealing
 4. Ask for the property address
 5. Ask their timeline: "Are you looking to get this done in the next few weeks?"
 6. Ask roughly the approximate size of the project (single car, double car, or larger)
-7. Tell them: "Great! Joel will be giving you a personal call back within the hour to discuss your project and give you a free estimate."
-8. Transfer to Joel at 918-896-6737
+7. Tell them: "Great! ${owner} will be giving you a personal call back within the hour to discuss your project and give you a free estimate."
+8. Transfer to ${owner} at ${phone}
 
-Keep it conversational and friendly. Never quote prices. Always end by transferring to Joel.`;
+Keep it conversational and friendly. Never quote prices. Always end by transferring to ${owner}.`;
+}
 
-async function createBlandAgent(phoneNumber, leadContext) {
+async function createBlandAgent(phoneNumber, leadContext, company={}) {
   try {
+    const script = buildBlandScript(company);
+    const greeting = `Thanks for calling ${company.name||"us"}, this is Alex! Are you calling about a concrete project?`;
     const res = await fetch(BLAND_PROXY, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         phone_number: phoneNumber,
-        task: BLAND_AGENT_SCRIPT,
+        task: script,
         language: "en-US",
         voice: "maya",
         max_duration: 10,
         wait_for_greeting: true,
-        transfer_phone_number: COMPANY.transferPhone,
+        transfer_phone_number: company.transferPhone || company.phone || "",
         webhook: PROXY_BASE + "/?target=bland",
         metadata: { source: "pavemail", lead: leadContext },
-        first_sentence: "Thanks for calling JWood LLC, this is Alex! Are you calling about a concrete project?",
+        first_sentence: greeting,
         record: true,
         reduce_latency: false,
       })
     });
     const data = await res.json();
-
     return data;
   } catch(e) {
     console.error("Bland API error:", e);
@@ -543,7 +558,7 @@ async function reverseGeocode(lat, lng) {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-      { headers: { "User-Agent": "PaveMail/1.0 (${ACTIVE_COMPANY.email})" } }
+      { headers: { "User-Agent": `PaveMail/1.0 (${ACTIVE_COMPANY.email||"pavemail@app.com"})` } }
     );
     const data = await res.json();
     if (!data || data.error) return null;
@@ -566,7 +581,7 @@ async function verifyAddress(address, city, state, zip) {
     const res = await fetch(LOB_VERIFY_PROXY, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ primary_line: address, city: city||"Tulsa", state: state||"OK", zip_code: zip||"" })
+      body: JSON.stringify({ primary_line: address, city: city||ACTIVE_COMPANY.city||"", state: state||ACTIVE_COMPANY.state||"", zip_code: zip||"" })
     });
     const data = await res.json();
     return {
@@ -597,17 +612,17 @@ async function lobRequest(endpoint, body) {
 }
 
 // Lob verified address IDs
-const LOB_FROM_ID = COMPANY.lobFromId; // JWood LLC
+// LOB_FROM_ID is now dynamic via ACTIVE_COMPANY.lobFromId at call time
 const LOB_TO_ID   = "adr_cef32a4b4157e9df"; // Tulsa Test Homeowner
 
 async function sendMailer({ neighborhood, headline, sub }) {
   return lobRequest("/postcards", {
-    description: `JWood LLC - ${neighborhood || "Tulsa"} Campaign`,
+    description: `${neighborhood||"Campaign"} - Direct Mail`,
     to:   LOB_TO_ID,
-    from: LOB_FROM_ID,
+    from: (window.__ACTIVE_LOB_FROM_ID||""),
     size: "6x9",
-    front: `<html><body style="margin:0;padding:30px;background:#1c1a17;color:#f5f0e6;font-family:Arial,sans-serif;"><div style="color:#e8560a;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">JWood LLC · Tulsa, OK</div><h1 style="font-size:32px;color:#f5f0e6;margin:0;line-height:1.1;">${headline || "UPGRADE YOUR CONCRETE THIS SEASON"}</h1><p style="font-size:12px;color:#b8b4ac;margin-top:10px;line-height:1.6;">${sub || "Tulsa concrete specialists. Free estimates, written warranty, local crew."}</p><div style="margin-top:18px;background:#e8560a;color:white;padding:10px 16px;border-radius:6px;display:inline-block;"><strong style="font-size:13px;">FREE ESTIMATE — CALL 918-896-6737</strong></div><p style="margin-top:10px;font-size:10px;color:#7a7670;">Mention code JWOOD · ${ACTIVE_COMPANY.email}</p></body></html>`,
-    back: `<html><body style="margin:0;padding:30px;background:#f5f0e6;color:#1c1a17;font-family:Arial,sans-serif;"><h2 style="font-size:20px;color:#1c1a17;margin-bottom:12px;">Why Tulsa Homeowners Choose JWood LLC</h2><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Oklahoma Weather Experts</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">We know Tulsa freeze-thaw cycles and use the right materials.</p></div><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Commercial-Grade Materials</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">Reinforced concrete built to last 30+ years in Oklahoma soil.</p></div><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Written Warranty on Every Job</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">2-year workmanship guarantee. If something fails, we fix it free.</p></div></div><div style="background:#1c1a17;color:white;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:15px;font-weight:700;">${ACTIVE_COMPANY.phone}</div><div style="font-size:10px;color:#b8b4ac;margin-top:2px;">${ACTIVE_COMPANY.email}</div><div style="margin-top:5px;font-size:10px;background:#e8560a;display:inline-block;padding:3px 8px;border-radius:4px;">Code: JWOOD — FREE estimate</div></div></body></html>`,
+    front: `<html><body style="margin:0;padding:30px;background:#1c1a17;color:#f5f0e6;font-family:Arial,sans-serif;"><div style="color:#e8560a;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">${ACTIVE_COMPANY.name} · ${ACTIVE_COMPANY.city}${ACTIVE_COMPANY.state?`, ${ACTIVE_COMPANY.state}`:''}</div><h1 style="font-size:32px;color:#f5f0e6;margin:0;line-height:1.1;">${headline || "UPGRADE YOUR CONCRETE THIS SEASON"}</h1><p style="font-size:12px;color:#b8b4ac;margin-top:10px;line-height:1.6;">${sub || "Tulsa concrete specialists. Free estimates, written warranty, local crew."}</p><div style="margin-top:18px;background:#e8560a;color:white;padding:10px 16px;border-radius:6px;display:inline-block;"><strong style="font-size:13px;">FREE ESTIMATE — CALL ${ACTIVE_COMPANY.phone}</strong></div><p style="margin-top:10px;font-size:10px;color:#7a7670;">Mention code ${ACTIVE_COMPANY.promo||"SAVE"} · ${ACTIVE_COMPANY.email}</p></body></html>`,
+    back: `<html><body style="margin:0;padding:30px;background:#f5f0e6;color:#1c1a17;font-family:Arial,sans-serif;"><h2 style="font-size:20px;color:#1c1a17;margin-bottom:12px;">Why Homeowners Choose ${ACTIVE_COMPANY.name}</h2><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Oklahoma Weather Experts</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">We know local weather patterns and use the right materials for your climate.</p></div><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Commercial-Grade Materials</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">Reinforced concrete built to last 30+ years.</p></div><div style="background:#f0ebe0;border-left:4px solid #e8560a;padding:8px 12px;border-radius:4px;"><strong style="font-size:11px;">Written Warranty on Every Job</strong><p style="font-size:10px;color:#6a6864;margin:2px 0 0;">2-year workmanship guarantee. If something fails, we fix it free.</p></div></div><div style="background:#1c1a17;color:white;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:15px;font-weight:700;">${ACTIVE_COMPANY.phone}</div><div style="font-size:10px;color:#b8b4ac;margin-top:2px;">${ACTIVE_COMPANY.email}</div><div style="margin-top:5px;font-size:10px;background:#e8560a;display:inline-block;padding:3px 8px;border-radius:4px;">Code: ${ACTIVE_COMPANY.promo||"SAVE"} — FREE estimate</div></div></body></html>`,
     use_type: "marketing",
   });
 }
@@ -643,6 +658,54 @@ const CRACKED_EXAMPLE_URL = "https://images.unsplash.com/photo-1558618666-fcd25c
 // ─────────────────────────────────────────────
 // QR CODE
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// VIRTUAL LIST — renders only visible rows
+// Eliminates DOM bloat for 100+ item lists
+// ─────────────────────────────────────────────
+function useVirtualList(items, rowHeight=88, overscan=5) {
+  const [scrollTop, setScrollTop] = React.useState(0);
+  const [containerH, setContainerH] = React.useState(600);
+  const ref = React.useRef(null);
+
+  React.useEffect(()=>{
+    const el = ref.current; if(!el) return;
+    setContainerH(el.clientHeight||600);
+    const onScroll = ()=>setScrollTop(el.scrollTop);
+    const onResize = ()=>setContainerH(el.clientHeight||600);
+    el.addEventListener("scroll", onScroll, {passive:true});
+    window.addEventListener("resize", onResize, {passive:true});
+    return()=>{ el.removeEventListener("scroll",onScroll); window.removeEventListener("resize",onResize); };
+  },[]);
+
+  const startIdx = Math.max(0, Math.floor(scrollTop/rowHeight) - overscan);
+  const endIdx   = Math.min(items.length-1, Math.ceil((scrollTop+containerH)/rowHeight) + overscan);
+  const visibleItems = items.slice(startIdx, endIdx+1).map((item,i)=>({item, index:startIdx+i}));
+  const totalH   = items.length * rowHeight;
+  const offsetY  = startIdx * rowHeight;
+
+  return { ref, visibleItems, totalH, offsetY };
+}
+
+function VirtualList({items, rowHeight=88, renderRow, emptyMsg="No items"}) {
+  const {ref, visibleItems, totalH, offsetY} = useVirtualList(items, rowHeight);
+  if(items.length===0) return(
+    <div style={{textAlign:"center",padding:"40px 20px",color:"var(--gravel)",fontSize:13}}>{emptyMsg}</div>
+  );
+  return(
+    <div ref={ref} style={{overflowY:"auto",height:"100%",position:"relative"}}>
+      <div style={{height:totalH,position:"relative"}}>
+        <div style={{position:"absolute",top:offsetY,left:0,right:0}}>
+          {visibleItems.map(({item,index})=>(
+            <div key={item.id||index} style={{height:rowHeight,overflow:"hidden"}}>
+              {renderRow(item,index)}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function QRCode({ value, size = 120 }) {
   const url = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(value)}&color=1c1a17&bgcolor=faf7f2&margin=6`;
   return <img src={url} width={size} height={size} alt="Scan to call" style={{ borderRadius:6, display:"block" }} />;
@@ -684,33 +747,45 @@ function calcPrice(sqft, service, damage) {
   return { lo, hi };
 }
 // ─────────────────────────────────────────────
-// DEMO MAILER CONTENT (fallback when no API)
+// DEMO MAILER CONTENT — fully dynamic per contractor
 // ─────────────────────────────────────────────
-const DEMO_MAILERS = {
-  "Spring-Crack Repair-Free Estimate": {
-    page1: { eyebrow:"Your Neighbors Are Already Upgrading", headline:"TULSA WINTERS ARE TOUGH ON CONCRETE", subheadline:"Freeze-thaw cycles across Tulsa have left concrete cracked and crumbling this spring. Don't let small damage turn into a full replacement — JWood LLC is already working in your neighborhood.", badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"No Obligation" },
-    page2: { headline:"WHY YOUR CONCRETE CAN'T WAIT", intro:"Oklahoma's temperature swings — from icy winters to 100°F summers — are brutal on concrete. Cracks ignored now become costly replacements by fall.", benefits:[{icon:"▲",title:"Oklahoma Weather Damage",desc:"Tulsa's freeze-thaw cycles crack concrete fast. Spring is the best time to repair before summer heat sets in."},{icon:"◉",title:"Stop Water Intrusion",desc:"Cracks let water in. Water expands when frozen. That destroys your base and doubles repair costs."},{icon:"◫",title:"Boost Curb Appeal",desc:"A repaired surface instantly upgrades your home's appearance and protects its value."},{icon:"◌",title:"One-Day Turnaround",desc:"Most crack repairs completed same day. Driveable within 24 hours."}], whyTitle:"Why JWood LLC?", whyText:"We're local Tulsans — we know Oklahoma soil, Oklahoma weather, and Oklahoma homeowners. Every job is done with commercial-grade materials and backed by our written warranty." },
-    page3: { headline:"OUR SIMPLE 4-STEP PROCESS", intro:"From your first call to pulling your car back in — we make it effortless.", steps:[{title:"Free On-Site Estimate",desc:"We visit, assess the damage, and give you a written quote. No pressure, no surprises."},{title:"Schedule at Your Convenience",desc:"We work around your schedule, including Saturdays."},{title:"Expert Repair",desc:"Our crew arrives on time, protects your lawn, and gets to work with commercial-grade materials."},{title:"Done & Guaranteed",desc:"We clean up completely and hand you a written warranty before we leave."}], offerHeadline:"FREE ESTIMATE — CALL TODAY", offerSub:"Spring slots filling fast — mention code JWOOD when you call" },
-    page4: { eyebrow:"Ready to Get Started?", headline:"CALL JWOOD LLC TODAY", sub:"Serving Tulsa and surrounding areas. Spring is our busiest season — call now to lock in your free estimate before your neighbors do.", guarantee:"We guarantee our work for 2 full years. If anything fails due to workmanship, we come back and fix it — no questions asked." }
-  },
-  "Summer-New Installation-Free Estimate": {
-    page1: { eyebrow:"Upgrade Before Summer Cookout Season", headline:"NEW CONCRETE PROJECT COMPLETED THIS SUMMER", subheadline:"Long Tulsa summer days mean faster curing and better results. JWood LLC is completing concrete projects across your neighborhood — and we have a free estimate ready for you.", badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"Call Today" },
-    page2: { headline:"TRANSFORM YOUR HOME'S FIRST IMPRESSION", intro:"A new concrete project is one of the highest-ROI investments a Tulsa homeowner can make — averaging 98% return at resale.", benefits:[{icon:"◈",title:"Summer Is Ideal",desc:"Oklahoma's warm temps and dry summers create perfect conditions for long-lasting concrete pours."},{icon:"◆",title:"Best ROI",desc:"New concrete projects return nearly 100% of cost at resale — better than most home renovations."},{icon:"▦",title:"Custom Finish",desc:"Choose width, texture, color, and edging to perfectly match your Tulsa home."},{icon:"▣",title:"Done in Days",desc:"Most residential projects installed and driveable within 3–5 days."}], whyTitle:"Why JWood LLC?", whyText:"Tulsa homeowners trust JWood LLC because we show up on time, communicate clearly, and stand behind every pour. We use reinforced concrete with proper base prep." },
-    page3: { headline:"HOW IT WORKS", intro:"A new concrete project is easier than you think.", steps:[{title:"Free Design Consultation",desc:"We measure your space and help you choose the right width, finish, and budget."},{title:"Demo & Excavation",desc:"We remove your old surface and properly prepare the base — the most critical step."},{title:"Pour & Finish",desc:"Commercial-grade concrete poured by our experienced Tulsa crew."},{title:"Cure, Seal & Warranty",desc:"We apply a professional sealer and hand you a written warranty before we leave."}], offerHeadline:"FREE ESTIMATE — NO OBLIGATION", offerSub:"Summer slots limited — call 918-896-6737 and mention JWOOD" },
-    page4: { eyebrow:"Let's Build Something Great", headline:"CALL 918-896-6737 THIS WEEK", sub:"Summer slots fill fast across Tulsa. We can usually start within 2 weeks of your estimate.", guarantee:"5-year structural warranty on all new installations. We stand behind every pour." }
-  },
-  "Fall-Sealing-Free Estimate": {
-    page1: { eyebrow:"Protect Your Concrete Before Winter Hits", headline:"SEAL IT NOW BEFORE OKLAHOMA WINTER CRACKS IT", subheadline:"Fall is the last chance to protect your concrete before Tulsa's freeze-thaw season begins. JWood LLC is sealing concrete across your neighborhood right now.", badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"Limited Slots" },
-    page2: { headline:"WHY FALL SEALING IS CRITICAL IN TULSA", intro:"Oklahoma's winters are unpredictable — ice, snow, and freeze-thaw cycles can destroy unsealed concrete in a single season.", benefits:[{icon:"◈",title:"Winter Protection",desc:"Sealing blocks water before it freezes and expands inside your concrete."},{icon:"◆",title:"UV & Heat Shield",desc:"Tulsa summers hit 100°F+. Sealer protects against UV damage and surface deterioration."},{icon:"✦",title:"Like-New Appearance",desc:"Professional sealing restores color and gives your concrete a clean, finished look."},{icon:"▣",title:"Prevent Costly Repairs",desc:"A $300 seal job now prevents a $3,000 replacement later."}], whyTitle:"Why JWood LLC?", whyText:"We use commercial-grade penetrating sealers — not the hardware store stuff that peels in one season. Our sealing jobs are done right, and we're Tulsa locals." },
-    page3: { headline:"SIMPLE SEALING PROCESS", intro:"In and out in a few hours. Your concrete is protected all winter.", steps:[{title:"Free Assessment",desc:"We inspect your concrete and check for cracks that need repair before sealing."},{title:"Surface Prep & Clean",desc:"We power wash and prep the surface for maximum sealer adhesion."},{title:"Professional Application",desc:"Commercial-grade sealer applied evenly by our trained crew."},{title:"24-Hour Cure",desc:"Stay off it for 24 hours and you're fully protected for the season."}], offerHeadline:"FREE ESTIMATE THIS WEEK", offerSub:"Fall slots filling fast — mention JWOOD when you call 918-896-6737" },
-    page4: { eyebrow:"Don't Wait for the First Freeze", headline:"CALL JWOOD LLC BEFORE WINTER HITS", sub:"Once temperatures drop below 50°F sealing becomes less effective. Call now while fall conditions are still perfect.", guarantee:"All sealing work guaranteed for 2 seasons. If it peels or fails, we come back and redo it — free." }
-  }
-};
+function buildDemoMailer(season, angle, company) {
+  const co    = company?.name     || "Your Contractor";
+  const owner = company?.ownerName|| "the owner";
+  const city  = company?.city     || "your area";
+  const state = company?.state    || "";
+  const loc   = [city, state].filter(Boolean).join(", ");
+  const phone = company?.phone    || "";
+  const promo = company?.promo    || "SAVE";
 
-function getDemoMailer(season, angle, offer) {
-  const key = `${season}-${angle}-${offer}`;
-  return DEMO_MAILERS[key] || Object.values(DEMO_MAILERS)[0];
+  const TEMPLATES = {
+    Spring: {
+      page1: { eyebrow:"Your Neighbors Are Already Upgrading", headline:"WINTER WAS TOUGH ON YOUR CONCRETE", subheadline:`Freeze-thaw cycles left concrete cracked and crumbling this spring. Don't let small damage turn into a full replacement — ${co} is already working in your neighborhood.`, badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"No Obligation" },
+      page2: { headline:"WHY YOUR CONCRETE CAN'T WAIT", intro:"Temperature swings — from icy winters to summer heat — are brutal on concrete. Cracks ignored now become costly replacements by fall.", benefits:[{icon:"▲",title:"Weather Damage",desc:"Freeze-thaw cycles crack concrete fast. Spring is the best time to repair before summer heat sets in."},{icon:"◉",title:"Stop Water Intrusion",desc:"Cracks let water in. Water expands when frozen, destroying your base and doubling repair costs."},{icon:"◫",title:"Boost Curb Appeal",desc:"A repaired surface instantly upgrades your home's appearance and protects its value."},{icon:"◌",title:"One-Day Turnaround",desc:"Most crack repairs completed same day. Driveable within 24 hours."}], whyTitle:`Why ${co}?`, whyText:`We're local — we know the soil, the weather, and the homeowners in ${city}. Every job is done with commercial-grade materials and backed by our written warranty.` },
+      page3: { headline:"OUR SIMPLE 4-STEP PROCESS", intro:"From your first call to pulling your car back in — we make it effortless.", steps:[{title:"Free On-Site Estimate",desc:"We visit, assess the damage, and give you a written quote. No pressure, no surprises."},{title:"Schedule at Your Convenience",desc:"We work around your schedule, including Saturdays."},{title:"Expert Repair",desc:"Our crew arrives on time, protects your lawn, and gets to work with commercial-grade materials."},{title:"Done & Guaranteed",desc:"We clean up completely and hand you a written warranty before we leave."}], offerHeadline:"FREE ESTIMATE — CALL TODAY", offerSub:`Spring slots filling fast — mention code ${promo} when you call` },
+      page4: { eyebrow:"Ready to Get Started?", headline:`CALL ${co.toUpperCase()} TODAY`, sub:`Serving ${city} and surrounding areas. Spring is our busiest season — call now to lock in your free estimate before your neighbors do.`, guarantee:"We guarantee our work for 2 full years. If anything fails due to workmanship, we come back and fix it — no questions asked." }
+    },
+    Summer: {
+      page1: { eyebrow:"Upgrade Before Summer Cookout Season", headline:"NEW CONCRETE COMPLETED THIS SUMMER", subheadline:`Long summer days mean faster curing and better results. ${co} is completing concrete projects across your neighborhood — and we have a free estimate ready for you.`, badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"Call Today" },
+      page2: { headline:"TRANSFORM YOUR HOME'S FIRST IMPRESSION", intro:"A new concrete project is one of the highest-ROI investments a homeowner can make — averaging 98% return at resale.", benefits:[{icon:"◈",title:"Summer Is Ideal",desc:"Warm temps and dry summers create perfect conditions for long-lasting concrete pours."},{icon:"◆",title:"Best ROI",desc:"New concrete projects return nearly 100% of cost at resale — better than most home renovations."},{icon:"▦",title:"Custom Finish",desc:"Choose width, texture, color, and edging to perfectly match your home."},{icon:"▣",title:"Done in Days",desc:"Most residential projects installed and driveable within 3–5 days."}], whyTitle:`Why ${co}?`, whyText:`Homeowners in ${city} trust ${co} because we show up on time, communicate clearly, and stand behind every pour. We use reinforced concrete with proper base prep.` },
+      page3: { headline:"HOW IT WORKS", intro:"A new concrete project is easier than you think.", steps:[{title:"Free Design Consultation",desc:"We measure your space and help you choose the right width, finish, and budget."},{title:"Demo & Excavation",desc:"We remove your old surface and properly prepare the base — the most critical step."},{title:"Pour & Finish",desc:"Commercial-grade concrete poured by our experienced crew."},{title:"Cure, Seal & Warranty",desc:"We apply a professional sealer and hand you a written warranty before we leave."}], offerHeadline:"FREE ESTIMATE — NO OBLIGATION", offerSub:`Summer slots limited — call and mention ${promo}` },
+      page4: { eyebrow:"Let's Build Something Great", headline:`CALL ${phone||co.toUpperCase()} THIS WEEK`, sub:`Summer slots fill fast across ${city}. We can usually start within 2 weeks of your estimate.`, guarantee:"5-year structural warranty on all new installations. We stand behind every pour." }
+    },
+    Fall: {
+      page1: { eyebrow:"Protect Your Concrete Before Winter Hits", headline:"SEAL IT NOW BEFORE WINTER CRACKS IT", subheadline:`Fall is the last chance to protect your concrete before the freeze-thaw season begins. ${co} is sealing concrete across your neighborhood right now.`, badgeTop:"FREE", badgeMain:"ESTIMATE", badgeBottom:"Limited Slots" },
+      page2: { headline:"WHY FALL SEALING IS CRITICAL", intro:"Winter is unpredictable — ice, snow, and freeze-thaw cycles can destroy unsealed concrete in a single season.", benefits:[{icon:"◈",title:"Winter Protection",desc:"Sealing blocks water before it freezes and expands inside your concrete."},{icon:"◆",title:"UV & Heat Shield",desc:"Sealer protects against UV damage and summer surface deterioration."},{icon:"✦",title:"Like-New Appearance",desc:"Professional sealing restores color and gives your concrete a clean, finished look."},{icon:"▣",title:"Prevent Costly Repairs",desc:"A $300 seal job now prevents a $3,000 replacement later."}], whyTitle:`Why ${co}?`, whyText:`We use commercial-grade penetrating sealers — not the hardware store stuff that peels in one season. Our sealing jobs are done right, and we're your local experts in ${city}.` },
+      page3: { headline:"SIMPLE SEALING PROCESS", intro:"In and out in a few hours. Your concrete is protected all winter.", steps:[{title:"Free Assessment",desc:"We inspect your concrete and check for cracks that need repair before sealing."},{title:"Surface Prep & Clean",desc:"We power wash and prep the surface for maximum sealer adhesion."},{title:"Professional Application",desc:"Commercial-grade sealer applied evenly by our trained crew."},{title:"24-Hour Cure",desc:"Stay off it for 24 hours and you're fully protected for the season."}], offerHeadline:"FREE ESTIMATE THIS WEEK", offerSub:`Fall slots filling fast — mention ${promo} when you call` },
+      page4: { eyebrow:"Don't Wait for the First Freeze", headline:`CALL ${co.toUpperCase()} BEFORE WINTER HITS`, sub:`Once temperatures drop, sealing becomes less effective. Call now while fall conditions are still perfect in ${city}.`, guarantee:"All sealing work guaranteed for 2 seasons. If it peels or fails, we come back and redo it — free." }
+    },
+  };
+  return TEMPLATES[season] || TEMPLATES["Spring"];
 }
+
+function getDemoMailer(season, angle, offer, company) {
+  return buildDemoMailer(season, angle, company);
+}
+
+
 
 // ─────────────────────────────────────────────
 // STYLES
@@ -1493,7 +1568,7 @@ body{font-family:'Syne',sans-serif;background:var(--black);color:var(--cream);he
 })();
 
 // ─────────────────────────────────────────────
-// DEMO COMPANY — replaces JWood in demo mode
+// DEMO COMPANY — used in demo mode only
 // ─────────────────────────────────────────────
 const DEMO_COMPANY = {
   name:"Pave Pro LLC", ownerName:"Alex", phone:"918-555-0199",
@@ -1653,6 +1728,63 @@ function MailerPreview({mailer,form}){
 }
 
 // ─────────────────────────────────────────────
+// ERROR BOUNDARY
+// ─────────────────────────────────────────────
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    try {
+      if (window.Sentry) window.Sentry.captureException(error, { extra: info });
+    } catch(e) {}
+    console.error("PaveMail ErrorBoundary caught:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+          height:"100%", padding:32, gap:16, background:"var(--ink,#111009)", color:"var(--concrete,#b8b4ac)"
+        }}>
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="22" stroke="#e8560a" strokeWidth="2" opacity="0.5"/>
+            <path d="M24 14V26" stroke="#e8560a" strokeWidth="2.5" strokeLinecap="round"/>
+            <circle cx="24" cy="33" r="2" fill="#e8560a"/>
+          </svg>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:"var(--cream,#f5f0e6)"}}>
+            {this.props.label || "Something went wrong"}
+          </div>
+          <div style={{fontSize:12,color:"var(--stone,#7a7670)",maxWidth:320,textAlign:"center",lineHeight:1.6}}>
+            This section hit an unexpected error. Your data is safe. Try refreshing the page.
+          </div>
+          <button
+            onClick={()=>this.setState({hasError:false,error:null})}
+            style={{
+              background:"rgba(232,86,10,0.12)",border:"1px solid rgba(232,86,10,0.3)",
+              borderRadius:8,padding:"9px 18px",color:"var(--orange2,#e8560a)",
+              fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Syne',sans-serif"
+            }}
+          >
+            Try Again
+          </button>
+          {this.state.error && (
+            <div style={{fontSize:10,color:"var(--gravel,#555)",fontFamily:"monospace",maxWidth:400,wordBreak:"break-all",opacity:0.5}}>
+              {this.state.error.message}
+            </div>
+          )}
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ─────────────────────────────────────────────
 // MAIN APP
 // ─────────────────────────────────────────────
 // Capacity config - module scope for stability
@@ -1710,7 +1842,7 @@ function renderPostcardCanvas(photoSrc, mailer, setDataUrl) {
     }
     // Company tag
     ctx.fillStyle='#e8560a'; ctx.font='bold 8px Arial';
-    ctx.fillText('JWOOD LLC \xb7 TULSA, OK',18,28);
+    ctx.fillText((mailer.companyName||'MY COMPANY') + ' \xb7 ' + (mailer.city||mailer.state||''),18,28);
     // Address
     ctx.fillStyle='rgba(245,240,230,0.7)'; ctx.font='500 11px Arial';
     ctx.fillText((mailer.address||'')+', '+(mailer.city||''),18,H-195);
@@ -1890,18 +2022,19 @@ export default function App(){
   const[contractor,setContractor]=useState(()=>{
     try{ const s=localStorage.getItem("pm_profile"); return s?JSON.parse(s):null; }catch{ return null; }
   });
-  const[authScreen,setAuthScreen]=useState("login"); // login | signup | forgot | profile-setup | demo-code | roi-calc | onboard
+  const[authScreen,setAuthScreen]=useState("login"); // login | signup | forgot | onboard
   const[roiMailers,setRoiMailers]=useState(300);
   const[roiAvgJob,setRoiAvgJob]=useState(1500);
   const[roiCloseRate,setRoiCloseRate]=useState(2);
-  const[onboardStep,setOnboardStep]=useState(0);
+  const[onboardStep,setOnboardStep]=useState(1); // 1=company 2=location 3=logo 4=integrations
   const[demoCode,setDemoCode]=useState("");
   const[demoShake,setDemoShake]=useState(false);
-  const[authForm,setAuthForm]=useState({email:"",password:"",confirmPassword:"",inviteCode:"",ownerName:"",companyName:"",phone:"",city:"Tulsa"});
+  const[authForm,setAuthForm]=useState({email:"",password:"",confirmPassword:"",inviteCode:"",ownerName:"",companyName:"",phone:"",city:"",state:"",logoUrl:"",promo:""});
   const[authLoading,setAuthLoading]=useState(false);
   const[authError,setAuthError]=useState("");
   const[authSuccess,setAuthSuccess]=useState("");
-  const isAdmin = authUser?.user?.email === ADMIN_EMAIL;
+  const[logoUploading,setLogoUploading]=useState(false);
+  const isAdmin = authUser?.user?.email === CONFIG.ADMIN_EMAIL;
 
 
   // Login handler
@@ -1935,18 +2068,12 @@ export default function App(){
 
   // Signup handler
   async function handleSignup() {
-    if(authForm.inviteCode.trim().toUpperCase() !== "PAVE2026") { setAuthError("Invalid invite code - contact Joel for access"); return; }
-    if(!authForm.email||!authForm.password) { setAuthError("Enter your email and password"); return; }
-    if(authForm.password !== authForm.confirmPassword) { setAuthError("Passwords don't match"); return; }
-    if(authForm.password.length < 6) { setAuthError("Password must be at least 6 characters"); return; }
-    if(!authForm.ownerName||!authForm.companyName) { setAuthError("Enter your name and company name"); return; }
     setAuthLoading(true); setAuthError("");
     const data = await auth.signUp(authForm.email, authForm.password, {
       owner_name: authForm.ownerName,
       company_name: authForm.companyName,
     });
     if(data.id || data.user?.id) {
-      // Auto sign in after signup
       const loginData = await auth.signIn(authForm.email, authForm.password);
       if(loginData.access_token) {
         const session = {
@@ -1957,33 +2084,33 @@ export default function App(){
         };
         setAuthUser(session);
         try{ localStorage.setItem("pm_session", JSON.stringify(session)); }catch{}
-        setAuthScreen("profile-setup");
-        track("signup", { email: authForm.email, company: authForm.companyName });
+        // Save full profile immediately with all onboarding data
+        const profile = {
+          id: loginData.user.id,
+          company_name: authForm.companyName,
+          owner_name: authForm.ownerName,
+          phone: authForm.phone,
+          email: authForm.email,
+          city: authForm.city,
+          state: authForm.state,
+          promo: authForm.promo || "SAVE10",
+          logo_url: authForm.logoUrl || "",
+          accent_color: "#e8560a",
+          lob_from_id: "",
+          bland_transfer: authForm.phone.replace(/\D/g,"") ? "+1"+authForm.phone.replace(/\D/g,"") : "",
+          crew_size: 10,
+          max_jobs_week: 5,
+          weekly_target: 30000,
+        };
+        const saved = await auth.updateProfile(loginData.access_token, profile);
+        const updatedProfile = Array.isArray(saved) ? saved[0] : saved;
+        setContractor(updatedProfile);
+        try{ localStorage.setItem("pm_profile", JSON.stringify(updatedProfile)); }catch{}
+        track("signup", { email: authForm.email, company: authForm.companyName, city: authForm.city });
       }
     } else {
-      setAuthError(data.error_description || data.msg || "Signup failed - try again");
+      setAuthError(data.error_description || data.msg || "Signup failed — try again");
     }
-    setAuthLoading(false);
-  }
-
-  // Profile setup handler
-  async function handleProfileSetup() {
-    if(!authUser?.token) return;
-    setAuthLoading(true);
-    const profile = {
-      id: authUser.user.id,
-      company_name: authForm.companyName || contractor?.company_name || "My Company",
-      owner_name: authForm.ownerName || contractor?.owner_name || "Owner",
-      phone: authForm.phone || contractor?.phone || "",
-      email: authForm.email || authUser.user.email,
-      city: authForm.city || "Tulsa",
-      state: "OK",
-      accent_color: "#e8560a",
-    };
-    const saved = await auth.updateProfile(authUser.token, profile);
-    const updatedProfile = Array.isArray(saved) ? saved[0] : saved;
-    setContractor(updatedProfile);
-    try{ localStorage.setItem("pm_profile", JSON.stringify(updatedProfile)); }catch{}
     setAuthLoading(false);
   }
 
@@ -1994,7 +2121,81 @@ export default function App(){
     setPipeline([]); setSpotJobs([]); setAiLeads([]); setJobs([]);
     try{ localStorage.removeItem("pm_session"); localStorage.removeItem("pm_profile"); }catch{}
     setAuthScreen("login");
-    setAuthForm({email:"",password:"",confirmPassword:"",inviteCode:"",ownerName:"",companyName:"",phone:"",city:"Tulsa"});
+    setAuthForm({email:"",password:"",confirmPassword:"",inviteCode:"",ownerName:"",companyName:"",phone:"",city:"",state:"",logoUrl:"",promo:""});
+  }
+
+  // ── STRIPE BILLING ──
+  const STRIPE_PLANS = {
+    starter: { name:"Starter", price:149, mailers:300, label:"$149/mo · 300 mailers included" },
+    pro:     { name:"Pro",     price:249, mailers:750, label:"$249/mo · 750 mailers included" },
+    growth:  { name:"Growth",  price:399, mailers:1500,label:"$399/mo · 1,500 mailers included" },
+  };
+
+  async function startCheckout(planId) {
+    const key = CONFIG.STRIPE_KEY;
+    if(!key){ showToast("Stripe not configured — add STRIPE_KEY to CONFIG","info"); return; }
+    try {
+      // Load Stripe.js dynamically
+      if(!window.Stripe) {
+        await new Promise((res,rej)=>{
+          const s=document.createElement("script"); s.src="https://js.stripe.com/v3/";
+          s.onload=res; s.onerror=rej; document.head.appendChild(s);
+        });
+      }
+      const stripe=window.Stripe(key);
+      // Call your backend to create a Checkout Session
+      // Replace with your actual backend endpoint
+      const res=await fetch(`${CONFIG.PROXY_BASE}/?target=stripe-checkout`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          planId,
+          customerEmail:authUser?.user?.email,
+          contractorId:authUser?.user?.id,
+          successUrl: window.location.href+"?billing=success",
+          cancelUrl:  window.location.href+"?billing=cancel",
+        })
+      });
+      const {sessionId,error}=await res.json();
+      if(error){ showToast(error,"info"); return; }
+      await stripe.redirectToCheckout({sessionId});
+    } catch(e){ showToast("Billing unavailable — try again later","info"); console.error("Stripe error:",e); }
+  }
+
+  function BillingSection() {
+    const [billingView,setBillingView]=React.useState("plans");
+    const billingSuccess=new URLSearchParams(window.location.search).get("billing")==="success";
+    return(
+      <div className="settings-section">
+        <h3>Subscription & Billing</h3>
+        {billingSuccess&&(
+          <div style={{background:"rgba(42,122,82,0.12)",border:"1px solid rgba(42,122,82,0.3)",borderRadius:8,padding:"10px 14px",marginBottom:12,fontSize:12,color:"var(--green2)"}}>
+            ✅ Subscription active — welcome to PaveMail Pro!
+          </div>
+        )}
+        {!CONFIG.STRIPE_KEY&&(
+          <div style={{background:"rgba(212,160,23,0.1)",border:"1px solid rgba(212,160,23,0.25)",borderRadius:8,padding:"10px 14px",marginBottom:12,fontSize:11,color:"var(--yellow)"}}>
+            ⚠ Billing not yet active — add your Stripe publishable key to CONFIG.STRIPE_KEY
+          </div>
+        )}
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {Object.entries(STRIPE_PLANS).map(([id,plan])=>(
+            <div key={id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(0,0,0,0.2)",border:"1px solid rgba(184,180,172,0.1)",borderRadius:10,padding:"14px 16px"}}>
+              <div>
+                <div style={{fontWeight:700,color:"var(--cream)",fontSize:13}}>{plan.name}</div>
+                <div style={{fontSize:11,color:"var(--stone)",marginTop:2}}>{plan.label}</div>
+              </div>
+              <button onClick={()=>startCheckout(id)} style={{background:"var(--orange)",color:"white",border:"none",borderRadius:7,padding:"8px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Syne',sans-serif",flexShrink:0}}>
+                Subscribe
+              </button>
+            </div>
+          ))}
+        </div>
+        <div style={{marginTop:12,fontSize:10,color:"var(--gravel)",lineHeight:1.7}}>
+          All plans include unlimited AI mailer generation, AI phone agent, pipeline management, field map, and job board. Additional mailers billed at $0.62 each.
+        </div>
+      </div>
+    );
   }
 
   async function handleDemoMode() {
@@ -2036,13 +2237,16 @@ export default function App(){
   const[loading,setLoading]=useState(false);
   const[sending,setSending]=useState(false);
   const[mailer,setMailer]=useState(null);
+  const[mailerB,setMailerB]=useState(null);       // A/B variant B
+  const[abMode,setAbMode]=useState(false);         // A/B test toggle
+  const[activeVariant,setActiveVariant]=useState("A"); // which variant is shown
   const[lobResult,setLobResult]=useState(null);
   const[jobs,setJobs]=useState(MOCK_JOBS);
   const[selectedJob,setSelectedJob]=useState(null);
   const[settings,setSettings]=useState({autoSend:false,weeklyReport:true,trackOpens:true,smsAlerts:false});
   const[spotMode,setSpotMode]=useState("address");
   const[spotForm,setSpotForm]=useState({
-    address:"",city:"Tulsa",state:"OK",zip:"",
+    address:"",city:"",state:"",zip:"",
     sqft:400,customSqft:"",service:"Crack Repair",damageLevel:"Moderate",
     bidLow:"",bidHigh:"",overridePrice:false,
     includes:"",damage:[],notes:""
@@ -2098,47 +2302,70 @@ export default function App(){
   // Real capacity engine - data-driven, auto-sets mode
   React.useEffect(()=>{
     const C = ACTIVE_COMPANY;
-    const maxJobs = C.maxJobsWeek || 6;
-    const crewSize = C.crewSize || 12;
+    const maxJobs    = C.maxJobsWeek || 6;
+    const crewSize   = C.crewSize    || 12;
     const weeklyTarget = C.weeklyTarget || 40000;
-    const AVG_JOB_DAYS = 2; // avg days per concrete job
 
-    const wonJobs     = pipeline.filter(l=>l.stage==="won");
-    const activeJobs  = wonJobs.length;
-    const wonRevenue  = wonJobs.reduce((s,l)=>s+(l.value||0),0);
-    const pipeValue   = pipeline.filter(l=>l.stage!=="won").reduce((s,l)=>s+(l.value||0),0);
+    const wonJobs    = pipeline.filter(l=>l.stage==="won");
+    const wonRevenue = wonJobs.reduce((s,l)=>s+(l.value||0),0);
+    const pipeValue  = pipeline.filter(l=>l.stage!=="won").reduce((s,l)=>s+(l.value||0),0);
 
-    // Crew-day math: how many days of work is committed?
-    const committedDays = activeJobs * AVG_JOB_DAYS;
-    const availDays     = crewSize * 5; // 5-day work week
-    const utilizationPct = Math.min(100, Math.round((committedDays / availDays) * 100));
+    // ── Real schedule utilization ──
+    // Use actual job board dates to count crew-days booked THIS week
+    const now      = new Date();
+    const monday   = new Date(now); monday.setDate(now.getDate()-((now.getDay()+6)%7)); monday.setHours(0,0,0,0);
+    const friday   = new Date(monday); friday.setDate(monday.getDate()+4); friday.setHours(23,59,59,999);
 
-    // Revenue velocity: on pace for weekly target?
-    const revenueGap  = Math.max(0, weeklyTarget - wonRevenue);
-    const onPace      = wonRevenue >= weeklyTarget;
+    const thisWeekJobs = jobBoardJobs.filter(j=>{
+      if(!j.date) return false;
+      const d = new Date(j.date);
+      return d >= monday && d <= friday && j.status !== "complete" && j.status !== "collected";
+    });
 
-    // Auto mode from real utilization
+    // Jobs without a date fall back to won-pipeline count × avg 2 days
+    const scheduledDays   = thisWeekJobs.length * 2;
+    const unscheduledWon  = wonJobs.filter(l=>!jobBoardJobs.find(j=>j.address===l.address)).length;
+    const committedDays   = scheduledDays + (unscheduledWon * 2);
+    const availDays       = crewSize * 5;
+    const utilizationPct  = Math.min(100, Math.round((committedDays / availDays) * 100));
+
+    // Next 2 weeks lookahead — are we getting tight?
+    const twoWeeksOut = new Date(friday); twoWeeksOut.setDate(friday.getDate()+7);
+    const nextWeekJobs = jobBoardJobs.filter(j=>{
+      if(!j.date) return false;
+      const d = new Date(j.date);
+      return d > friday && d <= twoWeeksOut && j.status !== "complete";
+    });
+    const lookaheadPct = Math.min(100, Math.round(((nextWeekJobs.length*2)/availDays)*100));
+
+    // Revenue velocity
+    const revenueGap = Math.max(0, weeklyTarget - wonRevenue);
+    const onPace     = wonRevenue >= weeklyTarget;
+
+    // Auto mode from real utilization + lookahead
     let autoMode = "hungry";
-    if(utilizationPct >= 100) autoMode = "paused";
-    else if(utilizationPct >= 75) autoMode = "selective";
-    else if(utilizationPct >= 45) autoMode = "normal";
+    const effectivePct = Math.max(utilizationPct, lookaheadPct * 0.6); // weight next week 60%
+    if(effectivePct >= 100) autoMode = "paused";
+    else if(effectivePct >= 75) autoMode = "selective";
+    else if(effectivePct >= 45) autoMode = "normal";
 
     setCapacity(c=>({
       ...c,
-      activeJobs,
-      wonRevenue,
-      pipeValue,
+      activeJobs: wonJobs.length,
+      wonRevenue, pipeValue,
       weeklyRevenue: wonRevenue,
-      revenueGap,
-      onPace,
+      revenueGap, onPace,
       utilizationPct,
-      committedDays,
-      availDays,
-      weeksBooked: activeJobs > 0 ? Math.ceil(activeJobs / maxJobs) : 0,
+      committedDays, availDays,
+      thisWeekJobs: thisWeekJobs.length,
+      nextWeekJobs: nextWeekJobs.length,
+      lookaheadPct,
+      weeksBooked: thisWeekJobs.length > 0 ? Math.ceil(thisWeekJobs.length / maxJobs) : 0,
       mode: c.manualOverride || autoMode,
       autoMode,
     }));
-  },[pipeline, contractor, isDemoMode]);
+  },[pipeline, jobBoardJobs, contractor, isDemoMode]);
+
 
   // CAPACITY_MODES moved to module scope
 
@@ -2225,7 +2452,7 @@ export default function App(){
     }
   };
   const[showAddLead,setShowAddLead]=useState(false);
-  const[newLead,setNewLead]=useState({address:"",city:"Tulsa",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
+  const[newLead,setNewLead]=useState("address":"",city:"",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
 
   const LEAD_FLAGS = [
     {id:"no_pay",    label:"No Pay",        color:"#c0392b", bg:"rgba(192,57,43,0.15)",  icon:<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="4.5" fill="#c0392b" fillOpacity="0.2" stroke="#c0392b" strokeWidth="1.3"/><line x1="3" y1="3" x2="8" y2="8" stroke="#c0392b" strokeWidth="1.4" strokeLinecap="round"/><line x1="8" y1="3" x2="3" y2="8" stroke="#c0392b" strokeWidth="1.4" strokeLinecap="round"/></svg>, desc:"Did not pay or disputed invoice"},
@@ -2275,7 +2502,7 @@ export default function App(){
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({
-          model:"claude-sonnet-4-5-20250929",
+          model:"claude-sonnet-4-5",
           max_tokens:400,
           messages:[{role:"user",content:`Write a direct mail postcard for ${ACTIVE_COMPANY.name} (concrete contractor, ${ACTIVE_COMPANY.city} OK, ${ACTIVE_COMPANY.phone}). We just completed a concrete project at ${radiusLead.address}, ${radiusLead.city}. This postcard goes to their neighbors within ${radiusForm.radius} miles. The angle: we are already working in the neighborhood, equipment is here, we can offer a neighbor discount this week. Be warm, neighbor-to-neighbor tone. Return ONLY JSON: {"headline":"string","personalNote":"string","urgencyLine":"string","offer":"string"}`}]
         })
@@ -2295,6 +2522,10 @@ export default function App(){
   // Send radius mailer via Lob
   const sendRadiusMailer=async()=>{
     if(!radiusMailer||radiusSending)return;
+    const confirmed=window.confirm(
+      `Send radius mailer to neighbors within ${radiusForm.radius} miles of ${radiusMailer.address}?\n\nThis will trigger physical mail printing. Cannot be undone.`
+    );
+    if(!confirmed)return;
     setRadiusSending(true);
     showToast("Sending radius mailer...","info");
     try{
@@ -2314,7 +2545,7 @@ export default function App(){
           </div>
           <div style="background:#e8560a;color:white;padding:10px 14px;border-radius:6px;text-align:center;">
             <div style="font-size:9px;font-weight:700;letter-spacing:1px;">CALL JOEL DIRECTLY</div>
-            <div style="font-size:16px;font-weight:700;font-family:monospace;">{ACTIVE_COMPANY.phone}</div>
+            <div style="font-size:16px;font-weight:700;font-family:monospace;">${ACTIVE_COMPANY.phone}</div>
           </div>
           <p style="margin-top:10px;font-size:10px;color:rgba(184,180,172,0.5);">${radiusMailer.urgencyLine}</p>
         </div>
@@ -2327,8 +2558,8 @@ export default function App(){
         </div>
         <p style="font-size:12px;line-height:1.7;margin-bottom:14px;">While our equipment is in your neighborhood, we'd love to give you a <strong>free estimate</strong> on your project. As your neighbor's contractor, you get our neighbor rate this week.</p>
         <div style="background:#1c1a17;color:white;padding:12px;border-radius:8px;text-align:center;">
-          <div style="font-size:14px;font-weight:700;">{ACTIVE_COMPANY.phone}</div>
-          <div style="font-size:10px;color:#b8b4ac;margin-top:2px;">Call or text {ACTIVE_COMPANY.ownerName} · {ACTIVE_COMPANY.name} · {ACTIVE_COMPANY.city}, OK</div>
+          <div style="font-size:14px;font-weight:700;">${ACTIVE_COMPANY.phone}</div>
+          <div style="font-size:10px;color:#b8b4ac;margin-top:2px;">Call or text ${ACTIVE_COMPANY.ownerName} · ${ACTIVE_COMPANY.name} · ${ACTIVE_COMPANY.city}, OK</div>
           <div style="margin-top:6px;font-size:10px;background:#e8560a;display:inline-block;padding:3px 10px;border-radius:4px;">Free estimate · No obligation</div>
         </div>
       </body></html>`;
@@ -2342,8 +2573,8 @@ export default function App(){
           to:{
             address_line1:radiusLead.address,
             address_city:radiusLead.city||"Tulsa",
-            address_state:"OK",
-            address_zip:radiusLead.zip||"74105",
+            address_state:radiusLead.state||ACTIVE_COMPANY.state||"OK",
+            address_zip:radiusLead.zip||"",
             address_country:"US",
           },
           from:ACTIVE_COMPANY.lobFromId,
@@ -2375,7 +2606,7 @@ export default function App(){
     setPipeline(p=>[newLeadObj,...p]);
     track('lead_added', {address:newLeadObj.address, city:newLeadObj.city});
     db.upsertLead(newLeadObj).catch(e=>console.error("Save lead failed:", e));
-    setNewLead({address:"",city:"Tulsa",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
+    setNewLead("address":"",city:"",neighborhood:"",bidLow:"",bidHigh:"",notes:""});
     setShowAddLead(false);
     showToast("📍 Lead added to pipeline","success");
   }
@@ -2407,6 +2638,56 @@ export default function App(){
     return () => window.removeEventListener("keydown", handler);
   }, [authScreen]);
 
+  // ── PWA: inject manifest + register service worker ──
+  const [pwaInstallPrompt, setPwaInstallPrompt] = React.useState(null);
+  const [pwaInstalled, setPwaInstalled]         = React.useState(false);
+
+  React.useEffect(()=>{
+    // Inject manifest dynamically (avoids needing a separate manifest.json file)
+    if(!document.getElementById("pwa-manifest")) {
+      const manifest = {
+        name: "PaveMail",
+        short_name: "PaveMail",
+        description: "AI-powered direct mail for concrete contractors",
+        start_url: "/",
+        display: "standalone",
+        background_color: "#111009",
+        theme_color: "#e8560a",
+        orientation: "portrait",
+        icons: [
+          { src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='32' fill='%23111009'/><rect x='24' y='70' width='144' height='88' rx='12' fill='none' stroke='%23e8560a' stroke-width='8'/><path d='M24 90L96 130L168 90' stroke='%23e8560a' stroke-width='8' stroke-linecap='round'/><path d='M72 70V50C72 32 120 32 120 50V70' stroke='%23e8560a' stroke-width='8' stroke-linecap='round'/></svg>", sizes:"192x192", type:"image/svg+xml" },
+          { src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%23111009'/><rect x='64' y='180' width='384' height='240' rx='24' fill='none' stroke='%23e8560a' stroke-width='20'/><path d='M64 240L256 340L448 240' stroke='%23e8560a' stroke-width='20' stroke-linecap='round'/><path d='M192 180V130C192 80 320 80 320 130V180' stroke='%23e8560a' stroke-width='20' stroke-linecap='round'/></svg>", sizes:"512x512", type:"image/svg+xml" },
+        ],
+        categories: ["business", "productivity"],
+      };
+      const blob = new Blob([JSON.stringify(manifest)], {type:"application/json"});
+      const url  = URL.createObjectURL(blob);
+      const link = document.createElement("link");
+      link.id = "pwa-manifest"; link.rel = "manifest"; link.href = url;
+      document.head.appendChild(link);
+    }
+    // Meta tags for iOS
+    if(!document.querySelector("meta[name='apple-mobile-web-app-capable']")) {
+      [
+        {name:"apple-mobile-web-app-capable",content:"yes"},
+        {name:"apple-mobile-web-app-status-bar-style",content:"black-translucent"},
+        {name:"apple-mobile-web-app-title",content:"PaveMail"},
+        {name:"theme-color",content:"#e8560a"},
+      ].forEach(({name,content})=>{
+        const m=document.createElement("meta"); m.name=name; m.content=content;
+        document.head.appendChild(m);
+      });
+    }
+    // Capture install prompt (Android Chrome)
+    const onPrompt = (e)=>{ e.preventDefault(); setPwaInstallPrompt(e); };
+    const onInstalled = ()=>{ setPwaInstalled(true); setPwaInstallPrompt(null); };
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    // Check if already installed
+    if(window.matchMedia("(display-mode: standalone)").matches) setPwaInstalled(true);
+    return()=>{ window.removeEventListener("beforeinstallprompt",onPrompt); window.removeEventListener("appinstalled",onInstalled); };
+  },[]);
+
   React.useEffect(()=>{
     initAnalytics();
     // Demo mode - data already loaded, skip Supabase entirely
@@ -2415,7 +2696,7 @@ export default function App(){
       return;
     }
     // Load admin data if admin user
-    if(authUser?.user?.email === ADMIN_EMAIL && authUser?.token) {      setAdminData(d=>({...d,loading:true}));
+    if(authUser?.user?.email === CONFIG.ADMIN_EMAIL && authUser?.token) {      setAdminData(d=>({...d,loading:true}));
       Promise.all([
         db.getAllContractors(authUser.token),
         db.getAllPipeline(authUser.token),
@@ -2471,6 +2752,28 @@ export default function App(){
     loadAll();
   },[isDemoMode]);
 
+  // ── AI LEADS PERSISTENCE — save new leads to DB ──
+  React.useEffect(()=>{
+    const token = getAuthToken();
+    if(!token||isDemoMode||aiLeads.length===0) return;
+    // Only persist real leads (not demo or test-call placeholders without a caller)
+    const real = aiLeads.filter(l=>l.caller&&l.caller!=="Test Call"&&l.id);
+    if(real.length===0) return;
+    const payload = real.map(l=>({
+      id: l.id,
+      contractor_id: ACTIVE_COMPANY.contractorId,
+      caller: l.caller||"Unknown", phone: l.phone||"",
+      summary: l.summary||"", service: l.service||"", address: l.address||"",
+      status: l.status||"pending", transferred: l.transferred||false,
+      bland_call_id: l.blandCallId||"",
+    }));
+    sbFetch("ai_calls",{
+      method:"POST",
+      headers:{"Prefer":"resolution=merge-duplicates,return=minimal"},
+      body:JSON.stringify(payload),
+    }).catch(()=>{});
+  },[aiLeads]);
+
   // ── LEAFLET FIELD MAP INIT ──
   // Key insight: init ONLY when tab is visible (display:none = zero size = blank map on Chrome)
   const leafletMapRef = React.useRef(null);
@@ -2481,10 +2784,9 @@ export default function App(){
 
     // If already initialized, just force a redraw
     if(leafletInitialized.current && leafletMapRef.current) {
-      setTimeout(()=>{
-        leafletMapRef.current.invalidateSize(true);
-        leafletMapRef.current.eachLayer(l=>{ if(l.redraw) l.redraw(); });
-      }, 150);
+      [100, 400, 800].forEach(ms => {
+        setTimeout(()=>{ try { leafletMapRef.current.invalidateSize(true); } catch(e){} }, ms);
+      });
       return;
     }
 
@@ -2518,8 +2820,15 @@ export default function App(){
         container.innerHTML = "";
       }
 
-      // Wait one frame for browser to paint the container at full size
+      // Wait for the browser to paint the container with real dimensions
+      // Double rAF alone is not reliable on mobile Safari/Chrome — use a timeout too
       await new Promise(r => requestAnimationFrame(()=>requestAnimationFrame(r)));
+      await new Promise(r => setTimeout(r, 150));
+
+      // If container still has no size, wait longer (mobile paint can be slow)
+      if(container.offsetWidth === 0 || container.offsetHeight === 0) {
+        await new Promise(r => setTimeout(r, 400));
+      }
 
       const L = window.L;
       const map = L.map("pavemail-fieldmap", {
@@ -2589,14 +2898,119 @@ export default function App(){
         }
       });
 
-      // Final size check - critical for Chrome mobile
-      setTimeout(()=>{ map.invalidateSize(true); }, 100);
-      setTimeout(()=>{ map.invalidateSize(true); }, 500);
+      // Aggressive invalidateSize — mobile Safari/Chrome need multiple attempts
+      [100, 400, 800, 1500, 3000].forEach(ms => {
+        setTimeout(()=>{ try { map.invalidateSize(true); } catch(e){} }, ms);
+      });
+
+      // ResizeObserver: auto-fix whenever the container actually resizes
+      if(window.ResizeObserver) {
+        const ro = new ResizeObserver(()=>{ try { map.invalidateSize(true); } catch(e){} });
+        ro.observe(container);
+      }
+
       setFieldMapReady(true);
     };
 
     initLeaflet().catch(err => console.warn("Leaflet init failed:", err));
   },[tab]);
+
+  // ── OFFLINE-FIRST FIELD TAGS ──
+  // IndexedDB as local queue → syncs to Supabase when online
+  const IDB_NAME="pavemail_offline", IDB_STORE="field_tags", IDB_VER=1;
+  function openIDB(){
+    return new Promise((res,rej)=>{
+      const req=indexedDB.open(IDB_NAME,IDB_VER);
+      req.onupgradeneeded=e=>e.target.result.createObjectStore(IDB_STORE,{keyPath:"id"});
+      req.onsuccess=e=>res(e.target.result);
+      req.onerror=e=>rej(e.target.error);
+    });
+  }
+  async function idbPut(tags){
+    try{ const db=await openIDB(); const tx=db.transaction(IDB_STORE,"readwrite"); tags.forEach(t=>tx.objectStore(IDB_STORE).put({...t,id:t.id||`ft-${Date.now()}-${Math.random()}`})); await new Promise((r,j)=>{tx.oncomplete=r;tx.onerror=j;}); }catch{}
+  }
+  async function idbGetAll(){
+    try{ const db=await openIDB(); const tx=db.transaction(IDB_STORE,"readonly"); return new Promise((r,j)=>{const req=tx.objectStore(IDB_STORE).getAll();req.onsuccess=e=>r(e.target.result||[]);req.onerror=j;}); }catch{return [];}
+  }
+  async function idbClear(){
+    try{ const db=await openIDB(); const tx=db.transaction(IDB_STORE,"readwrite"); tx.objectStore(IDB_STORE).clear(); }catch{}
+  }
+
+  // Load: try Supabase first, fall back to IndexedDB if offline
+  React.useEffect(()=>{
+    const token=getAuthToken();
+    if(isDemoMode)return;
+    const load=async()=>{
+      try{
+        const rows=await sbFetch("field_tags?order=created_at.desc&limit=200");
+        if(Array.isArray(rows)&&rows.length>0){
+          const tags=rows.map(r=>({lat:r.lat,lng:r.lng,address:r.address,city:r.city||"",notes:r.notes||"",id:r.id}));
+          setFieldTags(tags);
+          await idbPut(tags); // keep local in sync
+          return;
+        }
+      }catch{}
+      // Offline fallback — load from IndexedDB
+      const cached=await idbGetAll();
+      if(cached.length>0){ setFieldTags(cached); showToast("📡 Offline mode — field tags loaded from device","info"); }
+    };
+    load();
+  },[]);
+
+  // Save: write to IndexedDB immediately (instant), then sync to Supabase when online
+  React.useEffect(()=>{
+    if(isDemoMode||fieldTags.length===0)return;
+    idbPut(fieldTags); // always save locally first — survives offline
+    const token=getAuthToken();
+    if(!token)return;
+    const payload=fieldTags.map(t=>({
+      contractor_id:ACTIVE_COMPANY.contractorId,
+      lat:t.lat,lng:t.lng,
+      address:t.address||"",city:t.city||"",notes:t.notes||"",
+      ...(t.id&&!t.id.startsWith("ft-")?{id:t.id}:{}),
+    }));
+    sbFetch("field_tags",{method:"POST",headers:{"Prefer":"resolution=merge-duplicates,return=minimal"},body:JSON.stringify(payload)})
+      .then(()=>{ /* synced */ })
+      .catch(()=>{ /* offline — already saved to IndexedDB, will retry on reconnect */ });
+  },[fieldTags]);
+
+  // Online reconnect — flush IndexedDB queue to Supabase
+  React.useEffect(()=>{
+    const sync=async()=>{
+      const token=getAuthToken();
+      if(!token||isDemoMode)return;
+      const cached=await idbGetAll();
+      if(cached.length===0)return;
+      const payload=cached.map(t=>({contractor_id:ACTIVE_COMPANY.contractorId,lat:t.lat,lng:t.lng,address:t.address||"",city:t.city||"",notes:t.notes||""}));
+      sbFetch("field_tags",{method:"POST",headers:{"Prefer":"resolution=merge-duplicates,return=minimal"},body:JSON.stringify(payload)})
+        .then(()=>{ showToast("📡 Field tags synced","success"); })
+        .catch(()=>{});
+    };
+    window.addEventListener("online",sync);
+    return()=>window.removeEventListener("online",sync);
+  },[]);
+
+  // ── JOB BOARD PERSISTENCE ──
+  React.useEffect(()=>{
+    const token = getAuthToken();
+    if(!token||isDemoMode) return;
+    sbFetch("job_board?order=created_at.desc&limit=200")
+      .then(rows=>{ if(Array.isArray(rows)&&rows.length>0) setJobBoardJobs(rows.map(r=>({id:r.id,address:r.address,service:r.service,value:r.value||0,crew:r.crew||"",date:r.date||"",notes:r.notes||"",status:r.status||"scheduled",city:r.city||""}))); })
+      .catch(()=>{});
+  },[]);
+
+  React.useEffect(()=>{
+    const token = getAuthToken();
+    if(!token||isDemoMode||jobBoardJobs.length===0) return;
+    const payload = jobBoardJobs.map(j=>({
+      id: j.id,
+      contractor_id: ACTIVE_COMPANY.contractorId,
+      address: j.address||"", service: j.service||"", value: j.value||0,
+      crew: j.crew||"", date: j.date||"", notes: j.notes||"",
+      status: j.status||"scheduled", city: j.city||"",
+    }));
+    sbFetch("job_board",{method:"POST",headers:{"Prefer":"resolution=merge-duplicates,return=minimal"},body:JSON.stringify(payload)}).catch(()=>{});
+  },[jobBoardJobs]);
 
   // Auto-recalculate price whenever inputs change
   React.useEffect(()=>{
@@ -2623,32 +3037,52 @@ export default function App(){
 
   const generate=async()=>{
     if(!form.neighborhood)return;
-    setLoading(true);setMailer(null);setLobResult(null);
+    setLoading(true);setMailer(null);setMailerB(null);setLobResult(null);setActiveVariant("A");
+    const loc=`${form.neighborhood}${ACTIVE_COMPANY.city?`, ${ACTIVE_COMPANY.city}`:""}${ACTIVE_COMPANY.state?` ${ACTIVE_COMPANY.state}`:""}`;
+    const basePrompt=`You are a direct mail copywriter for a concrete contractor. Company: ${ACTIVE_COMPANY.name}, Phone: ${ACTIVE_COMPANY.phone}. Area: ${loc}. Season: ${form.season}, Service: ${form.angle}, Offer: ${form.offer}, Promo: ${form.promoCode||ACTIVE_COMPANY.promo}. Notes: ${form.extraNotes||""}. Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subheadline":"string","badgeTop":"string","badgeMain":"string","badgeBottom":"string"},"page2":{"headline":"string","intro":"string","benefits":[{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"}],"whyTitle":"string","whyText":"string"},"page3":{"headline":"string","intro":"string","steps":[{"title":"string","desc":"string"},{"title":"string","desc":"string"},{"title":"string","desc":"string"},{"title":"string","desc":"string"}],"offerHeadline":"string","offerSub":"string"},"page4":{"eyebrow":"string","headline":"string","sub":"string","guarantee":"string"}}`;
+    const variantBPrompt = basePrompt + " IMPORTANT: Write a completely different angle/hook from the obvious approach. Use a surprising or counterintuitive headline strategy.";
     try{
-      const prompt=`You are a direct mail copywriter for a concrete contractor in Tulsa, Oklahoma. Company: ${ACTIVE_COMPANY.name}, Phone: ${ACTIVE_COMPANY.phone}. Neighborhood: ${form.neighborhood}, OK. Season: ${form.season}, Service: ${form.angle}, Offer: ${form.offer}, Promo: ${form.promoCode}. Notes: ${form.extraNotes||"Tulsa area, Oklahoma weather"}.
-Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subheadline":"string","badgeTop":"string","badgeMain":"string","badgeBottom":"string"},"page2":{"headline":"string","intro":"string","benefits":[{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"},{"icon":"emoji","title":"string","desc":"string"}],"whyTitle":"string","whyText":"string"},"page3":{"headline":"string","intro":"string","steps":[{"title":"string","desc":"string"},{"title":"string","desc":"string"},{"title":"string","desc":"string"},{"title":"string","desc":"string"}],"offerHeadline":"string","offerSub":"string"},"page4":{"eyebrow":"string","headline":"string","sub":"string","guarantee":"string"}}`;
-      const res=await fetch(ANTHROPIC_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5-20250929",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
-      const data=await res.json();
-      const raw=data.content?.map(b=>b.text||"").join("");
-      const parsed=parseJSON(raw);
-      if(parsed){setMailer(parsed);setLoading(false);return;}
+      // Generate A and B in parallel when A/B mode is on
+      const requests=[fetch(ANTHROPIC_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:1000,messages:[{role:"user",content:basePrompt}]})})];
+      if(abMode) requests.push(fetch(ANTHROPIC_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:1000,messages:[{role:"user",content:variantBPrompt}]})}));
+      const results=await Promise.all(requests);
+      const [dataA,dataB]=await Promise.all(results.map(r=>r.json()));
+      const rawA=dataA.content?.map(b=>b.text||"").join("");
+      const parsedA=parseJSON(rawA);
+      if(parsedA){
+        setMailer({...parsedA,_variant:"A",_abId:Date.now()});
+        if(abMode&&dataB){
+          const rawB=dataB.content?.map(b=>b.text||"").join("");
+          const parsedB=parseJSON(rawB);
+          if(parsedB) setMailerB({...parsedB,_variant:"B",_abId:Date.now()});
+        }
+        setLoading(false);
+        if(abMode) showToast("✅ A/B variants generated — pick your winner","success");
+        return;
+      }
     }catch(_){}
-    await new Promise(r=>setTimeout(r,1600));
-    const demo=getDemoMailer(form.season,form.angle,form.offer);
-
-    setMailer({...demo,page1:{...demo.page1,eyebrow:`${form.neighborhood} - ${demo.page1.eyebrow}`}});
+    await new Promise(r=>setTimeout(r,1200));
+    const demo=getDemoMailer(form.season,form.angle,form.offer,ACTIVE_COMPANY);
+    setMailer({...demo,page1:{...demo.page1,eyebrow:`${form.neighborhood} - ${demo.page1.eyebrow}`},_variant:"A"});
     setLoading(false);
-    showToast(`✨ Demo mailer loaded - ${ACTIVE_COMPANY.name} branded & ready`,"info");
+    showToast(`✨ Demo mailer loaded — ${ACTIVE_COMPANY.name} branded`,"info");
   };
 
   const sendToPress=async()=>{
     if(!mailer||sending)return;
+    // Duplicate-send guard: confirm before spending money on physical mail
+    const homes=parseInt(form.homes)||0;
+    const cost=((homes)*0.62).toFixed(2);
+    const confirmed=window.confirm(
+      `Send ${homes.toLocaleString()} mailers to ${form.neighborhood}?\n\nEstimated cost: $${cost}\n\nThis will trigger physical mail printing. Cannot be undone.`
+    );
+    if(!confirmed)return;
     setSending(true);
     setLobResult(null);
     showToast("📤 Sending mailer...","info");
 
     try{
-      // Send one test piece to JWood LLC's own address as proof of concept
+      // Send test piece to verify mailer before full campaign send
       const result=await sendMailer({
         neighborhood: form.neighborhood,
         headline: mailer.page1?.headline,
@@ -2726,7 +3160,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           method:"POST",
           headers:{"Content-Type":"application/json"},
           body:JSON.stringify({
-            model:"claude-sonnet-4-5-20250929",
+            model:"claude-sonnet-4-5",
             max_tokens:400,
             messages:[{
               role:"user",
@@ -2760,7 +3194,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       const res=await fetch(ANTHROPIC_PROXY,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-5-20250929",max_tokens:400,messages:[{role:"user",content:prompt}]})
+        body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:400,messages:[{role:"user",content:prompt}]})
       });
       const data=await res.json();
       const raw=data.content?.map(b=>b.text||"").join("");
@@ -2804,6 +3238,10 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
   const sendSpot=async()=>{
     if(!spotMailer||spotSending)return;
+    const confirmed=window.confirm(
+      `Send spot bid mailer to ${spotMailer.address}?\n\nThis will print and mail a physical postcard. Cannot be undone.`
+    );
+    if(!confirmed)return;
     setSpotSending(true);
 
     // Upload photo to imgbb for Lob.com printing
@@ -2818,7 +3256,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     try{
       await lobRequest("/postcards",{
         description:`${ACTIVE_COMPANY.name} Spot Bid - ${spotMailer.address}`,
-        to:LOB_TO_ID,from:LOB_FROM_ID,size:"6x9",
+        to:LOB_TO_ID,from:(window.__ACTIVE_LOB_FROM_ID||""),size:"6x9",
         front:`<html><body style="margin:0;padding:0;font-family:Arial,sans-serif;position:relative;width:100%;height:100%;overflow:hidden;">
   ${hostedPhotoUrl
     ? `<div style="position:absolute;inset:0;background:url('${hostedPhotoUrl}') center/cover no-repeat;"></div>
@@ -2896,7 +3334,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
       track('spot_sent', {address:spotMailer.address, bid:spotMailer.bidLo, hasPhoto:!!capturedPhotoUrl});
       showToast("✅ Spot bid sent + saved to database!","success");
       setSpotMailer(null);
-      setSpotForm({address:"",city:"Tulsa",state:"OK",zip:"",sqft:400,customSqft:"",service:"Crack Repair",damageLevel:"Moderate",bidLow:"",bidHigh:"",overridePrice:false,includes:"",damage:[],notes:""});
+      setSpotForm({address:"",city:"",state:"",zip:"",sqft:400,customSqft:"",service:"Crack Repair",damageLevel:"Moderate",bidLow:"",bidHigh:"",overridePrice:false,includes:"",damage:[],notes:""});
       setSpotPhoto(null);
       setSpotPhotoUrl(null);
     }catch(e){
@@ -3003,7 +3441,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     showToast("Initiating test call...","info");
     const clean=testCallNumber.replace(/\D/g,"");
     track('ai_call_made', {phone: testCallNumber});
-    const result=await createBlandAgent("+1"+clean,"Test call from PaveMail dashboard");
+    const result=await createBlandAgent("+1"+clean,"Test call from PaveMail dashboard",ACTIVE_COMPANY);
 
     if(result.call_id||result.id||result.status==="success"){
       showToast("Test call initiated! You should receive a call within 10 seconds.","success");
@@ -3032,8 +3470,12 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
     maxJobsWeek:   contractor.max_jobs_week || ACTIVE_COMPANY.maxJobsWeek,
     weeklyTarget:  contractor.weekly_target || ACTIVE_COMPANY.weeklyTarget,
     accentColor:   contractor.accent_color || ACTIVE_COMPANY.accentColor,
+    logoUrl:       contractor.logo_url || "",
+    promo:         contractor.promo || "SAVE10",
   } : COMPANY);
   const ACTIVE_COMPANY = BASE;
+  // Keep Lob FROM_ID in sync for module-level functions that need it
+  if(typeof window !== "undefined") window.__ACTIVE_LOB_FROM_ID = BASE.lobFromId||"";
 
   // Show auth screen if not logged in
   if(!authUser) return(
@@ -3099,31 +3541,169 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           {/* ── SIGN UP ── */}
           {authScreen==="signup"&&(
             <>
-              <button onClick={()=>{setAuthScreen("login");setAuthError("");}} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:12,fontFamily:"'Syne',sans-serif",display:"flex",alignItems:"center",gap:4,padding:"4px 0",marginBottom:8,opacity:0.8}}>
+              <button onClick={()=>{setAuthScreen("login");setAuthError("");setOnboardStep(1);}} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:12,fontFamily:"'Syne',sans-serif",display:"flex",alignItems:"center",gap:4,padding:"4px 0",marginBottom:12,opacity:0.8}}>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 Back to Sign In
               </button>
-              <div className="login-label" style={{marginTop:4}}>Create Account</div>
-              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
-                {[
-                  {ph:"Invite Code *",key:"inviteCode",type:"text",ac:"off"},
-                  {ph:"Your First Name *",key:"ownerName",type:"text",ac:"given-name"},
-                  {ph:"Company Name *",key:"companyName",type:"text",ac:"organization"},
-                  {ph:"Email Address *",key:"email",type:"email",ac:"email"},
-                  {ph:"Password (min 6 chars) *",key:"password",type:"password",ac:"new-password"},
-                  {ph:"Confirm Password *",key:"confirmPassword",type:"password",ac:"new-password"},
-                ].map(f=>(
-                  <input key={f.key} type={f.type} placeholder={f.ph} autoComplete={f.ac}
-                    value={authForm[f.key]} onChange={e=>setAuthForm(p=>({...p,[f.key]:e.target.value}))}
+
+              {/* Step progress */}
+              <div style={{display:"flex",alignItems:"center",gap:0,marginBottom:20}}>
+                {["Account","Business","Location","Logo"].map((label,i)=>{
+                  const step=i+1;
+                  const done=onboardStep>step;
+                  const active=onboardStep===step;
+                  return(
+                    <React.Fragment key={i}>
+                      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,flex:1}}>
+                        <div style={{width:28,height:28,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,fontFamily:"'Syne',sans-serif",
+                          background:done?"var(--green)":active?"var(--orange)":"rgba(184,180,172,0.1)",
+                          color:done||active?"white":"var(--gravel)",
+                          border:active?"2px solid var(--orange2)":"2px solid transparent",
+                          transition:"all 0.2s"}}>
+                          {done?"✓":step}
+                        </div>
+                        <div style={{fontSize:9,color:active?"var(--orange2)":done?"var(--green2)":"var(--gravel)",fontWeight:active?700:400,letterSpacing:0.5}}>{label}</div>
+                      </div>
+                      {i<3&&<div style={{height:1,flex:0.5,background:done?"var(--green)":"rgba(184,180,172,0.1)",marginBottom:18,transition:"all 0.2s"}}/>}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+
+              {/* STEP 1 — Account */}
+              {onboardStep===1&&(
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>CREATE YOUR ACCOUNT</div>
+                  <input type="text" placeholder="Invite Code *" autoComplete="off"
+                    value={authForm.inviteCode} onChange={e=>setAuthForm(p=>({...p,inviteCode:e.target.value}))}
                     style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"11px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:13,outline:"none"}}
                   />
-                ))}
-              </div>
-              {authError&&<div style={{color:"#f08080",fontSize:12,marginBottom:8,textAlign:"center"}}>{authError}</div>}
-              <button className="gen-btn" onClick={handleSignup} disabled={authLoading} style={{marginBottom:10}}>
-                {authLoading?<span className="spin"/>:"Create Account"}
-              </button>
-              <button onClick={()=>{setAuthScreen("login");setAuthError("");}} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:12,fontFamily:"'Syne',sans-serif",width:"100%"}}>← Back to Sign In</button>
+                  <input type="email" placeholder="Email Address *" autoComplete="email"
+                    value={authForm.email} onChange={e=>setAuthForm(p=>({...p,email:e.target.value}))}
+                    style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"11px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:13,outline:"none"}}
+                  />
+                  <input type="password" placeholder="Password (min 6 chars) *" autoComplete="new-password"
+                    value={authForm.password} onChange={e=>setAuthForm(p=>({...p,password:e.target.value}))}
+                    style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"11px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:13,outline:"none"}}
+                  />
+                  <input type="password" placeholder="Confirm Password *" autoComplete="new-password"
+                    value={authForm.confirmPassword} onChange={e=>setAuthForm(p=>({...p,confirmPassword:e.target.value}))}
+                    style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"11px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:13,outline:"none"}}
+                  />
+                  {authError&&<div style={{color:"#f08080",fontSize:12,textAlign:"center"}}>{authError}</div>}
+                  <button className="gen-btn" style={{marginTop:4}} onClick={()=>{
+                    if(authForm.inviteCode.trim().toUpperCase()!=="PAVE2026"){setAuthError("Invalid invite code — contact us for access");return;}
+                    if(!authForm.email||!authForm.password){setAuthError("Enter your email and password");return;}
+                    if(authForm.password!==authForm.confirmPassword){setAuthError("Passwords don't match");return;}
+                    if(authForm.password.length<6){setAuthError("Password must be at least 6 characters");return;}
+                    setAuthError("");setOnboardStep(2);
+                  }}>Next: Your Business →</button>
+                </div>
+              )}
+
+              {/* STEP 2 — Business */}
+              {onboardStep===2&&(
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>YOUR BUSINESS</div>
+                  <input type="text" placeholder="Your First Name *" autoComplete="given-name"
+                    value={authForm.ownerName} onChange={e=>setAuthForm(p=>({...p,ownerName:e.target.value}))}
+                    style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"11px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:13,outline:"none"}}
+                  />
+                  <input type="text" placeholder="Company Name *" autoComplete="organization"
+                    value={authForm.companyName} onChange={e=>setAuthForm(p=>({...p,companyName:e.target.value}))}
+                    style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"11px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:13,outline:"none"}}
+                  />
+                  <input type="tel" placeholder="Business Phone *" autoComplete="tel"
+                    value={authForm.phone} onChange={e=>setAuthForm(p=>({...p,phone:e.target.value}))}
+                    style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"11px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:13,outline:"none"}}
+                  />
+                  <input type="text" placeholder="Promo Code (e.g. SAVE10)" autoComplete="off"
+                    value={authForm.promo} onChange={e=>setAuthForm(p=>({...p,promo:e.target.value.toUpperCase()}))}
+                    style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"11px 14px",color:"var(--cream)",fontFamily:"'DM Mono',monospace",fontSize:13,outline:"none",letterSpacing:2}}
+                  />
+                  {authError&&<div style={{color:"#f08080",fontSize:12,textAlign:"center"}}>{authError}</div>}
+                  <button className="gen-btn" style={{marginTop:4}} onClick={()=>{
+                    if(!authForm.ownerName||!authForm.companyName){setAuthError("Enter your name and company name");return;}
+                    if(!authForm.phone){setAuthError("Enter your business phone");return;}
+                    setAuthError("");setOnboardStep(3);
+                  }}>Next: Location →</button>
+                  <button onClick={()=>setOnboardStep(1)} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:11,fontFamily:"'Syne',sans-serif"}}>← Back</button>
+                </div>
+              )}
+
+              {/* STEP 3 — Location */}
+              {onboardStep===3&&(
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>YOUR LOCATION</div>
+                  <div style={{fontSize:12,color:"var(--stone)",lineHeight:1.6,marginBottom:4}}>This appears on every mailer and sets your default map area.</div>
+                  <input type="text" placeholder="City *" autoComplete="address-level2"
+                    value={authForm.city} onChange={e=>setAuthForm(p=>({...p,city:e.target.value}))}
+                    style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"11px 14px",color:"var(--cream)",fontFamily:"'Syne',sans-serif",fontSize:13,outline:"none"}}
+                  />
+                  <input type="text" placeholder="State (e.g. OK, TX, FL) *" autoComplete="address-level1"
+                    value={authForm.state} onChange={e=>setAuthForm(p=>({...p,state:e.target.value.toUpperCase().slice(0,2)}))}
+                    style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(184,180,172,0.2)",borderRadius:8,padding:"11px 14px",color:"var(--cream)",fontFamily:"'DM Mono',monospace",fontSize:14,outline:"none",letterSpacing:3}}
+                  />
+                  {authError&&<div style={{color:"#f08080",fontSize:12,textAlign:"center"}}>{authError}</div>}
+                  <button className="gen-btn" style={{marginTop:4}} onClick={()=>{
+                    if(!authForm.city||!authForm.state){setAuthError("Enter your city and state");return;}
+                    setAuthError("");setOnboardStep(4);
+                  }}>Next: Upload Logo →</button>
+                  <button onClick={()=>setOnboardStep(2)} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:11,fontFamily:"'Syne',sans-serif"}}>← Back</button>
+                </div>
+              )}
+
+              {/* STEP 4 — Logo */}
+              {onboardStep===4&&(
+                <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2,color:"var(--cream)",marginBottom:2}}>YOUR LOGO</div>
+                  <div style={{fontSize:12,color:"var(--stone)",lineHeight:1.6}}>Optional — appears in your profile and mailers. PNG or JPG under 2MB.</div>
+
+                  {/* Logo preview */}
+                  <div style={{width:"100%",height:120,background:"rgba(255,255,255,0.03)",border:`2px dashed ${authForm.logoUrl?"var(--orange)":"rgba(184,180,172,0.2)"}`,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden",cursor:"pointer"}}
+                    onClick={()=>document.getElementById("logo-upload-input").click()}>
+                    {authForm.logoUrl
+                      ? <img src={authForm.logoUrl} alt="logo" style={{maxHeight:100,maxWidth:"90%",objectFit:"contain"}}/>
+                      : <div style={{textAlign:"center",color:"var(--gravel)"}}>
+                          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style={{margin:"0 auto 8px",display:"block"}}><rect x="2" y="6" width="28" height="20" rx="3" stroke="currentColor" strokeWidth="1.5" opacity="0.4"/><path d="M8 22L13 16L17 20L21 15L26 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.4"/><circle cx="11" cy="13" r="2" fill="currentColor" opacity="0.4"/></svg>
+                          <div style={{fontSize:12}}>{logoUploading?"Uploading...":"Tap to upload logo"}</div>
+                        </div>
+                    }
+                    {logoUploading&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center"}}><span className="spin"/></div>}
+                  </div>
+                  <input id="logo-upload-input" type="file" accept="image/*" style={{display:"none"}} onChange={async e=>{
+                    const file=e.target.files?.[0];
+                    if(!file)return;
+                    if(file.size>2*1024*1024){setAuthError("Logo must be under 2MB");return;}
+                    setLogoUploading(true);setAuthError("");
+                    try{
+                      const reader=new FileReader();
+                      reader.onload=async(ev)=>{
+                        const base64=ev.target.result.split(",")[1];
+                        const res=await fetch(IMGBB_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:base64,name:authForm.companyName||"logo"})});
+                        const data=await res.json();
+                        const url=data?.data?.url||data?.data?.display_url||"";
+                        if(url){setAuthForm(p=>({...p,logoUrl:url}));}
+                        else{setAuthError("Upload failed — continue without logo");}
+                        setLogoUploading(false);
+                      };
+                      reader.readAsDataURL(file);
+                    }catch(err){setAuthError("Upload failed — continue without logo");setLogoUploading(false);}
+                  }}/>
+
+                  {authForm.logoUrl&&(
+                    <button onClick={()=>setAuthForm(p=>({...p,logoUrl:""}))} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:11,fontFamily:"'Syne',sans-serif",alignSelf:"center"}}>
+                      ✕ Remove logo
+                    </button>
+                  )}
+
+                  {authError&&<div style={{color:"#f08080",fontSize:12,textAlign:"center"}}>{authError}</div>}
+                  <button className="gen-btn" style={{marginTop:4}} onClick={handleSignup} disabled={authLoading}>
+                    {authLoading?<><span className="spin"/>Creating Account...</>:"🚀 Launch PaveMail"}
+                  </button>
+                  <button onClick={()=>setOnboardStep(3)} style={{background:"none",border:"none",color:"var(--stone)",cursor:"pointer",fontSize:11,fontFamily:"'Syne',sans-serif"}}>← Back</button>
+                </div>
+              )}
             </>
           )}
 
@@ -3453,6 +4033,9 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <path d="M7 8V5C7 3.3 8.3 2 11 2C13.7 2 15 3.3 15 5V8" stroke="rgba(232,86,10,0.6)" strokeWidth="1.2" strokeLinecap="round"/>
               </svg>
               PAVE<span>MAIL</span>
+              {ACTIVE_COMPANY.logoUrl&&(
+                <img src={ACTIVE_COMPANY.logoUrl} alt="logo" style={{height:22,maxWidth:80,objectFit:"contain",borderRadius:3,marginLeft:4,opacity:0.9}}/>
+              )}
             </div>
           <div className="topbar-sep"/>
 
@@ -3515,6 +4098,18 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
           </div>
 
           <div className="topbar-right">
+            {/* PWA install prompt */}
+            {pwaInstallPrompt&&!pwaInstalled&&(
+              <button onClick={async()=>{
+                pwaInstallPrompt.prompt();
+                const {outcome}=await pwaInstallPrompt.userChoice;
+                if(outcome==="accepted"){setPwaInstalled(true);showToast("✅ PaveMail installed!","success");}
+                setPwaInstallPrompt(null);
+              }} style={{background:"rgba(232,86,10,0.12)",border:"1px solid rgba(232,86,10,0.3)",borderRadius:7,padding:"5px 10px",color:"var(--orange2)",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"'Syne',sans-serif",display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
+                <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1V8M5.5 8L3 5.5M5.5 8L8 5.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M1 9.5H10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                Add to Home Screen
+              </button>
+            )}
             {isAdmin&&<div className="lob-pill"><div className="lob-dot"/>Mail: Test Mode</div>}
             {isDemoMode&&<div style={{background:"rgba(212,160,23,0.15)",border:"1px solid rgba(212,160,23,0.3)",borderRadius:20,padding:"3px 10px",fontSize:10,color:"#d4a017",fontWeight:700,display:"flex",alignItems:"center",gap:5}}>◎ DEMO</div>}
             <div className="user-menu-wrap">
@@ -3560,7 +4155,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
         {/* NAV */}
         <nav className="nav">
           <div className="nav-label">Campaigns</div>
-          {[{id:"map",label:"Neighborhood Scan",badge:null},{id:"create",label:"Create Mailer",badge:null},{id:"spotbid",label:"Spot Bid",badge:null},{id:"pipeline",label:"Pipeline",badge:null},{id:"fieldmap",label:"Field Map",badge:null},{id:"jobboard",label:"Job Board",badge:null},{id:"command",label:"Command",badge:null},{id:"tracker",label:"Mail Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length||null},{id:"aiphone",label:"AI Phone",badge:aiLeads.filter(l=>l.status==="pending").length||null}].map(item=>(
+          {[{id:"map",label:"Neighborhood Scan",badge:null},{id:"create",label:"Create Mailer",badge:null},{id:"spotbid",label:"Spot Bid",badge:null},{id:"pipeline",label:"Pipeline",badge:null},{id:"fieldmap",label:"Field Map",badge:null},{id:"jobboard",label:"Job Board",badge:null},{id:"command",label:"Command",badge:null},{id:"tracker",label:"Mail Tracker",badge:jobs.filter(j=>j.status==="sent"||j.status==="queued").length||null},{id:"aiphone",label:"AI Phone",badge:aiLeads.filter(l=>l.status==="pending").length||null},{id:"roi",label:"ROI Analytics",badge:null}].map(item=>(
             <button key={item.id} className={`nav-item${tab===item.id?" active":""}`} onClick={()=>switchTab(item.id)}>
               <NavIcon id={item.id}/>{item.label}
               {item.badge?<span className="nav-badge">{item.badge}</span>:null}
@@ -3614,6 +4209,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
         {/* CONTENT */}
         <div className="content">
+        <ErrorBoundary label="Tab crashed — try switching tabs or refreshing">
 
           {/* MAP */}
           {tab==="map"&&(
@@ -3709,7 +4305,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 {PINS.map((p,i)=><div key={i} className={`map-pin ${p.t}`} style={{left:`${p.x}%`,top:`${p.y}%`}}/>)}
                 <div style={{position:"absolute",top:12,left:12,background:"rgba(14,13,11,0.82)",border:"1px solid rgba(184,180,172,0.12)",borderRadius:7,padding:"10px 14px",fontSize:10,color:"var(--concrete)",display:"flex",flexDirection:"column",gap:6}}>
                   <div style={{display:"flex",alignItems:"center",gap:7}}><div style={{width:10,height:10,borderRadius:"50%",background:"var(--orange2)"}}/> Home Address</div>
-                  <div style={{display:"flex",alignItems:"center",gap:7}}><div style={{width:12,height:12,borderRadius:"50%",background:"var(--green2)"}}/> JWood Past Job</div>
+                  <div style={{display:"flex",alignItems:"center",gap:7}}><div style={{width:12,height:12,borderRadius:"50%",background:"var(--green2)"}}/> Past Job</div>
                   <div style={{display:"flex",alignItems:"center",gap:7}}><div style={{width:12,height:8,background:"rgba(232,86,10,0.3)",border:"1px solid var(--orange)"}}/> Selected Zone</div>
                 </div>
                 <div className="map-controls"><button className="map-ctrl">+</button><button className="map-ctrl">−</button><button className="map-ctrl">⌖</button></div>
@@ -3730,7 +4326,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div className="field"><label>Neighborhood *</label><input placeholder="e.g. South Tulsa, Broken Arrow, Jenks..." value={form.neighborhood} onChange={e=>set("neighborhood",e.target.value)}/></div>
                 <div className="row2">
                   <div className="field"><label>Homes to Mail</label><input type="number" placeholder="200" value={form.homes} onChange={e=>set("homes",e.target.value)}/></div>
-                  <div className="field"><label>Promo Code</label><input placeholder="JWOOD" value={form.promoCode} onChange={e=>set("promoCode",e.target.value)}/></div>
+                  <div className="field"><label>Promo Code</label><input placeholder={ACTIVE_COMPANY.promo||"SAVE10"} value={form.promoCode} onChange={e=>set("promoCode",e.target.value)}/></div>
                 </div>
                 <div className="section-head">Campaign Settings</div>
                 <div className="field"><label>Season</label><div className="chips">{SEASONS.map(s=><button key={s} className={`chip${form.season===s?" on":""}`} onClick={()=>set("season",s)}>{s}</button>)}</div></div>
@@ -3740,9 +4336,30 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div className="field"><label>Extra Notes</label><textarea placeholder="e.g. Just finished a job on 71st St. Mention freeze-thaw damage." value={form.extraNotes} onChange={e=>set("extraNotes",e.target.value)}></textarea></div>
                 <div className="divider"/>
                 <div className="cost-bar"><div><div className="cb-label">Est. Print + Mail Cost</div><div className="cb-sub">{form.homes||0} homes x $0.62 (EDDM rate)</div></div><div className="cb-value">${estCost}</div></div>
+                {/* A/B Test toggle */}
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:"rgba(58,143,212,0.06)",border:"1px solid rgba(58,143,212,0.15)",borderRadius:8,marginBottom:8}}>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:"var(--blue2)"}}>A/B Copy Test</div>
+                    <div style={{fontSize:10,color:"var(--gravel)"}}>Generate 2 headlines — pick the winner</div>
+                  </div>
+                  <button onClick={()=>setAbMode(m=>!m)} style={{width:40,height:22,borderRadius:11,border:"none",cursor:"pointer",position:"relative",transition:"background 0.2s",background:abMode?"var(--blue2)":"rgba(184,180,172,0.2)"}}>
+                    <div style={{position:"absolute",top:3,left:abMode?20:3,width:16,height:16,borderRadius:"50%",background:"white",transition:"left 0.2s"}}/>
+                  </button>
+                </div>
                 <button className="gen-btn" onClick={generate} disabled={loading||!form.neighborhood}>
-                  {loading?<><span className="spin"/>WRITING YOUR MAILER...</>:"⚡ GENERATE MAILER"}
+                  {loading?<><span className="spin"/>{abMode?"WRITING A/B VARIANTS...":"WRITING YOUR MAILER..."}
+                  </>:abMode?"⚡ GENERATE A/B TEST":"⚡ GENERATE MAILER"}
                 </button>
+                {/* A/B variant switcher */}
+                {mailerB&&(
+                  <div style={{display:"flex",gap:6,marginTop:8}}>
+                    {["A","B"].map(v=>(
+                      <button key={v} onClick={()=>setActiveVariant(v)} style={{flex:1,padding:"8px",borderRadius:7,border:`1px solid ${activeVariant===v?"var(--orange)":"rgba(184,180,172,0.15)"}`,background:activeVariant===v?"rgba(232,86,10,0.12)":"transparent",color:activeVariant===v?"var(--orange2)":"var(--stone)",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>
+                        Variant {v}{activeVariant===v?" ✓":""}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {mailer&&!loading&&(
                   <button className="send-btn" onClick={sendToPress} disabled={sending}>
                     {sending?<><span className="spin"/>SENDING TO LOB.COM...</>:`📬 SEND TO ${parseInt(form.homes)||0} TULSA HOMES - $${estCost}`}
@@ -3765,7 +4382,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                     <button className="btn btn-primary btn-sm" onClick={sendToPress} disabled={sending}>{sending?"Sending...":"📬 Print & Mail"}</button>
                     <div className="preview-meta"><span>📍 <strong>{form.neighborhood}</strong></span><span>🏠 <strong>{form.homes}</strong> homes</span></div>
                   </div>
-                  <MailerPreview mailer={mailer} form={form}/>
+                  <MailerPreview mailer={activeVariant==="B"&&mailerB?mailerB:mailer} form={form}/>
                 </>}
               </div>
             </div>
@@ -4115,7 +4732,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   <div className="empty">
                     <div className="icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="1.5"/><circle cx="24" cy="24" r="13" stroke="currentColor" strokeWidth="1.5" opacity="0.6"/><circle cx="24" cy="24" r="5" fill="currentColor" opacity="0.8"/></svg></div>
                     <h3>Spot Bid Preview</h3>
-                    <p>Enter an address and damage details - AI writes a personal note that sounds like it came from Joel himself, not a corporation.</p>
+                    <p>Enter an address and damage details - AI writes a personal note that sounds personal and local, not corporate, not a corporation.</p>
                     <div style={{marginTop:16,background:"rgba(232,86,10,0.08)",border:"1px solid rgba(232,86,10,0.2)",borderRadius:8,padding:"14px 18px",textAlign:"left",maxWidth:320}}>
                       <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--orange2)",marginBottom:8}}>How It Works</div>
                       <div style={{fontSize:12,color:"var(--stone)",lineHeight:1.8}}>
@@ -4791,7 +5408,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:10}}>
                 <div>
                   <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2,color:"var(--cream)",lineHeight:1}}>AI ANSWERING SERVICE</div>
-                  <div style={{fontSize:12,color:"var(--stone)",marginTop:3}}>AI qualifies every inbound call · Live transfers to Joel · All leads logged here</div>
+                  <div style={{fontSize:12,color:"var(--stone)",marginTop:3}}>AI qualifies every inbound call · Live transfers to you · All leads logged here</div>
                 </div>
                 <div style={{display:"flex",gap:8,alignItems:"center"}}>
                   <div style={{display:"flex",alignItems:"center",gap:6,background:"rgba(42,122,82,0.1)",border:"1px solid rgba(42,122,82,0.25)",borderRadius:20,padding:"6px 14px"}}>
@@ -4887,7 +5504,7 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                       </span>
                     )}
                       {lead.address&&<span style={{fontSize:10,color:"var(--stone)"}}>📍 {lead.address}</span>}
-                      {lead.transferred&&<span style={{fontSize:10,color:"var(--green2)"}}>📞 Transferred to Joel</span>}
+                      {lead.transferred&&<span style={{fontSize:10,color:"var(--green2)"}}>📞 Transferred to ${ACTIVE_COMPANY.ownerName||"owner"}</span>}
                     </div>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",gap:6,flexShrink:0}}>
@@ -5124,33 +5741,32 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
 
               {/* LIST VIEW */}
               {pipelineView==="list"&&(
-                <div className="pl-list">
+                <div className="pl-list" style={{display:"flex",flexDirection:"column",flex:1,minHeight:0}}>
                   <div className="pl-list-head">
                     <div>Address</div><div>Neighborhood</div><div>Spotted</div><div>Sent</div><div>Called</div><div>Bid</div><div>Status</div><div>Permits</div>
                   </div>
-                  {pipeline.map(lead=>{
-                    const stage=STAGES.find(s=>s.id===lead.stage);
-                    return(
-                      <div className="pl-list-row" key={lead.id}>
-                        <div><div className="pl-addr">{lead.address}</div><div className="pl-sub">{lead.city}</div></div>
-                        <div className="pl-cell">{lead.neighborhood}</div>
-                        <div className="pl-cell">{lead.spotted||"-"}</div>
-                        <div className="pl-cell">{lead.mailerSent||"-"}</div>
-                        <div className="pl-cell">{lead.calledBack||"-"}</div>
-                        <div className="pl-cell mono">{lead.bidLo}{lead.bidHi?`–${lead.bidHi}`:""}</div>
-                        <div>
-                          <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",borderRadius:12,fontSize:10,fontWeight:700,background:stage?.bg,color:stage?.color}}>
-                            {stage?.icon} {stage?.label}
-                          </span>
-                        </div>
-                        <div>
-                          <a href={getTulsaPortalUrl(`${lead.address} ${lead.city}`)} target="_blank" rel="noreferrer" className="permit-link" style={{fontSize:9}}>
-                            🔍 Lookup
-                          </a>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <div style={{flex:1,minHeight:0}}>
+                    <VirtualList
+                      items={pipeline}
+                      rowHeight={56}
+                      emptyMsg="No leads yet — spot a property to get started"
+                      renderRow={(lead)=>{
+                        const stage=STAGES.find(s=>s.id===lead.stage);
+                        return(
+                          <div className="pl-list-row" style={{height:56,alignItems:"center"}}>
+                            <div><div className="pl-addr">{lead.address}</div><div className="pl-sub">{lead.city}</div></div>
+                            <div className="pl-cell">{lead.neighborhood}</div>
+                            <div className="pl-cell">{lead.spotted||"-"}</div>
+                            <div className="pl-cell">{lead.mailerSent||"-"}</div>
+                            <div className="pl-cell">{lead.calledBack||"-"}</div>
+                            <div className="pl-cell mono">{lead.bidLo}{lead.bidHi?`–${lead.bidHi}`:""}</div>
+                            <div><span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",borderRadius:12,fontSize:10,fontWeight:700,background:stage?.bg,color:stage?.color}}>{stage?.icon} {stage?.label}</span></div>
+                            <div><a href={getTulsaPortalUrl(`${lead.address} ${lead.city}`)} target="_blank" rel="noreferrer" className="permit-link" style={{fontSize:9}}>🔍 Lookup</a></div>
+                          </div>
+                        );
+                      }}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -5200,7 +5816,214 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
             </div>
           )}
 
-          {/* ADMIN */}
+          {/* ROI ANALYTICS */}
+          {tab==="roi"&&(()=>{
+            const totalMailers=jobs.reduce((s,j)=>s+(parseInt(j.homes)||0),0);
+            const totalSpend=jobs.reduce((s,j)=>s+(parseFloat(j.cost)||0),0);
+            const wonLeads=pipeline.filter(l=>l.stage==="won");
+            const wonRevenue=wonLeads.reduce((s,l)=>s+(l.value||0),0);
+            const calledBack=pipeline.filter(l=>l.stage==="called"||l.stage==="won").length;
+            const totalLeads=pipeline.length;
+            const callRate=totalLeads>0?((calledBack/totalLeads)*100).toFixed(1):"0.0";
+            const closeRate=calledBack>0?((wonLeads.length/calledBack)*100).toFixed(1):"0.0";
+            const costPerLead=calledBack>0?(totalSpend/calledBack).toFixed(2):"0.00";
+            const costPerJob=wonLeads.length>0?(totalSpend/wonLeads.length).toFixed(2):"0.00";
+            const roiMultiple=totalSpend>0?(wonRevenue/totalSpend).toFixed(1):"0.0";
+            const avgJobVal=wonLeads.length>0?Math.round(wonRevenue/wonLeads.length):0;
+            const funnel=[
+              {label:"Mailers Sent",val:totalMailers,color:"var(--blue2)",pct:100},
+              {label:"Leads Spotted",val:totalLeads,color:"var(--orange2)",pct:totalMailers>0?Math.round((totalLeads/Math.max(totalMailers,1))*1000)/10:0},
+              {label:"Called Back",val:calledBack,color:"var(--yellow)",pct:totalLeads>0?Math.round((calledBack/totalLeads)*100):0},
+              {label:"Jobs Won",val:wonLeads.length,color:"var(--green2)",pct:calledBack>0?Math.round((wonLeads.length/calledBack)*100):0},
+            ];
+            const now=new Date();
+            const monthlyData=Array.from({length:6},(_,i)=>{
+              const d=new Date(now.getFullYear(),now.getMonth()-5+i,1);
+              const label=d.toLocaleString("default",{month:"short"});
+              const rev=wonLeads.filter(l=>{
+                if(!l.jobWon)return false;
+                const wd=new Date(l.jobWon);
+                return wd.getMonth()===d.getMonth()&&wd.getFullYear()===d.getFullYear();
+              }).reduce((s,l)=>s+(l.value||0),0);
+              return{label,rev};
+            });
+            const maxRev=Math.max(...monthlyData.map(m=>m.rev),1);
+            return(
+              <div style={{padding:"20px",overflowY:"auto",height:"100%"}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>ROI ANALYTICS</div>
+                <p style={{fontSize:12,color:"var(--stone)",marginBottom:20}}>Live performance data · {ACTIVE_COMPANY.name}</p>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:20}}>
+                  {[
+                    {label:"Mailers Sent",val:totalMailers.toLocaleString(),color:"var(--blue2)"},
+                    {label:"Total Spend",val:`$${totalSpend.toFixed(0)}`,color:"var(--stone)"},
+                    {label:"Won Revenue",val:`$${wonRevenue.toLocaleString()}`,color:"var(--green2)"},
+                    {label:"ROI Multiple",val:`${roiMultiple}x`,color:"var(--orange2)"},
+                    {label:"Cost Per Lead",val:`$${costPerLead}`,color:"var(--yellow)"},
+                    {label:"Cost Per Job",val:`$${costPerJob}`,color:"var(--orange2)"},
+                    {label:"Avg Job Value",val:`$${avgJobVal.toLocaleString()}`,color:"var(--green2)"},
+                    {label:"Call-Back Rate",val:`${callRate}%`,color:"var(--blue2)"},
+                  ].map((m,i)=>(
+                    <div key={i} style={{background:"rgba(0,0,0,0.3)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,padding:"14px 16px"}}>
+                      <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--gravel)",marginBottom:4}}>{m.label}</div>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,color:m.color,lineHeight:1}}>{m.val}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Revenue bar chart */}
+                <div style={{background:"rgba(0,0,0,0.2)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:12,padding:"18px 20px",marginBottom:16}}>
+                  <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--gravel)",marginBottom:14}}>Won Revenue — Last 6 Months</div>
+                  <div style={{display:"flex",alignItems:"flex-end",gap:8,height:80}}>
+                    {monthlyData.map((m,i)=>(
+                      <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                        <div style={{fontSize:9,color:"var(--stone)",fontFamily:"'DM Mono',monospace"}}>{m.rev>0?`$${(m.rev/1000).toFixed(1)}k`:""}</div>
+                        <div style={{width:"100%",borderRadius:4,height:`${Math.max(4,Math.round((m.rev/maxRev)*60))}px`,background:m.rev>0?"var(--green2)":"rgba(184,180,172,0.08)",opacity:m.rev>0?0.8:1,transition:"height 0.4s"}}/>
+                        <div style={{fontSize:9,color:"var(--gravel)"}}>{m.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Conversion funnel */}
+                <div style={{background:"rgba(0,0,0,0.2)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:12,padding:"18px 20px",marginBottom:16}}>
+                  <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--gravel)",marginBottom:14}}>Conversion Funnel</div>
+                  {funnel.map((f,i)=>(
+                    <div key={i} style={{marginBottom:10}}>
+                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                        <span style={{fontSize:11,color:"var(--concrete)"}}>{f.label}</span>
+                        <span style={{fontSize:11,fontFamily:"'DM Mono',monospace",color:f.color}}>{f.val.toLocaleString()}{i>0?` (${f.pct}%)`:""}</span>
+                      </div>
+                      <div style={{height:6,background:"rgba(184,180,172,0.08)",borderRadius:3,overflow:"hidden"}}>
+                        <div style={{height:"100%",width:`${f.pct}%`,background:f.color,borderRadius:3,opacity:0.8}}/>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Campaign breakdown */}
+                {jobs.length>0&&(
+                  <div style={{background:"rgba(0,0,0,0.2)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:12,padding:"18px 20px"}}>
+                    <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--gravel)",marginBottom:14}}>Campaign Breakdown</div>
+                    {jobs.slice(0,10).map((c,i)=>(
+                      <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid rgba(184,180,172,0.05)"}}>
+                        <div><div style={{fontSize:12,fontWeight:600,color:"var(--cream)"}}>{c.name}</div><div style={{fontSize:10,color:"var(--stone)"}}>{(parseInt(c.homes)||0).toLocaleString()} homes · {c.sent||""}</div></div>
+                        <div style={{textAlign:"right"}}>
+                          <div style={{fontSize:12,fontFamily:"'DM Mono',monospace",color:"var(--orange2)"}}>${(parseFloat(c.cost)||0).toFixed(2)}</div>
+                          <div style={{fontSize:10,padding:"2px 6px",borderRadius:8,display:"inline-block",marginTop:2,background:c.status==="sent"?"rgba(42,122,82,0.15)":"rgba(212,160,23,0.15)",color:c.status==="sent"?"var(--green2)":"var(--yellow)"}}>{c.status}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {totalMailers===0&&<div style={{textAlign:"center",padding:"48px 20px",color:"var(--gravel)",fontSize:13}}>Send your first mailer to start tracking ROI</div>}
+              </div>
+            );
+          })()}
+
+          {/* ADMIN — Super Admin Dashboard */}
+          {tab==="admin"&&isAdmin&&(
+            <div className="settings-layout">
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"var(--cream)",marginBottom:4}}>⚙ SUPER ADMIN</div>
+              <p style={{fontSize:12,color:"var(--stone)",marginBottom:20}}>All contractor accounts · Full data visibility · Pilot dashboard</p>
+
+              {/* Platform stats */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10,marginBottom:24}}>
+                {[
+                  {label:"Contractors",val:adminData.contractors?.length||0,color:"var(--orange2)"},
+                  {label:"Total Leads",val:adminData.pipeline?.length||0,color:"var(--blue2)"},
+                  {label:"Total Bids",val:adminData.bids?.length||0,color:"var(--yellow)"},
+                  {label:"Campaigns",val:adminData.campaigns?.length||0,color:"var(--green2)"},
+                  {label:"Won Jobs",val:adminData.pipeline?.filter(l=>l.stage==="won").length||0,color:"var(--green2)"},
+                  {label:"Pipeline $",val:"$"+(adminData.pipeline?.reduce((s,l)=>s+(l.value||0),0)||0).toLocaleString(),color:"var(--orange2)"},
+                ].map((s,i)=>(
+                  <div key={i} style={{background:"rgba(0,0,0,0.3)",border:"1px solid rgba(184,180,172,0.08)",borderRadius:10,padding:"14px 16px"}}>
+                    <div style={{fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"var(--gravel)",marginBottom:4}}>{s.label}</div>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,color:s.color}}>{s.val}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Contractor roster */}
+              <div className="settings-section">
+                <h3>Contractor Accounts ({adminData.contractors?.length||0})</h3>
+                {adminData.loading&&<div style={{color:"var(--stone)",fontSize:12}}>Loading...</div>}
+                {(adminData.contractors||[]).map((c,i)=>{
+                  const leads  = (adminData.pipeline||[]).filter(l=>l.contractor_id===c.id||l.user_id===c.id);
+                  const won    = leads.filter(l=>l.stage==="won");
+                  const wonRev = won.reduce((s,l)=>s+(l.value||0),0);
+                  const bids   = (adminData.bids||[]).filter(b=>b.contractor_id===c.id||b.user_id===c.id);
+                  return(
+                    <div key={i} style={{background:"rgba(0,0,0,0.25)",border:"1px solid rgba(184,180,172,0.1)",borderRadius:12,padding:"16px 18px",marginBottom:10}}>
+                      <div style={{display:"flex",alignItems:"flex-start",gap:12,marginBottom:10}}>
+                        {c.logo_url
+                          ? <img src={c.logo_url} alt="logo" style={{width:40,height:40,borderRadius:8,objectFit:"contain",background:"rgba(255,255,255,0.05)",padding:4}}/>
+                          : <div style={{width:40,height:40,borderRadius:8,background:"rgba(232,86,10,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"var(--orange2)",flexShrink:0}}>
+                              {(c.company_name||"?")[0]}
+                            </div>
+                        }
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontWeight:700,color:"var(--cream)",fontSize:14}}>{c.company_name||"Unnamed"}</div>
+                          <div style={{fontSize:11,color:"var(--stone)"}}>{c.owner_name} · {c.city}{c.state?`, ${c.state}`:""}</div>
+                          <div style={{fontSize:11,color:"var(--gravel)",fontFamily:"'DM Mono',monospace"}}>{c.email}</div>
+                        </div>
+                        <div style={{fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:12,background:"rgba(42,122,82,0.15)",color:"var(--green2)",flexShrink:0}}>● Active</div>
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+                        {[
+                          {label:"Leads",val:leads.length,color:"var(--blue2)"},
+                          {label:"Won",val:won.length,color:"var(--green2)"},
+                          {label:"Spot Bids",val:bids.length,color:"var(--yellow)"},
+                          {label:"Won Rev",val:"$"+wonRev.toLocaleString(),color:"var(--orange2)"},
+                        ].map((s,j)=>(
+                          <div key={j} style={{background:"rgba(0,0,0,0.2)",borderRadius:8,padding:"8px 10px",textAlign:"center"}}>
+                            <div style={{fontSize:9,color:"var(--gravel)",marginBottom:2}}>{s.label}</div>
+                            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:s.color}}>{s.val}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {c.phone&&<div style={{marginTop:10,fontSize:11,color:"var(--stone)",display:"flex",gap:12,flexWrap:"wrap"}}>
+                        <span>📞 {c.phone}</span>
+                        {c.lob_from_id&&<span style={{color:"var(--green2)"}}>✅ Lob Connected</span>}
+                        {!c.lob_from_id&&<span style={{color:"var(--orange2)"}}>⚠ Lob not set up</span>}
+                        {c.bland_transfer&&<span style={{color:"var(--green2)"}}>✅ AI Phone</span>}
+                      </div>}
+                    </div>
+                  );
+                })}
+                {!adminData.loading&&(adminData.contractors||[]).length===0&&(
+                  <div style={{fontSize:13,color:"var(--gravel)",textAlign:"center",padding:"24px 0"}}>No contractors yet. Share the invite code to onboard pilots.</div>
+                )}
+              </div>
+
+              {/* Invite code manager */}
+              <div className="settings-section">
+                <h3>Pilot Invite Code</h3>
+                <div style={{background:"rgba(232,86,10,0.07)",border:"1px solid rgba(232,86,10,0.2)",borderRadius:10,padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+                  <div>
+                    <div style={{fontSize:11,color:"var(--stone)",marginBottom:4}}>Current invite code — share with pilot contractors</div>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"var(--orange2)"}}>PAVE2026</div>
+                  </div>
+                  <button className="btn btn-ghost btn-sm" onClick={()=>{navigator.clipboard?.writeText("PAVE2026");showToast("Invite code copied","success");}}>
+                    Copy Code
+                  </button>
+                </div>
+              </div>
+
+              {/* System status */}
+              <div className="settings-section">
+                <h3>System Status</h3>
+                <div style={{fontSize:12,color:"var(--stone)",lineHeight:2.4}}>
+                  <div>✅ <strong style={{color:"var(--cream)"}}>Multi-tenant auth</strong> — Supabase, per-user data</div>
+                  <div>✅ <strong style={{color:"var(--cream)"}}>AI Mailer Generation</strong> — claude-sonnet-4-5</div>
+                  <div>✅ <strong style={{color:"var(--cream)"}}>Print & Mail API</strong> — Lob.com connected</div>
+                  <div>✅ <strong style={{color:"var(--cream)"}}>AI Phone Agent</strong> — Bland.ai, dynamic per contractor</div>
+                  <div>✅ <strong style={{color:"var(--cream)"}}>Logo Upload</strong> — imgbb CDN</div>
+                  <div>✅ <strong style={{color:"var(--cream)"}}>Error Monitoring</strong> — Sentry active</div>
+                  <div>✅ <strong style={{color:"var(--cream)"}}>Field Map</strong> — Leaflet + satellite tiles</div>
+                  <div>🔧 <strong style={{color:"var(--orange2)"}}>Supabase RLS</strong> — Enable in dashboard per table</div>
+                  <div>🔧 <strong style={{color:"var(--orange2)"}}>Lob live mode</strong> — Flip to live key when ready</div>
+                  <div>🔧 <strong style={{color:"var(--orange2)"}}>Billing</strong> — Stripe integration pending</div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* SETTINGS */}
           {tab==="settings"&&(
@@ -5209,48 +6032,61 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"var(--cream)"}}>SETTINGS</div>
                 <button className="btn btn-ghost btn-sm" onClick={handleLogout}>🔒 Sign Out</button>
               </div>
-              <p style={{fontSize:13,color:"var(--stone)",marginBottom:26}}>{contractor?.company_name||ACTIVE_COMPANY.name} · {contractor?.city||ACTIVE_COMPANY.city}, {contractor?.state||ACTIVE_COMPANY.state} · {contractor?.phone||ACTIVE_COMPANY.phone}</p>
+              <p style={{fontSize:13,color:"var(--stone)",marginBottom:26}}>{contractor?.company_name||ACTIVE_COMPANY.name} · {contractor?.city||ACTIVE_COMPANY.city}{contractor?.state?`, ${contractor.state}`:""} · {contractor?.phone||ACTIVE_COMPANY.phone}</p>
 
-              {/* ── ADMIN ONLY: Production Checklist ── */}
-              {isAdmin&&(
-                <div className="settings-section">
-                  <h3>Production Checklist</h3>
-                  <div style={{fontSize:12,color:"var(--stone)",lineHeight:2.4}}>
-                    <div>✅ <strong style={{color:"var(--cream)"}}>AI Mailer Generation</strong> - Live</div>
-                    <div>✅ <strong style={{color:"var(--cream)"}}>QR Code Auto-Dial</strong> - On every mailer</div>
-                    <div>✅ <strong style={{color:"var(--cream)"}}>Print & Mail API</strong> - Test mode connected</div>
-                    <div>✅ <strong style={{color:"var(--cream)"}}>USPS Route Data</strong> - Live address counts</div>
-                    <div>✅ <strong style={{color:"var(--cream)"}}>AI Phone Agent</strong> - Standing by</div>
-                    <div>✅ <strong style={{color:"var(--cream)"}}>Error Monitoring</strong> - Active</div>
-                    <div>✅ <strong style={{color:"var(--cream)"}}>Analytics</strong> - Tracking 11 events</div>
-                    <div>🔧 <strong style={{color:"var(--orange2)"}}>Print & Mail Live Mode</strong> - Flip to live key when ready</div>
-                    <div>🔧 <strong style={{color:"var(--orange2)"}}>Inbound Phone Number</strong> - Purchase ~$2/mo to activate</div>
-                    <div>🔧 <strong style={{color:"var(--orange2)"}}>Billing</strong> - Per-contractor subscription pending</div>
-                  </div>
-                </div>
-              )}
-
-              {/* ── ALL CONTRACTORS: Company Info ── */}
+              {/* ── Company Info + Logo ── */}
               <div className="settings-section">
                 <h3>Your Business</h3>
                 <div style={{background:"rgba(232,86,10,0.07)",border:"1px solid rgba(232,86,10,0.18)",borderRadius:9,padding:"16px 18px",fontSize:13,lineHeight:2,color:"var(--concrete)"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <rect x="1" y="6" width="12" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
-                      <path d="M4 6V4.5C4 2.8 5.3 1.5 7 1.5C8.7 1.5 10 2.8 10 4.5V6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                      <line x1="3" y1="9" x2="5.5" y2="9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                      <line x1="3" y1="11" x2="4.5" y2="11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                      <rect x="7.5" y="8" width="3" height="5" rx="0.5" fill="currentColor" opacity="0.5"/>
-                    </svg>
-                    <strong style={{color:"var(--cream)"}}>{ACTIVE_COMPANY.name}</strong>
+                  <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8}}>
+                    {ACTIVE_COMPANY.logoUrl
+                      ? <img src={ACTIVE_COMPANY.logoUrl} alt="logo" style={{height:48,maxWidth:120,objectFit:"contain",borderRadius:6,background:"rgba(255,255,255,0.04)",padding:4}}/>
+                      : <div style={{width:48,height:48,borderRadius:8,background:"rgba(232,86,10,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:"var(--orange2)"}}>
+                          {(ACTIVE_COMPANY.name||"?")[0]}
+                        </div>
+                    }
+                    <div>
+                      <strong style={{color:"var(--cream)",fontSize:15}}>{ACTIVE_COMPANY.name}</strong>
+                      <div style={{fontSize:11,color:"var(--stone)"}}>{ACTIVE_COMPANY.city}{ACTIVE_COMPANY.state?`, ${ACTIVE_COMPANY.state}`:""}</div>
+                    </div>
                   </div>
                   <div>📞 <strong style={{color:"var(--cream)",fontFamily:"'DM Mono',monospace"}}>{ACTIVE_COMPANY.phone}</strong></div>
-                  <div>✉️ <strong style={{color:"var(--cream)"}}>{ACTIVE_COMPANY.email}</strong></div>
-                  <div>📍 <strong style={{color:"var(--cream)"}}>{ACTIVE_COMPANY.city}, {ACTIVE_COMPANY.state}</strong></div>
+                  <div>✉️ <strong style={{color:"var(--cream)"}}>{ACTIVE_COMPANY.email||authUser?.user?.email}</strong></div>
                   {ACTIVE_COMPANY.promo&&<div>🏷️ Promo Code: <strong style={{color:"var(--orange2)",fontFamily:"'DM Mono',monospace"}}>{ACTIVE_COMPANY.promo}</strong></div>}
                   <div style={{marginTop:12,display:"flex",alignItems:"center",gap:12}}>
-                    <QRCode value={`tel:${ACTIVE_COMPANY.phoneRaw}`} size={72}/>
-                    <div style={{fontSize:11,color:"var(--stone)",lineHeight:1.8}}>Your QR code appears on every mailer<br/>Homeowners scan to call you instantly<br/>Works on all smartphones</div>
+                    <QRCode value={`tel:${ACTIVE_COMPANY.phoneRaw||ACTIVE_COMPANY.phone.replace(/\D/g,"")}`} size={72}/>
+                    <div style={{fontSize:11,color:"var(--stone)",lineHeight:1.8}}>Your QR code appears on every mailer<br/>Homeowners scan to call you instantly</div>
+                  </div>
+                  {/* Logo upload in settings */}
+                  <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid rgba(184,180,172,0.08)"}}>
+                    <div style={{fontSize:11,color:"var(--stone)",marginBottom:8}}>Update Logo</div>
+                    <label style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(232,86,10,0.1)",border:"1px solid rgba(232,86,10,0.25)",borderRadius:7,padding:"7px 12px",cursor:"pointer",fontSize:11,color:"var(--orange2)",fontWeight:600,fontFamily:"'Syne',sans-serif"}}>
+                      {logoUploading?"Uploading...":"📷 Upload New Logo"}
+                      <input type="file" accept="image/*" style={{display:"none"}} onChange={async e=>{
+                        const file=e.target.files?.[0];
+                        if(!file||!authUser?.token)return;
+                        if(file.size>2*1024*1024){showToast("Logo must be under 2MB","info");return;}
+                        setLogoUploading(true);
+                        try{
+                          const reader=new FileReader();
+                          reader.onload=async(ev)=>{
+                            const base64=ev.target.result.split(",")[1];
+                            const res=await fetch(IMGBB_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:base64,name:ACTIVE_COMPANY.name||"logo"})});
+                            const data=await res.json();
+                            const url=data?.data?.url||data?.data?.display_url||"";
+                            if(url){
+                              await auth.updateProfile(authUser.token,{...contractor,id:authUser.user.id,logo_url:url});
+                              const updated={...contractor,logo_url:url};
+                              setContractor(updated);
+                              try{localStorage.setItem("pm_profile",JSON.stringify(updated));}catch{}
+                              showToast("✅ Logo updated","success");
+                            } else {showToast("Upload failed","info");}
+                            setLogoUploading(false);
+                          };
+                          reader.readAsDataURL(file);
+                        }catch{setLogoUploading(false);showToast("Upload failed","info");}
+                      }}/>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -5271,12 +6107,12 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                 ))}
               </div>
 
-              {/* ── ALL CONTRACTORS: USPS Info ── */}
+              {/* ── Mail Delivery ── */}
               <div className="settings-section">
                 <h3>Mail Delivery</h3>
                 <div style={{display:"flex",flexDirection:"column",gap:10}}>
                   {[
-                    {label:"USPS Every Door Direct Mail",desc:"Neighborhood route data - real delivery counts for every ZIP",status:"live"},
+                    {label:"USPS Every Door Direct Mail",desc:"Neighborhood route data — real delivery counts for every ZIP",status:"live"},
                     {label:"Postcard Print & Mail",desc:"Physical 6x9 inch postcards printed and mailed to real addresses",status:"live"},
                     {label:"USPS Delivery Tracking",desc:"Know when your mail reaches the neighborhood",status:"soon"},
                   ].map((a,i)=>(
@@ -5294,9 +6130,18 @@ Return ONLY valid JSON: {"page1":{"eyebrow":"string","headline":"string","subhea
                   ))}
                 </div>
               </div>
+
+              {/* ── Billing ── */}
+              <BillingSection/>
+
+              {/* ── Sign Out ── */}
+              <div className="settings-section">
+                <button className="btn btn-ghost" style={{width:"100%",justifyContent:"center"}} onClick={handleLogout}>🔒 Sign Out</button>
+              </div>
             </div>
           )}
 
+        </ErrorBoundary>
         </div>
 
         {/* WON BANNER - radius mailer suggestion */}
